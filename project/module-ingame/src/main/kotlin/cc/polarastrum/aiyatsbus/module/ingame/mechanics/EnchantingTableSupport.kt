@@ -51,6 +51,7 @@ import taboolib.module.nms.PacketSendEvent
 import taboolib.module.ui.InventoryViewProxy
 import taboolib.platform.util.onlinePlayers
 import taboolib.platform.util.serializeToByteArray
+import taboolib.platform.util.submit
 import java.util.UUID
 import kotlin.random.Random
 
@@ -255,7 +256,7 @@ object EnchantingTableSupport {
         // 对书的附魔，必须手动进行，因为原版处理会掉特殊附魔
         // 也许可以用更好的方法兼容，submit 有一定风险 FIXME
         if (item.type == Material.ENCHANTED_BOOK) {
-            submit {
+            event.enchantBlock.location.submit {
                 event.inventory.setItem(0, result.second)
             }
         }
