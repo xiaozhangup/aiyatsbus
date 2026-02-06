@@ -81,5 +81,7 @@ interface MinecraftItemOperator {
      */
     fun adaptMerchantRecipe(merchantRecipeList: Any, player: Player)
 
-    fun createAiyatsbusItemStack(item: ItemStack): AiyatsbusItemStack
+    fun getEnchants(item: ItemStack): Map<AiyatsbusEnchantment, Int>
+
+    fun isUnbreakable(item: ItemStack): Boolean
 }

@@ -25,7 +25,6 @@ import cc.polarastrum.aiyatsbus.core.AiyatsbusEnchantmentBase
 import cc.polarastrum.aiyatsbus.core.util.legacyToAdventure
 import net.kyori.adventure.text.Component
 import net.minecraft.world.item.enchantment.Enchantment
-import org.bukkit.NamespacedKey
 import org.bukkit.craftbukkit.enchantments.CraftEnchantment
 import org.bukkit.enchantments.EnchantmentTarget
 import org.bukkit.entity.EntityCategory
@@ -45,7 +44,12 @@ class AiyatsbusCraftEnchantment(
 
     init {
         enchant.enchantment = this
+        enchant.trigger?.enchant = this
+        enchant.limitations.belonging = this
+        enchant.displayer.enchant = this
     }
+
+    private val hashCode = enchant.id.hashCode()
 
     override fun canEnchantItem(item: ItemStack): Boolean {
         return enchant.canEnchantItem(item)
@@ -102,13 +106,11 @@ class AiyatsbusCraftEnchantment(
     override fun getDamageIncrease(level: Int, entityCategory: EntityCategory): Float = 0.0f
 
     override fun equals(other: Any?): Boolean {
-        // 不这样转换过不了编译, 项目依赖配置有问题
-        return other is AiyatsbusEnchantment && (this.enchantmentKey as NamespacedKey) == other.enchantmentKey
+        return other is AiyatsbusEnchantment && this.hashCode() == other.hashCode() && this.id == other.id
     }
 
     override fun hashCode(): Int {
-        // 不这样转换过不了编译, 项目依赖配置有问题
-        return (this.enchantmentKey as NamespacedKey).hashCode()
+        return hashCode
     }
 
     override fun toString(): String {

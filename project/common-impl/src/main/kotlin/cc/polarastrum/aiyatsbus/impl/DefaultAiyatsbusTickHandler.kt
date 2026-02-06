@@ -89,6 +89,7 @@ class DefaultAiyatsbusTickHandler : AiyatsbusTickHandler {
                         val variables = mutableMapOf(
                             "player" to player,
                             "enchant" to ench,
+                            "maxLevel" to ench.basicData.maxLevel
                         )
 
                         variables += ench.variables.ordinary

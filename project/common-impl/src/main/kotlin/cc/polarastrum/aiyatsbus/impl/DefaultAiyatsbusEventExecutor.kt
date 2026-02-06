@@ -265,7 +265,7 @@ class DefaultAiyatsbusEventExecutor : AiyatsbusEventExecutor {
 
     private fun ItemStack.triggerEts(listen: String, event: Event, entity: LivingEntity, slot: EquipmentSlot?, ignoreSlot: Boolean = false) {
 
-        val enchants = fast().getEnchants().entries
+        val enchants = fixedEnchants.entries
             .filter { it.key.trigger != null }
             .sortedBy { it.key.trigger!!.listenerPriority }
 
@@ -296,6 +296,7 @@ class DefaultAiyatsbusEventExecutor : AiyatsbusEventExecutor {
                         "item" to this,
                         "enchant" to enchant,
                         "level" to enchantPair.value,
+                        "maxLevel" to enchant.basicData.maxLevel
                     )
 
                     vars += enchant.variables.variables(enchantPair.value, this, false)

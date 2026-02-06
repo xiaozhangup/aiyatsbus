@@ -40,7 +40,7 @@ data class Trigger(
     /** 配置节点 */
     private val section: ConfigurationSection?,
     /** 所属附魔 */
-    private var enchant: AiyatsbusEnchantment,
+    var enchant: AiyatsbusEnchantment,
     /** 定时器优先级，默认为 0 */
     val tickerPriority: Int = (section?.getString("tickerPriority")
         ?: section?.getString("ticker-priority")).coerceInt(0),
@@ -59,30 +59,27 @@ data class Trigger(
     /** 技能映射表 */
     val skills: ConcurrentHashMap<String, Skill> = ConcurrentHashMap()
 
-    lateinit var craftEnchantment: AiyatsbusEnchantment
-
     fun init() {
-        craftEnchantment = Aiyatsbus.api().getEnchantmentManager().getEnchant(enchant.enchantmentKey)!!
         try {
             // 初始化事件监听器
             section?.getConfigurationSection("listeners")?.let { listenersSection ->
                 listeners += listenersSection.getKeys(false)
-                    .associateWith { EventExecutor(listenersSection.getConfigurationSection(it)!!, craftEnchantment) }
+                    .associateWith { EventExecutor(listenersSection.getConfigurationSection(it)!!, enchant) }
             }
             // 初始化定时器
             section?.getConfigurationSection("tickers")?.let { tickersSection ->
                 tickers += tickersSection.getKeys(false)
-                    .associateWith { Ticker(tickersSection.getConfigurationSection(it)!!, craftEnchantment) }
-                    .mapKeys { "${craftEnchantment.basicData.id}.${it.key}" }.also {
+                    .associateWith { Ticker(tickersSection.getConfigurationSection(it)!!, enchant) }
+                    .mapKeys { "${enchant.basicData.id}.${it.key}" }.also {
                         it.entries.forEach { (id, ticker) ->
-                            Aiyatsbus.api().getTickHandler().getRoutine().put(craftEnchantment, id, ticker.interval)
+                            Aiyatsbus.api().getTickHandler().getRoutine().put(enchant, id, ticker.interval)
                         }
                     }
             }
             // 初始化技能
             section?.getConfigurationSection("skills")?.let { skillSection ->
                 skills += skillSection.getKeys(false)
-                    .associateWith { Skill(skillSection.getConfigurationSection(it)!!, craftEnchantment) }
+                    .associateWith { Skill(skillSection.getConfigurationSection(it)!!, enchant) }
             }
         } catch (ex: Throwable) {
             if (TabooLib.getCurrentLifeCycle() != LifeCycle.ACTIVE) {
@@ -109,7 +106,7 @@ data class Trigger(
      */
     fun onDisable() {
         listeners.clear()
-        tickers.keys.forEach { Aiyatsbus.api().getTickHandler().getRoutine().remove(craftEnchantment, it) }
+        tickers.keys.forEach { Aiyatsbus.api().getTickHandler().getRoutine().remove(enchant, it) }
         tickers.clear()
     }
 }

@@ -18,6 +18,7 @@
  */
 package cc.polarastrum.aiyatsbus.impl.registration.v12103_nms
 
+import cc.polarastrum.aiyatsbus.core.Aiyatsbus
 import cc.polarastrum.aiyatsbus.core.AiyatsbusEnchantment
 import cc.polarastrum.aiyatsbus.core.AiyatsbusEnchantmentBase
 import cc.polarastrum.aiyatsbus.core.AiyatsbusEnchantmentManager
@@ -189,11 +190,13 @@ class DefaultModernEnchantmentRegisterer : ModernEnchantmentRegisterer {
             val nms = enchantmentRegistry[CraftNamespacedKey.toMinecraft(enchant.enchantmentKey)]
 
             if (nms.isPresent) {
-                return (if (enchant.alternativeData.isVanilla) {
+                val result = (if (enchant.alternativeData.isVanilla) {
                     EnchantmentHelper.createVanillaCraftEnchantment(enchant, nms.get().value())
                 } else {
                     EnchantmentHelper.createAiyatsbusCraftEnchantment(enchant, nms.get().value())
                 }) as CraftEnchantment
+                Aiyatsbus.api().getEnchantmentManager().getByNMSMap()[nms.get().value()] = result as AiyatsbusEnchantment
+                return result
             } else {
                 throw IllegalStateException("Enchantment ${enchant.id} wasn't registered")
             }

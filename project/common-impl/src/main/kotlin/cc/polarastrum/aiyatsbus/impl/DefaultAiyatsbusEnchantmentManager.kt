@@ -29,7 +29,6 @@ import cc.polarastrum.aiyatsbus.impl.DefaultAiyatsbusAPI.Companion.proxy
 import cc.polarastrum.aiyatsbus.impl.enchant.InternalAiyatsbusEnchantment
 import cc.polarastrum.aiyatsbus.impl.registration.legacy.DefaultLegacyEnchantmentRegisterer
 import org.bukkit.NamespacedKey
-import org.bukkit.entity.Player
 import taboolib.common.LifeCycle
 import taboolib.common.TabooLib
 import taboolib.common.io.newFolder
@@ -64,12 +63,18 @@ class DefaultAiyatsbusEnchantmentManager : AiyatsbusEnchantmentManager {
     private val byKeyStringMap = ConcurrentHashMap<String, AiyatsbusEnchantment>()
     /** 按名称存储的附魔映射 */
     private val byNameMap = ConcurrentHashMap<String, AiyatsbusEnchantment>()
+    /** 按 NMSENchantment 存储的附魔映射 **/
+    private val byNMSMap = ConcurrentHashMap<Any, AiyatsbusEnchantment>()
 
     /** 等待被注册的附魔 */
     private val enchantmentsToRegister = CopyOnWriteArraySet<AiyatsbusEnchantmentBase>()
 
     override fun getEnchants(): Map<NamespacedKey, AiyatsbusEnchantment> {
         return byKeyMap
+    }
+
+    override fun getByNMSMap(): ConcurrentHashMap<Any, AiyatsbusEnchantment> {
+        return byNMSMap
     }
 
     override fun getEnchant(key: NamespacedKey): AiyatsbusEnchantment? {
@@ -110,6 +115,8 @@ class DefaultAiyatsbusEnchantmentManager : AiyatsbusEnchantmentManager {
     }
 
     override fun loadEnchantments() {
+        // 如果是重载, 记录当前附魔数量, 如果不一致得刷新在线玩家的附魔表
+        val enchantmentCount = byKeyMap.size
         clearEnchantments()
 
         val enchantsFolder = newFolder(getDataFolder(), "enchants")
@@ -131,6 +138,13 @@ class DefaultAiyatsbusEnchantmentManager : AiyatsbusEnchantmentManager {
         enchantmentsToRegister.forEach { register(it) }
 
         console().sendLang("loading-enchantments", byKeyMap.size, System.currentTimeMillis() - startTime)
+
+        if (enchantmentCount < byKeyMap.size) {
+            onlinePlayers.forEach {
+                Aiyatsbus.api().getMinecraftAPI().getPacketHandler()
+                    .synchronizeRegistries(it)
+            }
+        }
     }
 
     override fun loadFromFile(file: File) {
@@ -215,12 +229,13 @@ class DefaultAiyatsbusEnchantmentManager : AiyatsbusEnchantmentManager {
         oldEnchant.trigger?.onDisable()
         unregister(oldEnchant)
 
-        val newEnchant = InternalAiyatsbusEnchantment(id, file, Configuration.loadFromFile(file))
-        if (!newEnchant.dependencies.checkAvailable()) return
-        
-        register(newEnchant)
-        getEnchant(key)!!.trigger?.init()
-        onlinePlayers.forEach(Player::updateInventory)
+        if (file.exists()) {
+            val newEnchant = InternalAiyatsbusEnchantment(id, file, Configuration.loadFromFile(file))
+            if (!newEnchant.dependencies.checkAvailable()) return
+
+            register(newEnchant)
+            getEnchant(key)!!.trigger?.init()
+        }
         
         console().sendLang("enchantment-reload", id, System.currentTimeMillis() - startTime)
         EnchantRegistrationHooks.unregisterHooks()

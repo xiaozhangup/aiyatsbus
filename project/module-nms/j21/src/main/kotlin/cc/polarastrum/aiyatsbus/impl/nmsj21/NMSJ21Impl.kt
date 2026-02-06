@@ -16,10 +16,11 @@
  */
 package cc.polarastrum.aiyatsbus.impl.nmsj21
 
-import cc.polarastrum.aiyatsbus.core.AiyatsbusItemStack
+import cc.polarastrum.aiyatsbus.core.Aiyatsbus
+import cc.polarastrum.aiyatsbus.core.AiyatsbusEnchantment
 import cc.polarastrum.aiyatsbus.core.toDisplayMode
 import cc.polarastrum.aiyatsbus.core.util.isNull
-import cc.polarastrum.aiyatsbus.impl.nms12111.AiyatsbusItemStack12111Impl
+import com.google.common.collect.Maps
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.item.trading.MerchantOffers
 import org.bukkit.craftbukkit.entity.CraftLivingEntity
@@ -28,7 +29,9 @@ import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import taboolib.library.reflex.Reflex.Companion.setProperty
-import taboolib.module.nms.MinecraftVersion
+import taboolib.module.nms.MinecraftVersion.versionId
+import taboolib.module.nms.remap.DynamicOpcode
+import taboolib.module.nms.remap.dynamic
 import java.util.Optional
 import kotlin.jvm.optionals.getOrNull
 
@@ -73,12 +76,46 @@ class NMSJ21Impl : NMSJ21() {
         return (nmsItem as NMSItemStack).hurtAndBreak(amount, (entity as CraftLivingEntity).handle, null)
     }
 
-    override fun createAiyatsbusItemStack(item: ItemStack): AiyatsbusItemStack {
-        return if (MinecraftVersion.versionId >= 12111) {
-            AiyatsbusItemStack12111Impl(item)
-        } else {
-            AiyatsbusItemStackJ21Impl(item)
+    override fun getEnchants(item: ItemStack): Map<AiyatsbusEnchantment, Int> {
+        val handle: NMSItemStack = if (item is CraftItemStack) item.handle else CraftItemStack.asNMSCopy(item)
+        val stored = handle.get(DataComponents.STORED_ENCHANTMENTS) ?: handle.get(DataComponents.ENCHANTMENTS)
+        if (stored == null) {
+            return emptyMap()
         }
+        val entries = stored.entrySet()
+        if (entries.isEmpty()) {
+            return emptyMap()
+        }
+        val map = Maps.newHashMapWithExpectedSize<AiyatsbusEnchantment, Int>(entries.size)
+        for (entry in entries) {
+            val enchantment = entry.key
+            val level = entry.value
+            map[Aiyatsbus.api().getEnchantmentManager().getByNMSMap()[enchantment.value()]!!] = level
+        }
+        return map
+    }
+
+    override fun isUnbreakable(item: ItemStack): Boolean {
+        val handle: NMSItemStack = if (item is CraftItemStack) item.handle else CraftItemStack.asNMSCopy(item)
+        if (versionId > 12104) {
+            return dynamic(
+                DynamicOpcode.INVOKEVIRTUAL,
+                "net.minecraft.core.component.DataComponentHolder#get(net.minecraft.core.component.DataComponentType;)java.lang.Object;",
+                handle,
+                DataComponents.UNBREAKABLE
+            ) != null
+        }
+        val unbreakable = dynamic(
+            DynamicOpcode.INVOKEVIRTUAL,
+            "net.minecraft.core.component.DataComponentHolder#get(net.minecraft.core.component.DataComponentType;)java.lang.Object;",
+            handle,
+            DataComponents.UNBREAKABLE
+        ) ?: return false
+        return dynamic(
+            DynamicOpcode.INVOKEVIRTUAL,
+            "net.minecraft.world.item.component.Unbreakable#showInTooltip()Z",
+            unbreakable
+        ) as Boolean
     }
 }
 

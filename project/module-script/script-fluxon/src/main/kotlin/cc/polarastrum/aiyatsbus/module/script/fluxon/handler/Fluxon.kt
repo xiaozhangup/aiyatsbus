@@ -73,8 +73,8 @@ object Fluxon : FluxonHandler {
                 id + System.currentTimeMillis(), // 这里要加一个时间，因为不能加载一样名称的类
                 classLoader
             )
-            compiledScripts[id] = result.createInstance(classLoader) as RuntimeScriptBase
             Files.write(newFile(newFolder(getDataFolder(), "classes"), "${id}.class").toPath(), result.mainClass)
+            compiledScripts[id] = result.createInstance(classLoader) as RuntimeScriptBase
         } catch (ex: ParseException) {
             warning("编译脚本 $source 时发生错误:")
             ex.printStackTrace()

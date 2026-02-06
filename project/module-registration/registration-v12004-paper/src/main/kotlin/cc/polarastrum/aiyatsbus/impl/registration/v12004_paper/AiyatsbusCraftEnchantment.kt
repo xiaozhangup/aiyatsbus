@@ -44,7 +44,12 @@ class AiyatsbusCraftEnchantment(
 
     init {
         enchant.enchantment = this
+        enchant.trigger?.enchant = this
+        enchant.limitations.belonging = this
+        enchant.displayer.enchant = this
     }
+
+    private val hashCode = enchant.id.hashCode()
 
     override fun canEnchantItem(item: ItemStack): Boolean {
         return enchant.canEnchantItem(item)
@@ -107,11 +112,11 @@ class AiyatsbusCraftEnchantment(
     override fun getActiveSlots(): MutableSet<EquipmentSlot> = mutableSetOf()
 
     override fun equals(other: Any?): Boolean {
-        return other is AiyatsbusEnchantment && this.enchantmentKey == other.enchantmentKey
+        return other is AiyatsbusEnchantment && this.hashCode() == other.hashCode() && this.id == other.id
     }
 
     override fun hashCode(): Int {
-        return this.enchantmentKey.hashCode()
+        return hashCode
     }
 
     override fun toString(): String {

@@ -45,7 +45,7 @@ import taboolib.common.platform.function.registerLifeCycleTask
  * @since 2024/2/18 10:15
  */
 data class Limitations(
-    private val belonging: AiyatsbusEnchantment,
+    var belonging: AiyatsbusEnchantment,
     private val lines: List<String>
 ) {
 
@@ -53,7 +53,7 @@ data class Limitations(
     var conflictsWithEverything: Boolean = false
 
     /** 限制条件集合 */
-    val limitations = buildLimitations().toMutableSet()
+    val limitations = buildLimitations()
 
     /**
      * 构建限制条件集合
@@ -63,7 +63,7 @@ data class Limitations(
      *
      * @return 限制条件集合
      */
-    private fun buildLimitations(): Set<Pair<LimitType, String>> {
+    private fun buildLimitations(): MutableSet<Pair<LimitType, String>> {
         val result = mutableSetOf<Pair<LimitType, String>>()
         
         // 解析配置行
@@ -225,7 +225,7 @@ data class Limitations(
         ignoreSlot: Boolean
     ): Boolean {
         val itemType = item.type
-        val enchants = item.fast().getEnchants()
+        val enchants = item.fixedEnchants
         
         return when (type) {
             SLOT -> checkSlot(itemType, slot, ignoreSlot)

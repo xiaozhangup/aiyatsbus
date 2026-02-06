@@ -18,6 +18,7 @@ package cc.polarastrum.aiyatsbus.core
 
 import org.bukkit.NamespacedKey
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Aiyatsbus 附魔管理器接口
@@ -60,6 +61,13 @@ interface AiyatsbusEnchantmentManager {
      * @return 所有已注册附魔的映射表，键为命名空间键，值为附魔实例
      */
     fun getEnchants(): Map<NamespacedKey, AiyatsbusEnchantment>
+
+    /**
+     * 获取 NMSEnchantment 对应 AiyatsbusEnchantment 的映射
+     *
+     * @return
+     */
+    fun getByNMSMap(): ConcurrentHashMap<Any, AiyatsbusEnchantment>
 
     /**
      * 注册附魔

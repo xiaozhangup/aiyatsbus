@@ -182,5 +182,9 @@ interface AiyatsbusEnchantment {
         return if (basicData.nameHasColor) name else rarity.displayName(name)
     }
 
+    /**
+     * 更新附魔
+     * 用于品质和对象更新后重新加载
+     */
     fun updateEnchantment()
 }

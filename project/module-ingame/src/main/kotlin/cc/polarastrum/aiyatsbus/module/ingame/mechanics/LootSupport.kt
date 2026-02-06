@@ -91,10 +91,10 @@ object LootSupport {
         if (!enable) return
         (event.entity as? Player)?.let {
             event.loot.replaceAll { item ->
-                if (item.fast().getEnchants().isNotEmpty()) doEnchant(it, item).second
+                if (item.fixedEnchants.isNotEmpty()) doEnchant(it, item).second
                 else item
             }
-        } ?: event.loot.removeIf { it.fast().getEnchants().isNotEmpty() }
+        } ?: event.loot.removeIf { it.fixedEnchants.isNotEmpty() }
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -102,7 +102,7 @@ object LootSupport {
         if (!fishEnable) return
         if (event.state != PlayerFishEvent.State.CAUGHT_FISH || event.caught !is Item) return
         val item = event.caught as Item
-        if (item.itemStack.fast().getEnchants().isNotEmpty()) {
+        if (item.itemStack.fixedEnchants.isNotEmpty()) {
             item.itemStack = doEnchant(event.player, item.itemStack).second
         }
     }

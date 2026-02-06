@@ -17,8 +17,9 @@
 package cc.polarastrum.aiyatsbus.impl.nms
 
 import cc.polarastrum.aiyatsbus.core.Aiyatsbus
-import cc.polarastrum.aiyatsbus.core.AiyatsbusItemStack
+import cc.polarastrum.aiyatsbus.core.AiyatsbusEnchantment
 import cc.polarastrum.aiyatsbus.core.MinecraftItemOperator
+import cc.polarastrum.aiyatsbus.core.aiyatsbusEt
 import cc.polarastrum.aiyatsbus.core.toDisplayMode
 import cc.polarastrum.aiyatsbus.core.util.isNull
 import cc.polarastrum.aiyatsbus.impl.nmsj21.NMSJ21
@@ -26,9 +27,12 @@ import io.papermc.paper.adventure.PaperAdventure
 import net.kyori.adventure.util.Codec
 import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.world.entity.EnumItemSlot
+import net.minecraft.world.item.ItemEnchantedBook
+import net.minecraft.world.item.Items
 import net.minecraft.world.item.trading.MerchantRecipeList
 import org.bukkit.Bukkit
 import org.bukkit.Material
+import org.bukkit.NamespacedKey
 import org.bukkit.craftbukkit.v1_20_R3.entity.CraftLivingEntity
 import org.bukkit.craftbukkit.v1_20_R3.inventory.CraftItemStack
 import org.bukkit.entity.LivingEntity
@@ -39,6 +43,7 @@ import taboolib.library.reflex.Reflex.Companion.setProperty
 import taboolib.module.nms.MinecraftVersion.versionId
 import taboolib.module.nms.NMSItemTag
 import java.io.IOException
+import kotlin.experimental.and
 
 /**
  * Aiyatsbus
@@ -161,12 +166,37 @@ class DefaultMinecraftItemOperator : MinecraftItemOperator {
         }
     }
 
-    override fun createAiyatsbusItemStack(item: ItemStack): AiyatsbusItemStack {
-        return if (versionId >= 12005) {
-            NMSJ21.instance.createAiyatsbusItemStack(item)
-        } else {
-            AiyatsbusItemStackImpl(item)
+    override fun getEnchants(item: ItemStack): Map<AiyatsbusEnchantment, Int> {
+        if (versionId >= 12005) {
+            return NMSJ21.instance.getEnchants(item)
         }
+        val handle = (if (item is CraftItemStack) Aiyatsbus.api().getMinecraftAPI().getHelper().getCraftItemStackHandle(item) else CraftItemStack.asNMSCopy(item)) as NMSItemStack
+        val enchantmentNBT = if (handle.item == Items.ENCHANTED_BOOK)
+            ItemEnchantedBook.getEnchantments(handle)
+        else handle.enchantmentTags
+
+        val map = HashMap<AiyatsbusEnchantment, Int>()
+
+        for (base in enchantmentNBT) {
+            val compound = base as NBTTagCompound
+            val key = NamespacedKey.fromString(compound.getString("id"))
+            val level = ('\uffff'.code.toShort() and compound.getShort("lvl")).toInt()
+            if (key != null) {
+                val enchant = aiyatsbusEt(key)
+                if (enchant != null) {
+                    map[enchant] = level
+                }
+            }
+        }
+        return map
+    }
+
+    override fun isUnbreakable(item: ItemStack): Boolean {
+        if (versionId >= 12005) {
+            return NMSJ21.instance.isUnbreakable(item)
+        }
+        val handle = (if (item is CraftItemStack) Aiyatsbus.api().getMinecraftAPI().getHelper().getCraftItemStackHandle(item) else CraftItemStack.asNMSCopy(item)) as NMSItemStack
+        return handle.tag?.getBoolean("Unbreakable") == true
     }
 }
 

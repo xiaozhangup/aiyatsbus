@@ -6,7 +6,7 @@ import cc.polarastrum.aiyatsbus.core.StandardPriorities
 import cc.polarastrum.aiyatsbus.core.data.CheckType
 import cc.polarastrum.aiyatsbus.core.data.trigger.ActionType
 import cc.polarastrum.aiyatsbus.core.data.trigger.event.EventResolver
-import cc.polarastrum.aiyatsbus.core.fast
+import cc.polarastrum.aiyatsbus.core.fixedEnchants
 import cc.polarastrum.aiyatsbus.core.sendLang
 import cc.polarastrum.aiyatsbus.core.util.addCd
 import cc.polarastrum.aiyatsbus.core.util.calcToDouble
@@ -79,7 +79,7 @@ class DefaultAiyatsbusSkillHandler : AiyatsbusSkillHandler {
         val (item, resolved) = EventResolver.defaultItemResolver(e.player, EquipmentSlot.HAND)
         if (!resolved || item.isNull) return
 
-        val enchants = item!!.fast().getEnchants().entries
+        val enchants = item!!.fixedEnchants.entries
             .filter { it.key.trigger != null && it.key.trigger!!.skills.isNotEmpty() }
             .sortedBy { it.key.trigger!!.skillProperty }
 
@@ -108,7 +108,8 @@ class DefaultAiyatsbusSkillHandler : AiyatsbusSkillHandler {
                         "item" to item,
                         "enchant" to enchant,
                         "level" to level,
-                        "cooldown" to cooldown
+                        "cooldown" to cooldown,
+                        "maxLevel" to enchant.basicData.maxLevel
                     ).apply { putAll(enchant.variables.variables(level, item, false)) })
                 }
         }

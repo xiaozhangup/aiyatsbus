@@ -80,8 +80,7 @@ class DefaultAiyatsbusDisplayManager : AiyatsbusDisplayManager {
 
         // 首先确保物品必须存在
         if (item == null) return emptyList()
-        val fast = item.fast()
-        val enchants = fast.getEnchants()
+        val enchants = item.fixedEnchants
         // 整理附魔
         val sortedEnchants = enchants.ifEmpty { return emptyList() }.filter { it.key.displayer.display }.let(::sortEnchants)
         return buildList {
@@ -122,8 +121,7 @@ class DefaultAiyatsbusDisplayManager : AiyatsbusDisplayManager {
         // 首先确保物品必须存在
         if (item.isNull) return item
 
-        val fast = item.fast()
-        val enchants = fast.getEnchants()
+        val enchants = item.fixedEnchants
 
         // 必须 **克隆** 物品, 不得修改原物品
         return item.clone().modifyMeta<ItemMeta> {

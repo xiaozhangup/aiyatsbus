@@ -35,8 +35,6 @@ import java.util.concurrent.CompletableFuture
  */
 class DefaultAiyatsbusMinecraftAPI : AiyatsbusMinecraftAPI {
 
-    val group = "${DefaultAiyatsbusMinecraftAPI::class.java.`package`.name}"
-
     /** 杂项 */
     val nmsHelper by lazy {
         proxy<MinecraftHelper>("$group.nmsj21.DefaultMinecraftHelper")
@@ -85,5 +83,10 @@ class DefaultAiyatsbusMinecraftAPI : AiyatsbusMinecraftAPI {
             nmsPacketHandler
             nmsWorldOperator
         }
+    }
+
+    companion object {
+
+        val group = "${DefaultAiyatsbusMinecraftAPI::class.java.`package`.name}"
     }
 }

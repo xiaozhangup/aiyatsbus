@@ -39,7 +39,7 @@ data class Displayer(
     /** 配置根节点 */
     private val root: ConfigurationSection,
     /** 对应的附魔实例 */
-    private val enchant: AiyatsbusEnchantment,
+    var enchant: AiyatsbusEnchantment,
     /** 是否显示该附魔 */
     val display: Boolean = root.getBoolean("display", true),
     /** 附魔显示的前半部分，一般是名称和等级 */

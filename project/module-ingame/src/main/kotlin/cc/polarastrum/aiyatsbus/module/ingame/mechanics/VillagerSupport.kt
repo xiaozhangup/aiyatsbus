@@ -71,7 +71,7 @@ object VillagerSupport {
         val origin = e.recipe
         val result = origin.result.clone()
 
-        if (result.fast().getEnchants().isEmpty()) return
+        if (result.fixedEnchants.isEmpty()) return
         if (!enableEnchantTrade) {
             e.isCancelled = true
             return
@@ -85,7 +85,7 @@ object VillagerSupport {
             val level = random(1, drawEt.alternativeData.getTradeLevelLimit(drawEt.basicData.maxLevel, maxLevelLimit))
             result.addEt(drawEt, level)
         }
-        if (result.fast().getEnchants().isEmpty())
+        if (result.fixedEnchants.isEmpty())
             e.isCancelled = true
 
         origin.run origin@{

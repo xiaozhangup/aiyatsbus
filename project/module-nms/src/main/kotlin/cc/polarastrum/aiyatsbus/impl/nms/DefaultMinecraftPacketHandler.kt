@@ -21,10 +21,17 @@ package cc.polarastrum.aiyatsbus.impl.nms
 import cc.polarastrum.aiyatsbus.core.MinecraftPacketHandler
 import cc.polarastrum.aiyatsbus.core.toRevertMode
 import cc.polarastrum.aiyatsbus.core.util.isNull
+import net.minecraft.server.MinecraftServer
+import net.minecraft.server.network.ServerConfigurationPacketListenerImpl
+import org.bukkit.Bukkit
+import org.bukkit.craftbukkit.v1_20_R3.CraftServer
+import org.bukkit.craftbukkit.v1_20_R3.entity.CraftPlayer
 import org.bukkit.craftbukkit.v1_20_R3.inventory.CraftItemStack
 import org.bukkit.entity.Player
+import taboolib.common.platform.function.submit
 import taboolib.library.reflex.Reflex.Companion.getProperty
 import taboolib.module.nms.MinecraftVersion.isUniversal
+import taboolib.module.nms.MinecraftVersion.versionId
 import taboolib.module.nms.PacketReceiveEvent
 
 /**
@@ -35,6 +42,22 @@ import taboolib.module.nms.PacketReceiveEvent
  * @since 2025/8/16 09:34
  */
 class DefaultMinecraftPacketHandler : MinecraftPacketHandler {
+
+    override fun synchronizeRegistries(player: Player) {
+//        if (versionId < 12005) return // 小于这个版本的没有 SynchronizeRegistriesTask，调用无意义
+//        val uuid = player.uniqueId
+//        (player as CraftPlayer).handle.connection.switchToConfig()
+//
+//        submit(delay = 10L) {
+//            ((Bukkit.getServer() as CraftServer).server.connection.connections
+//                .firstOrNull {
+//                    it.packetListener is ServerConfigurationPacketListenerImpl &&
+//                            (it.packetListener as ServerConfigurationPacketListenerImpl).owner.id == uuid
+//                }
+//                ?.packetListener as? ServerConfigurationPacketListenerImpl)
+//                ?.startConfiguration()
+//        }
+    }
 
     /**
      * isUniversal -> carriedItem
