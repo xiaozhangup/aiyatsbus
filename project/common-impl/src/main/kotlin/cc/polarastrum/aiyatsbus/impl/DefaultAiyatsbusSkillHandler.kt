@@ -55,7 +55,7 @@ class DefaultAiyatsbusSkillHandler : AiyatsbusSkillHandler {
     }
 
     override fun registerEvents() {
-        listeners.add(registerBukkitListener(PlayerInteractEvent::class.java, priority = EventPriority.HIGHEST) {
+        listeners.add(registerBukkitListener(PlayerInteractEvent::class.java, priority = EventPriority.HIGHEST, ignoreCancelled = false) {
             if (!it.isMainhand()) return@registerBukkitListener
             val type = when {
                 it.isLeftClick() -> ActionType.LEFT_CLICK

@@ -121,7 +121,11 @@ class DefaultAiyatsbusDisplayManager : AiyatsbusDisplayManager {
         // 首先确保物品必须存在
         if (item.isNull) return item
 
-        val enchants = item.fixedEnchants
+        var enchants = item.fixedEnchants
+
+        if (LevelFixer.fix(item, enchants)) {
+            enchants = item.fixedEnchants
+        }
 
         // 必须 **克隆** 物品, 不得修改原物品
         return item.clone().modifyMeta<ItemMeta> {

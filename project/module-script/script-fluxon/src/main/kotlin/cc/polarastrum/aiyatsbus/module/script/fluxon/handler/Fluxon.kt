@@ -5,6 +5,7 @@ import cc.polarastrum.aiyatsbus.module.script.fluxon.relocate.FluxonRelocate
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.tabooproject.fluxon.Fluxon
+import org.tabooproject.fluxon.FluxonPlugin
 import org.tabooproject.fluxon.compiler.CompilationContext
 import org.tabooproject.fluxon.interpreter.bytecode.FluxonClassLoader
 import org.tabooproject.fluxon.runtime.FluxonRuntime
@@ -36,6 +37,10 @@ object Fluxon : FluxonHandler {
     private val compiledScripts = ConcurrentHashMap<String, RuntimeScriptBase>()
     private val classLoader = FluxonClassLoader(BukkitPlugin::class.java.classLoader)
     private val environment = FluxonRuntime.getInstance().newEnvironment()
+
+    init {
+        FluxonPlugin.DEFAULT_ALLOW_EXECUTE_TASK_ON_NON_SCRIPT_ENV = true
+    }
 
     override fun invoke(
         source: String,

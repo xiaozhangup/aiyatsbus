@@ -153,6 +153,21 @@ object AiyatsbusSettings {
     @ConfigNode("Settings.updater.contents")
     var updateContents = emptyList<String>()
 
+    @ConfigNode("Settings.updater.levelfixers.enable")
+    var enableLevelfixers = false
+
+    @ConfigNode("Settings.updater.levelfixers.vanilla")
+    var fixVanillaLevel = true
+
+    @ConfigNode("Settings.updater.levelfixers.custom")
+    var fixCustomLevel = true
+
+    @ConfigNode("Settings.updater.levelfixers.whitelist")
+    var levelFixersWhitelist = emptyList<String>()
+
+    @ConfigNode("Settings.updater.levelfixers.bypass-nbt")
+    var levelFixersBypassNBT = emptyList<String>()
+
     /**
      * 是否开启调试信息
      * 默认值: false
