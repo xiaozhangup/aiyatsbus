@@ -3,6 +3,7 @@ package cc.polarastrum.aiyatsbus.impl
 import cc.polarastrum.aiyatsbus.core.AiyatsbusEnchantment
 import cc.polarastrum.aiyatsbus.core.AiyatsbusSettings
 import cc.polarastrum.aiyatsbus.core.addEt
+import cc.polarastrum.aiyatsbus.core.data.trigger.ticker.Ticker
 import cc.polarastrum.aiyatsbus.core.event.AiyatsbusEnchantmentExecuteEvent
 import cc.polarastrum.aiyatsbus.core.fixedEnchants
 import cc.polarastrum.aiyatsbus.core.util.isNull
@@ -24,7 +25,7 @@ object LevelFixer {
 
     @SubscribeEvent
     fun e(e: PlayerJoinEvent) {
-        e.player.submit(delay = 10L) {
+        e.player.submit(delay = 20L) {
             e.player.inventory.contents.filterNot { it.isNull }.forEach { fix(it!!, it.fixedEnchants) }
         }
     }
@@ -36,7 +37,11 @@ object LevelFixer {
 
     @SubscribeEvent
     fun e(e: AiyatsbusEnchantmentExecuteEvent) {
-        fix(e.item, e.item.fixedEnchants)
+        if (e.trigger is Ticker) {
+            if (!e.isPreHandle()) return
+        }
+        fix(e.item ?: return, e.item.fixedEnchants)
+        e.level = e.item.fixedEnchants[e.enchant]!!
     }
 
     /**

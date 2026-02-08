@@ -33,8 +33,8 @@ data class AiyatsbusEnchantmentExecuteEvent(
             variableMap.put("level", value)
         }
 
-    var item: ItemStack
-        get() = variableMap["item"] as ItemStack
+    var item: ItemStack?
+        get() = variableMap["item"] as ItemStack?
         set(value) {
             variableMap.put("item", value)
         }
@@ -48,14 +48,14 @@ data class AiyatsbusEnchantmentExecuteEvent(
     /**
      * 必须先判断触发器类型再获取
      */
-    var event: Event
-        get() = variableMap["event"] as Event
+    var event: Event?
+        get() = variableMap["event"] as Event?
         set(value) {
             variableMap.put("event", value)
         }
 
-    var cooldown: Double
-        get() = variableMap["cooldown"] as Double
+    var cooldown: Double?
+        get() = variableMap["cooldown"] as Double?
         set(value) {
             variableMap.put("cooldown", value)
         }

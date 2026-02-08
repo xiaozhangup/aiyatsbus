@@ -32,19 +32,25 @@ data class Mechanism(
         // 初始化事件监听器
         section?.getConfigurationSection("listeners")?.let { listenersSection ->
             for (listener in listenersSection.getKeys(false)) {
-                triggers[EventExecutor(listenersSection.getConfigurationSection(listener)!!, enchant)] = TriggerType.LISTENER
+                val trigger = EventExecutor(listenersSection.getConfigurationSection(listener)!!, enchant)
+                trigger.init()
+                triggers[trigger] = TriggerType.LISTENER
             }
         }
         // 初始化定时器
         section?.getConfigurationSection("tickers")?.let { tickersSection ->
             for (ticker in tickersSection.getKeys(false)) {
-                triggers[Ticker(tickersSection.getConfigurationSection(ticker)!!, enchant)] = TriggerType.TICKER
+                val trigger = Ticker(tickersSection.getConfigurationSection(ticker)!!, enchant)
+                trigger.init()
+                triggers[trigger] = TriggerType.TICKER
             }
         }
         // 初始化技能
         section?.getConfigurationSection("skills")?.let { skillSection ->
             for (skill in skillSection.getKeys(false)) {
-                triggers[Skill(skillSection.getConfigurationSection(skill)!!, enchant)] = TriggerType.SKILL
+                val trigger = Skill(skillSection.getConfigurationSection(skill)!!, enchant)
+                trigger.init()
+                triggers[trigger] = TriggerType.SKILL
             }
         }
     }
