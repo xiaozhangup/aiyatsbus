@@ -45,7 +45,7 @@ class AiyatsbusCraftEnchantment(
 
     init {
         enchant.enchantment = this
-        enchant.trigger?.enchant = this
+        enchant.mechanism?.enchant = this
         enchant.limitations.belonging = this
         enchant.displayer.enchant = this
     }

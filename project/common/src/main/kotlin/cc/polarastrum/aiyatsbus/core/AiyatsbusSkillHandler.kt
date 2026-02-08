@@ -1,6 +1,6 @@
 package cc.polarastrum.aiyatsbus.core
 
-import cc.polarastrum.aiyatsbus.core.data.trigger.ActionType
+import cc.polarastrum.aiyatsbus.core.data.trigger.skill.ActionType
 import org.bukkit.event.player.PlayerEvent
 import taboolib.module.configuration.Configuration
 

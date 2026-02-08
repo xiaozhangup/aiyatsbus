@@ -20,7 +20,7 @@ import cc.polarastrum.aiyatsbus.core.data.*
 import cc.polarastrum.aiyatsbus.core.data.registry.Group
 import cc.polarastrum.aiyatsbus.core.data.registry.Rarity
 import cc.polarastrum.aiyatsbus.core.data.registry.Target
-import cc.polarastrum.aiyatsbus.core.data.trigger.Trigger
+import cc.polarastrum.aiyatsbus.core.data.trigger.Mechanism
 import cc.polarastrum.aiyatsbus.core.util.roman
 import org.bukkit.NamespacedKey
 import org.bukkit.enchantments.Enchantment
@@ -137,11 +137,11 @@ interface AiyatsbusEnchantment {
     val limitations: Limitations
 
     /**
-     * 附魔触发器
+     * 附魔机制
      * 
-     * 定义附魔效果的触发条件和执行逻辑，为 null 表示不使用 Aiyatsbus 内置的触发器系统。
+     * 定义附魔效果的执行逻辑，为 null 表示不使用 Aiyatsbus 内置的附魔机制系统。
      */
-    val trigger: Trigger?
+    val mechanism: Mechanism?
 
     /** 是否不可获得 */
     val inaccessible: Boolean

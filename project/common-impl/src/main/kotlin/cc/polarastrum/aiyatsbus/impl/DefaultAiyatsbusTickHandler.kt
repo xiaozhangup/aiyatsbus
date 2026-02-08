@@ -16,12 +16,14 @@
  */
 package cc.polarastrum.aiyatsbus.impl
 
-import com.google.common.collect.HashBasedTable
-import com.google.common.collect.Table
 import cc.polarastrum.aiyatsbus.core.*
 import cc.polarastrum.aiyatsbus.core.data.CheckType
+import cc.polarastrum.aiyatsbus.core.data.trigger.TriggerType
+import cc.polarastrum.aiyatsbus.core.data.trigger.ticker.Ticker
 import cc.polarastrum.aiyatsbus.core.util.isNull
 import cc.polarastrum.aiyatsbus.core.util.reloadable
+import com.google.common.collect.HashBasedTable
+import com.google.common.collect.Table
 import org.bukkit.inventory.ItemStack
 import taboolib.common.LifeCycle
 import taboolib.common.platform.Awake
@@ -31,7 +33,7 @@ import taboolib.common.platform.function.submit
 import taboolib.common.platform.service.PlatformExecutor
 import taboolib.platform.util.onlinePlayers
 import taboolib.platform.util.submit
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -69,9 +71,11 @@ class DefaultAiyatsbusTickHandler : AiyatsbusTickHandler {
     }
 
     private fun onTick() {
-        routine.cellSet() // 无需判断这里 trigger 是否为 null, 因为只有 Trigger 初始化时才会往这里扔 enchant
+        // 这里无需判断附魔是否有机制, 也无需判断是否有 Ticker
+        // 因为只有 Ticker 初始化时才会往这里扔附魔
+        routine.cellSet()
             .filter { counter % it.value == 0L }
-            .sortedBy { it.rowKey.trigger!!.tickerPriority }
+            .sortedBy { it.rowKey.mechanism!!.priority(TriggerType.TICKER) }
             .forEach {
                 val ench = it.rowKey
                 val id = it.columnKey
@@ -84,9 +88,10 @@ class DefaultAiyatsbusTickHandler : AiyatsbusTickHandler {
 
                         // 一般能存在 routine 里的, trigger 和 tickers 必不为 null
                         val ticker =
-                            ench.trigger!!.tickers[id] ?: error("Unknown ticker $id for enchantment ${ench.basicData.id}")
+                            (ench.mechanism!!.triggers(TriggerType.TICKER).firstOrNull { t -> t.id == id }
+                                ?: error("Unknown ticker $id for enchantment ${ench.basicData.id}")) as Ticker
 
-                        val variables = mutableMapOf(
+                        val variables = hashMapOf(
                             "player" to player,
                             "enchant" to ench,
                             "maxLevel" to ench.basicData.maxLevel
@@ -118,7 +123,7 @@ class DefaultAiyatsbusTickHandler : AiyatsbusTickHandler {
                                 }
                                 flag = true
 
-                                val vars = variables.toMutableMap()
+                                val vars = HashMap(variables)
                                 vars += mapOf(
                                     "triggerSlot" to slot.name,
                                     "trigger-slot" to slot.name,

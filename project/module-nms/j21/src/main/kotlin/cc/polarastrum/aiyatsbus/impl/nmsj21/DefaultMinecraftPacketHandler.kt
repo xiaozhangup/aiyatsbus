@@ -38,7 +38,8 @@ import taboolib.module.nms.MinecraftVersion.versionId
 import taboolib.module.nms.PacketReceiveEvent
 import taboolib.module.nms.remap.DynamicOpcode
 import taboolib.module.nms.remap.dynamic
-import java.util.UUID
+import taboolib.platform.Folia
+import java.util.*
 
 /**
  * Aiyatsbus
@@ -51,6 +52,7 @@ class DefaultMinecraftPacketHandler : MinecraftPacketHandler {
 
     override fun synchronizeRegistries(player: Player) {
         if (versionId < 12107) return // fixme 1.21.7 以前的版本有点问题
+        if (Folia.isFolia) return // fixme folia 有点问题
         val uuid = player.uniqueId
         (player as CraftPlayer).handle.connection.switchToConfig()
 

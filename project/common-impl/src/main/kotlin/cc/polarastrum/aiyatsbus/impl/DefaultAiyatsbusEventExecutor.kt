@@ -16,14 +16,16 @@
  */
 package cc.polarastrum.aiyatsbus.impl
 
-import com.google.common.collect.HashBasedTable
-import com.google.common.collect.Table
 import cc.polarastrum.aiyatsbus.core.*
 import cc.polarastrum.aiyatsbus.core.data.CheckType
+import cc.polarastrum.aiyatsbus.core.data.trigger.TriggerType
+import cc.polarastrum.aiyatsbus.core.data.trigger.event.EventExecutor
 import cc.polarastrum.aiyatsbus.core.data.trigger.event.EventMapping
 import cc.polarastrum.aiyatsbus.core.data.trigger.event.EventResolver
 import cc.polarastrum.aiyatsbus.core.event.AiyatsbusPrepareAnvilEvent
 import cc.polarastrum.aiyatsbus.core.util.*
+import com.google.common.collect.HashBasedTable
+import com.google.common.collect.Table
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import org.bukkit.entity.Projectile
@@ -266,8 +268,8 @@ class DefaultAiyatsbusEventExecutor : AiyatsbusEventExecutor {
     private fun ItemStack.triggerEts(listen: String, event: Event, entity: LivingEntity, slot: EquipmentSlot?, ignoreSlot: Boolean = false) {
 
         val enchants = fixedEnchants.entries
-            .filter { it.key.trigger != null }
-            .sortedBy { it.key.trigger!!.listenerPriority }
+            .filter { it.key.mechanism?.hasTrigger(TriggerType.LISTENER) ?: false }
+            .sortedBy { it.key.mechanism!!.priority(TriggerType.LISTENER) }
 
         for (enchantPair in enchants) {
             val enchant = enchantPair.key
@@ -282,13 +284,12 @@ class DefaultAiyatsbusEventExecutor : AiyatsbusEventExecutor {
                 continue
             }
 
-            enchant.trigger!!.listeners
-                .filterValues { it.listen == listen }
-                .entries
-                .sortedBy { it.value.priority }
-                .forEach { (_, executor) ->
+            enchant.mechanism!!.triggers(TriggerType.LISTENER)
+                .filter { (it as EventExecutor).listen == listen }
+                .sortedBy { it.priority }
+                .forEach { executor ->
 //                    println("执行事件: $executor")
-                    val vars = mutableMapOf(
+                    val vars = hashMapOf(
                         "triggerSlot" to slot?.name,
                         "trigger-slot" to slot?.name,
                         "event" to event,
@@ -301,7 +302,7 @@ class DefaultAiyatsbusEventExecutor : AiyatsbusEventExecutor {
 
                     vars += enchant.variables.variables(enchantPair.value, this, false)
 
-                    executor.execute(entity, vars)
+                    executor.executeHandle(entity, vars)
                 }
         }
     }

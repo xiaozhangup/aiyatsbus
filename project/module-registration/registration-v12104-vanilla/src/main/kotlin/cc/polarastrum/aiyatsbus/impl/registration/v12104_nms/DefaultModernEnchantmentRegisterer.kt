@@ -190,13 +190,11 @@ class DefaultModernEnchantmentRegisterer : ModernEnchantmentRegisterer {
             val nms = enchantmentRegistry[CraftNamespacedKey.toMinecraft(enchant.enchantmentKey)]
 
             if (nms.isPresent) {
-                val result = (if (enchant.alternativeData.isVanilla) {
+                return (if (enchant.alternativeData.isVanilla) {
                     EnchantmentHelper.createVanillaCraftEnchantment(enchant, nms.get())
                 } else {
                     EnchantmentHelper.createAiyatsbusCraftEnchantment(enchant, nms.get())
                 }) as CraftEnchantment
-                Aiyatsbus.api().getEnchantmentManager().getByNMSMap()[nms.get().value()] = result as AiyatsbusEnchantment
-                return result
             } else {
                 throw IllegalStateException("Enchantment ${enchant.id} wasn't registered")
             }

@@ -1,20 +1,12 @@
 package cc.polarastrum.aiyatsbus.impl
 
-import cc.polarastrum.aiyatsbus.core.Aiyatsbus
-import cc.polarastrum.aiyatsbus.core.AiyatsbusSkillHandler
-import cc.polarastrum.aiyatsbus.core.StandardPriorities
+import cc.polarastrum.aiyatsbus.core.*
 import cc.polarastrum.aiyatsbus.core.data.CheckType
-import cc.polarastrum.aiyatsbus.core.data.trigger.ActionType
+import cc.polarastrum.aiyatsbus.core.data.trigger.TriggerType
 import cc.polarastrum.aiyatsbus.core.data.trigger.event.EventResolver
-import cc.polarastrum.aiyatsbus.core.fixedEnchants
-import cc.polarastrum.aiyatsbus.core.sendLang
-import cc.polarastrum.aiyatsbus.core.util.addCd
-import cc.polarastrum.aiyatsbus.core.util.calcToDouble
-import cc.polarastrum.aiyatsbus.core.util.checkCd
-import cc.polarastrum.aiyatsbus.core.util.checkIfIsNPC
-import cc.polarastrum.aiyatsbus.core.util.coerceDouble
-import cc.polarastrum.aiyatsbus.core.util.isNull
-import cc.polarastrum.aiyatsbus.core.util.sendCooldownTip
+import cc.polarastrum.aiyatsbus.core.data.trigger.skill.ActionType
+import cc.polarastrum.aiyatsbus.core.data.trigger.skill.Skill
+import cc.polarastrum.aiyatsbus.core.util.*
 import cc.polarastrum.aiyatsbus.impl.DefaultAiyatsbusSkillHandler.AiyatsbusSkillSettings.conf
 import org.bukkit.entity.Player
 import org.bukkit.event.player.PlayerEvent
@@ -80,18 +72,18 @@ class DefaultAiyatsbusSkillHandler : AiyatsbusSkillHandler {
         if (!resolved || item.isNull) return
 
         val enchants = item!!.fixedEnchants.entries
-            .filter { it.key.trigger != null && it.key.trigger!!.skills.isNotEmpty() }
-            .sortedBy { it.key.trigger!!.skillProperty }
+            .filter { it.key.mechanism?.hasTrigger(TriggerType.SKILL) ?: false }
+            .sortedBy { it.key.mechanism!!.priority(TriggerType.SKILL) }
 
         for ((enchant, level) in enchants) {
             if (enchant.limitations.checkAvailable(CheckType.USE, item, e.player, EquipmentSlot.HAND).isFailure) {
                 continue
             }
-            enchant.trigger!!.skills
-                .filterValues { it.getAction() == type }
-                .entries
-                .sortedBy { it.value.priority }
-                .forEach { (_, skill) ->
+            enchant.mechanism!!.triggers(TriggerType.SKILL)
+                .filter { (it as Skill).getAction() == type }
+                .sortedBy { it.priority }
+                .forEach { skill ->
+                    skill as Skill
                     if (!e.player.isSneaking && skill.isShiftNeeded()) return
                     if (e.player.isSneaking && skill.isShiftIgnored()) return
                     // TODO: Silence
@@ -102,7 +94,7 @@ class DefaultAiyatsbusSkillHandler : AiyatsbusSkillHandler {
                     e.player.addCd(enchant.basicData.id)
                     skill.playSound(e.player)
                     skill.spawnParticle(e.player)
-                    skill.execute(e.player, mutableMapOf<String, Any?>(
+                    skill.executeHandle(e.player, hashMapOf<String, Any?>(
                         "event" to e,
                         "player" to e.player,
                         "item" to item,

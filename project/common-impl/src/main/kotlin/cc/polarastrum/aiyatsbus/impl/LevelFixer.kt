@@ -3,6 +3,7 @@ package cc.polarastrum.aiyatsbus.impl
 import cc.polarastrum.aiyatsbus.core.AiyatsbusEnchantment
 import cc.polarastrum.aiyatsbus.core.AiyatsbusSettings
 import cc.polarastrum.aiyatsbus.core.addEt
+import cc.polarastrum.aiyatsbus.core.event.AiyatsbusEnchantmentExecuteEvent
 import cc.polarastrum.aiyatsbus.core.fixedEnchants
 import cc.polarastrum.aiyatsbus.core.util.isNull
 import org.bukkit.event.entity.EntityPickupItemEvent
@@ -10,6 +11,7 @@ import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.inventory.ItemStack
 import taboolib.common.platform.event.SubscribeEvent
 import taboolib.module.nms.getItemTag
+import taboolib.platform.util.submit
 
 /**
  * Aiyatsbus
@@ -22,12 +24,19 @@ object LevelFixer {
 
     @SubscribeEvent
     fun e(e: PlayerJoinEvent) {
-        e.player.inventory.contents.filterNot { it.isNull }.forEach { fix(it!!, it.fixedEnchants) }
+        e.player.submit(delay = 10L) {
+            e.player.inventory.contents.filterNot { it.isNull }.forEach { fix(it!!, it.fixedEnchants) }
+        }
     }
 
     @SubscribeEvent
     fun e(e: EntityPickupItemEvent) {
         fix(e.item.itemStack, e.item.itemStack.fixedEnchants)
+    }
+
+    @SubscribeEvent
+    fun e(e: AiyatsbusEnchantmentExecuteEvent) {
+        fix(e.item, e.item.fixedEnchants)
     }
 
     /**
