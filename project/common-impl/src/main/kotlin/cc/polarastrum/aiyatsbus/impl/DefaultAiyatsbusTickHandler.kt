@@ -110,7 +110,7 @@ class DefaultAiyatsbusTickHandler : AiyatsbusTickHandler {
                             }
                             if (item.isNull) return@slot
 
-                            val level = item.etLevel(ench)
+                            val level = item.fastEtLevel(ench)
 
                             if (level > 0) {
                                 val checkResult = ench.limitations.checkAvailable(CheckType.USE, item, player, slot)

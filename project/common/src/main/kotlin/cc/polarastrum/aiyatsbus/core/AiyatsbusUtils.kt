@@ -16,8 +16,9 @@
  */
 package cc.polarastrum.aiyatsbus.core
 
-import cc.polarastrum.aiyatsbus.core.data.*
-import cc.polarastrum.aiyatsbus.core.data.registry.*
+import cc.polarastrum.aiyatsbus.core.data.CheckType
+import cc.polarastrum.aiyatsbus.core.data.registry.Group
+import cc.polarastrum.aiyatsbus.core.data.registry.Rarity
 import cc.polarastrum.aiyatsbus.core.data.registry.Target
 import cc.polarastrum.aiyatsbus.core.util.get
 import org.bukkit.Material
@@ -280,6 +281,13 @@ var ItemMeta.fixedEnchants: Map<AiyatsbusEnchantment, Int>
 val ItemStack?.fixedEnchants: Map<AiyatsbusEnchantment, Int>
     get() { return Aiyatsbus.api().getMinecraftAPI().getItemOperator().getEnchants(this ?: return emptyMap()) }
 
+fun ItemStack?.eachFastFixedEnchants(func: (AiyatsbusEnchantment, Int) -> Unit) {
+    fastFixedEnchants.forEach { (enchant, level) -> func(enchant as AiyatsbusEnchantment, level as Int) }
+}
+
+val ItemStack?.fastFixedEnchants: Array<Array<Any>>
+    get() { return Aiyatsbus.api().getMinecraftAPI().getItemOperator().getFastEnchants(this ?: return emptyArray()) }
+
 val ItemStack?.isUnbreakable: Boolean
     get() { return Aiyatsbus.api().getMinecraftAPI().getItemOperator().isUnbreakable(this ?: return false) }
 
@@ -301,6 +309,8 @@ fun ItemMeta.etLevel(enchant: AiyatsbusEnchantment): Int {
  * @return 附魔等级，如果不存在则返回 -1
  */
 fun ItemStack.etLevel(enchant: AiyatsbusEnchantment) = fixedEnchants[enchant] ?: -1
+
+fun ItemStack.fastEtLevel(enchant: AiyatsbusEnchantment) = Aiyatsbus.api().getMinecraftAPI().getItemOperator().getEnchantLevel(this, enchant) ?: -1
 
 /**
  * 添加附魔

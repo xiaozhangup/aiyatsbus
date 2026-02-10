@@ -16,11 +16,7 @@
  */
 package cc.polarastrum.aiyatsbus.impl.nms
 
-import cc.polarastrum.aiyatsbus.core.Aiyatsbus
-import cc.polarastrum.aiyatsbus.core.AiyatsbusEnchantment
-import cc.polarastrum.aiyatsbus.core.MinecraftItemOperator
-import cc.polarastrum.aiyatsbus.core.aiyatsbusEt
-import cc.polarastrum.aiyatsbus.core.toDisplayMode
+import cc.polarastrum.aiyatsbus.core.*
 import cc.polarastrum.aiyatsbus.core.util.isNull
 import cc.polarastrum.aiyatsbus.impl.nmsj21.NMSJ21
 import io.papermc.paper.adventure.PaperAdventure
@@ -189,6 +185,51 @@ class DefaultMinecraftItemOperator : MinecraftItemOperator {
             }
         }
         return map
+    }
+
+    override fun getFastEnchants(item: ItemStack): Array<Array<Any>> {
+        if (versionId >= 12005) {
+            return NMSJ21.instance.getFastEnchants(item)
+        }
+        val handle = (if (item is CraftItemStack) Aiyatsbus.api().getMinecraftAPI().getHelper().getCraftItemStackHandle(item) else CraftItemStack.asNMSCopy(item)) as NMSItemStack
+        val enchantmentNBT = if (handle.item == Items.ENCHANTED_BOOK)
+            ItemEnchantedBook.getEnchantments(handle)
+        else handle.enchantmentTags
+
+        val array = Array<Array<Any>>(enchantmentNBT.size) { arrayOf() }
+
+        enchantmentNBT.forEachIndexed { i, base ->
+            val compound = base as NBTTagCompound
+            val key = NamespacedKey.fromString(compound.getString("id"))
+            val level = ('\uffff'.code.toShort() and compound.getShort("lvl")).toInt()
+            if (key != null) {
+                val enchant = aiyatsbusEt(key)
+                if (enchant != null) {
+                    array[i] = arrayOf(enchant, level)
+                }
+            }
+        }
+        return array
+    }
+
+    override fun getEnchantLevel(item: ItemStack, enchant: AiyatsbusEnchantment): Int? {
+        if (versionId >= 12005) {
+            return NMSJ21.instance.getEnchantLevel(item, enchant)
+        }
+        val handle = (if (item is CraftItemStack) Aiyatsbus.api().getMinecraftAPI().getHelper().getCraftItemStackHandle(item) else CraftItemStack.asNMSCopy(item)) as NMSItemStack
+        val enchantmentNBT = if (handle.item == Items.ENCHANTED_BOOK)
+            ItemEnchantedBook.getEnchantments(handle)
+        else handle.enchantmentTags
+
+        for (base in enchantmentNBT) {
+            val compound = base as NBTTagCompound
+            val key = compound.getString("id")
+            if (key != enchant.id) {
+                continue
+            }
+            return ('\uffff'.code.toShort() and compound.getShort("lvl")).toInt()
+        }
+        return null
     }
 
     override fun isUnbreakable(item: ItemStack): Boolean {

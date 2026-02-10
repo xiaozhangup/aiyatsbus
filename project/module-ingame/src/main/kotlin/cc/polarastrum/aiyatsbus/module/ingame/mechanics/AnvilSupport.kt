@@ -238,10 +238,12 @@ object AnvilSupport {
         // 这里需要向左面的物品的克隆中添加附魔, 来检测附魔冲突
         val tempLeftItem = left.clone()
         val leftEnchants = left.fixedEnchants
-        val rightEnchants = right.fixedEnchants
+        val rightEnchants = right.fastFixedEnchants
         val outEnchants = leftEnchants.toMutableMap()
 
         for ((rightEnchant, level) in rightEnchants) {
+            rightEnchant as AiyatsbusEnchantment
+            level as Int
             val maxLevel = rightEnchant.basicData.maxLevel
             val previousLevel = outEnchants.remove(rightEnchant)
             // 如果左面物品附魔已有要添加的附魔, 则视为合并

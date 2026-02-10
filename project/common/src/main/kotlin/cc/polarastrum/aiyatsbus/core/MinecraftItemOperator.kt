@@ -83,5 +83,12 @@ interface MinecraftItemOperator {
 
     fun getEnchants(item: ItemStack): Map<AiyatsbusEnchantment, Int>
 
+    /**
+     * Array<Array<AiyatsbusEnchantment and Int>>
+     */
+    fun getFastEnchants(item: ItemStack): Array<Array<Any>>
+
+    fun getEnchantLevel(item: ItemStack, enchant: AiyatsbusEnchantment): Int?
+
     fun isUnbreakable(item: ItemStack): Boolean
 }

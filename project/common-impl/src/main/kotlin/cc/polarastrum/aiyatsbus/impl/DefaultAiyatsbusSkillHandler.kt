@@ -71,11 +71,13 @@ class DefaultAiyatsbusSkillHandler : AiyatsbusSkillHandler {
         val (item, resolved) = EventResolver.defaultItemResolver(e.player, EquipmentSlot.HAND)
         if (!resolved || item.isNull) return
 
-        val enchants = item!!.fixedEnchants.entries
-            .filter { it.key.mechanism?.hasTrigger(TriggerType.SKILL) ?: false }
-            .sortedBy { it.key.mechanism!!.priority(TriggerType.SKILL) }
+        val enchants = item!!.fastFixedEnchants
+            .filter { (it[0] as AiyatsbusEnchantment).mechanism?.hasTrigger(TriggerType.SKILL) == true }
+            .sortedBy { (it[0] as AiyatsbusEnchantment).mechanism!!.priority(TriggerType.SKILL) }
 
         for ((enchant, level) in enchants) {
+            enchant as AiyatsbusEnchantment
+            level as Int
             if (enchant.limitations.checkAvailable(CheckType.USE, item, e.player, EquipmentSlot.HAND).isFailure) {
                 continue
             }

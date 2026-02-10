@@ -17,19 +17,20 @@
 package cc.polarastrum.aiyatsbus.impl.nmsj21
 
 import cc.polarastrum.aiyatsbus.core.AiyatsbusEnchantment
-import cc.polarastrum.aiyatsbus.core.aiyatsbusEt
 import cc.polarastrum.aiyatsbus.core.toDisplayMode
 import cc.polarastrum.aiyatsbus.core.util.isNull
 import com.google.common.collect.Maps
 import net.minecraft.core.component.DataComponents
-import net.minecraft.resources.ResourceKey
+import net.minecraft.world.item.enchantment.Enchantment
 import net.minecraft.world.item.trading.MerchantOffers
+import org.bukkit.craftbukkit.enchantments.CraftEnchantment
 import org.bukkit.craftbukkit.entity.CraftLivingEntity
 import org.bukkit.craftbukkit.inventory.CraftItemStack
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import taboolib.library.reflex.Reflex.Companion.setProperty
+import taboolib.module.nms.MinecraftVersion
 import taboolib.module.nms.MinecraftVersion.versionId
 import taboolib.module.nms.remap.DynamicOpcode
 import taboolib.module.nms.remap.dynamic
@@ -79,53 +80,63 @@ class NMSJ21Impl : NMSJ21() {
 
     override fun getEnchants(item: ItemStack): Map<AiyatsbusEnchantment, Int> {
         val handle: NMSItemStack = if (item is CraftItemStack) item.handle else CraftItemStack.asNMSCopy(item)
-        val stored = handle.get(DataComponents.STORED_ENCHANTMENTS) ?: handle.get(DataComponents.ENCHANTMENTS)
-        if (stored == null) {
-            return emptyMap()
-        }
+        val stored = handle.get(DataComponents.STORED_ENCHANTMENTS) ?: handle.get(DataComponents.ENCHANTMENTS) ?: return emptyMap()
         val entries = stored.entrySet()
         if (entries.isEmpty()) {
             return emptyMap()
         }
         val map = Maps.newHashMapWithExpectedSize<AiyatsbusEnchantment, Int>(entries.size)
         for (entry in entries) {
-            val enchantment = entry.key
-            val level = entry.value
-            map[aiyatsbusEt(
-                resourceLocationGetPath(nmsEnchNamespacedKey(enchantment.unwrapKey().get()))
-            )] = level
+            if (MinecraftVersion.isHigherOrEqual(MinecraftVersion.V1_21)) {
+                map[CraftEnchantment.minecraftHolderToBukkit(entry.key) as AiyatsbusEnchantment] = entry.value
+            } else {
+                val ench = dynamic(
+                    DynamicOpcode.INVOKEVIRTUAL,
+                    "it.unimi.dsi.fastutil.objects.Object2IntMap.Entry#getKey()net.minecraft.world.item.enchantment.Enchantment;",
+                    entry
+                ) as Enchantment
+                map[CraftEnchantment.minecraftToBukkit(ench) as AiyatsbusEnchantment] = entry.value
+            }
         }
         return map
     }
 
-    private fun resourceLocationGetPath(resourceLocation: Any): String {
-        if (versionId > 12110) {
-            return dynamic(
-                DynamicOpcode.INVOKEVIRTUAL,
-                "net.minecraft.resources.Identifier#getPath()java.lang.String;",
-                resourceLocation
-            ) as String
+    override fun getFastEnchants(item: ItemStack): Array<Array<Any>> {
+        val handle: NMSItemStack = if (item is CraftItemStack) item.handle else CraftItemStack.asNMSCopy(item)
+        val stored = handle.get(DataComponents.STORED_ENCHANTMENTS) ?: handle.get(DataComponents.ENCHANTMENTS) ?: return emptyArray()
+        val entries = stored.entrySet()
+        if (entries.isEmpty()) {
+            return emptyArray()
         }
-        return dynamic(
-            DynamicOpcode.INVOKEVIRTUAL,
-            "net.minecraft.resources.ResourceLocation#getPath()java.lang.String;",
-            resourceLocation
-        ) as String
+        val array = Array<Array<Any>>(entries.size) { arrayOf() }
+        entries.forEachIndexed { i, entry ->
+            val ench = if (MinecraftVersion.isHigherOrEqual(MinecraftVersion.V1_21)) {
+                CraftEnchantment.minecraftHolderToBukkit(entry.key) as AiyatsbusEnchantment
+            } else {
+                val ench1 = dynamic(
+                    DynamicOpcode.INVOKEVIRTUAL,
+                    "it.unimi.dsi.fastutil.objects.Object2IntMap.Entry#getKey()net.minecraft.world.item.enchantment.Enchantment;",
+                    entry
+                ) as Enchantment
+                CraftEnchantment.minecraftToBukkit(ench1) as AiyatsbusEnchantment
+            }
+            array[i] = arrayOf(ench, entry.value)
+        }
+        return array
     }
 
-    private fun nmsEnchNamespacedKey(resourceKey: ResourceKey<*>): Any {
-        if (versionId > 12110) {
-            return dynamic(
+    override fun getEnchantLevel(item: ItemStack, enchant: AiyatsbusEnchantment): Int? {
+        val handle: NMSItemStack = if (item is CraftItemStack) item.handle else CraftItemStack.asNMSCopy(item)
+        val stored = handle.get(DataComponents.STORED_ENCHANTMENTS) ?: handle.get(DataComponents.ENCHANTMENTS) ?: return null
+        return if (MinecraftVersion.isHigherOrEqual(MinecraftVersion.V1_21)) {
+            stored.getLevel(CraftEnchantment.bukkitToMinecraftHolder(enchant.enchantment))
+        } else {
+            dynamic(
                 DynamicOpcode.INVOKEVIRTUAL,
-                "net.minecraft.resources.ResourceKey#identifier()net.minecraft.resources.Identifier;",
-                resourceKey
-            ) as Any
+                "net.minecraft.world.item.enchantment#getLevel(net.minecraft.world.item.enchantment.Enchantment;)I",
+                stored
+            ) as Int
         }
-        return dynamic(
-            DynamicOpcode.INVOKEVIRTUAL,
-            "net.minecraft.resources.ResourceKey#location()net.minecraft.resources.ResourceLocation;",
-            resourceKey
-        ) as Any
     }
 
     override fun isUnbreakable(item: ItemStack): Boolean {

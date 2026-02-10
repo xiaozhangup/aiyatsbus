@@ -46,6 +46,8 @@ interface AiyatsbusDisplayManager {
      */
     fun sortEnchants(enchants: Map<AiyatsbusEnchantment, Int>): LinkedHashMap<AiyatsbusEnchantment, Int>
 
+    fun sortEnchants(enchants: List<Array<Any>>): LinkedHashMap<AiyatsbusEnchantment, Int>
+
     /**
      * 展示附魔，展示是给玩家看的，玩家必须存在
      *

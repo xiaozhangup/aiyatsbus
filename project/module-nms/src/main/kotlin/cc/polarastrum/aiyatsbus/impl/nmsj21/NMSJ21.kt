@@ -42,6 +42,10 @@ abstract class NMSJ21 {
 
     abstract fun getEnchants(item: ItemStack): Map<AiyatsbusEnchantment, Int>
 
+    abstract fun getFastEnchants(item: ItemStack): Array<Array<Any>>
+
+    abstract fun getEnchantLevel(item: ItemStack, enchant: AiyatsbusEnchantment): Int?
+
     abstract fun isUnbreakable(item: ItemStack): Boolean
 
     companion object {

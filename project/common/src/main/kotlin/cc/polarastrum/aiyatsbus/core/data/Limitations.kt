@@ -225,7 +225,7 @@ data class Limitations(
         ignoreSlot: Boolean
     ): Boolean {
         val itemType = item.type
-        val enchants = item.fixedEnchants
+        val enchants = item.fastFixedEnchants
         
         return when (type) {
             SLOT -> checkSlot(itemType, slot, ignoreSlot)
@@ -292,7 +292,7 @@ data class Limitations(
      * @param enchants 当前附魔列表
      * @return 检查结果
      */
-    private fun checkMaxCapability(item: ItemStack, enchants: Map<AiyatsbusEnchantment, Int>): Boolean {
+    private fun checkMaxCapability(item: ItemStack, enchants: Array<Array<Any>>): Boolean {
         return item.capability > enchants.size
     }
 
@@ -305,8 +305,8 @@ data class Limitations(
      * @param enchants 当前附魔列表
      * @return 检查结果
      */
-    private fun checkDependenceEnchant(value: String, enchants: Map<AiyatsbusEnchantment, Int>): Boolean {
-        return enchants.containsKey(aiyatsbusEt(value))
+    private fun checkDependenceEnchant(value: String, enchants: Array<Array<Any>>): Boolean {
+        return enchants.any { it[0] == aiyatsbusEt(value) }
     }
 
     /**
@@ -318,8 +318,8 @@ data class Limitations(
      * @param enchants 当前附魔列表
      * @return 检查结果
      */
-    private fun checkConflictEnchant(value: String, enchants: Map<AiyatsbusEnchantment, Int>): Boolean {
-        return !enchants.containsKey(aiyatsbusEt(value))
+    private fun checkConflictEnchant(value: String, enchants: Array<Array<Any>>): Boolean {
+        return enchants.none { it[0] == aiyatsbusEt(value) }
     }
 
     /**
@@ -331,8 +331,9 @@ data class Limitations(
      * @param enchants 当前附魔列表
      * @return 检查结果
      */
-    private fun checkDependenceGroup(value: String, enchants: Map<AiyatsbusEnchantment, Int>): Boolean {
-        return enchants.any { (enchant, _) -> 
+    private fun checkDependenceGroup(value: String, enchants: Array<Array<Any>>): Boolean {
+        return enchants.any { (enchant, _) ->
+            enchant as AiyatsbusEnchantment
             enchant.enchantment.isInGroup(value) && enchant.enchantmentKey != belonging.enchantmentKey 
         }
     }
@@ -346,10 +347,11 @@ data class Limitations(
      * @param enchants 当前附魔列表
      * @return 检查结果
      */
-    private fun checkConflictGroup(value: String, enchants: Map<AiyatsbusEnchantment, Int>): Boolean {
+    private fun checkConflictGroup(value: String, enchants: Array<Array<Any>>): Boolean {
         val group = aiyatsbusGroup(value)
         val maxCoexist = group?.maxCoexist ?: 10000
-        val conflictCount = enchants.count { (enchant, _) -> 
+        val conflictCount = enchants.count { (enchant, _) ->
+            enchant as AiyatsbusEnchantment
             enchant.enchantment.isInGroup(value) && enchant.enchantmentKey != belonging.enchantmentKey 
         }
         return conflictCount < maxCoexist
