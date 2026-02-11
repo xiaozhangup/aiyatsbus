@@ -23,6 +23,7 @@ import io.papermc.paper.adventure.PaperAdventure
 import net.kyori.adventure.util.Codec
 import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.world.entity.EnumItemSlot
+import net.minecraft.world.item.ItemAir
 import net.minecraft.world.item.ItemEnchantedBook
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.trading.MerchantRecipeList
@@ -238,6 +239,13 @@ class DefaultMinecraftItemOperator : MinecraftItemOperator {
         }
         val handle = (if (item is CraftItemStack) Aiyatsbus.api().getMinecraftAPI().getHelper().getCraftItemStackHandle(item) else CraftItemStack.asNMSCopy(item)) as NMSItemStack
         return handle.tag?.getBoolean("Unbreakable") == true
+    }
+
+    override fun isAir(item: ItemStack?): Boolean {
+        if (item == null) return true
+        if (item.amount == 0) return true
+        val handle = (if (item is CraftItemStack) Aiyatsbus.api().getMinecraftAPI().getHelper().getCraftItemStackHandle(item) else CraftItemStack.asNMSCopy(item)) as NMSItemStack
+        return handle.item is ItemAir
     }
 }
 

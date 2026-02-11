@@ -213,7 +213,7 @@ fun ItemStack.singleton(key: String, value: String, reader: VariableReader = Var
  * }
  * ```
  */
-val ItemStack?.isNull get() = this?.isAir ?: true
+val ItemStack?.isNull get() = Aiyatsbus.api().getMinecraftAPI().getItemOperator().isAir(this)
 
 /**
  * 判断物品是否为附魔书

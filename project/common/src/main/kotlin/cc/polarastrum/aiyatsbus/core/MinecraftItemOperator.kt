@@ -91,4 +91,6 @@ interface MinecraftItemOperator {
     fun getEnchantLevel(item: ItemStack, enchant: AiyatsbusEnchantment): Int?
 
     fun isUnbreakable(item: ItemStack): Boolean
+
+    fun isAir(item: ItemStack?): Boolean
 }

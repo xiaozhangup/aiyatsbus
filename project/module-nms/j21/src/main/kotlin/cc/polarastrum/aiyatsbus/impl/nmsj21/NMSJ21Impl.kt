@@ -17,11 +17,12 @@
 package cc.polarastrum.aiyatsbus.impl.nmsj21
 
 import cc.polarastrum.aiyatsbus.core.AiyatsbusEnchantment
+import cc.polarastrum.aiyatsbus.core.aiyatsbusEt
 import cc.polarastrum.aiyatsbus.core.toDisplayMode
 import cc.polarastrum.aiyatsbus.core.util.isNull
 import com.google.common.collect.Maps
 import net.minecraft.core.component.DataComponents
-import net.minecraft.world.item.enchantment.Enchantment
+import net.minecraft.resources.ResourceKey
 import net.minecraft.world.item.trading.MerchantOffers
 import org.bukkit.craftbukkit.enchantments.CraftEnchantment
 import org.bukkit.craftbukkit.entity.CraftLivingEntity
@@ -78,6 +79,36 @@ class NMSJ21Impl : NMSJ21() {
         return (nmsItem as NMSItemStack).hurtAndBreak(amount, (entity as CraftLivingEntity).handle, null)
     }
 
+    private fun resourceLocationGetPath(resourceLocation: Any): String {
+        if (versionId > 12110) {
+            return dynamic(
+                DynamicOpcode.INVOKEVIRTUAL,
+                "net.minecraft.resources.Identifier#getPath()java.lang.String;",
+                resourceLocation
+            ) as String
+        }
+        return dynamic(
+            DynamicOpcode.INVOKEVIRTUAL,
+            "net.minecraft.resources.ResourceLocation#getPath()java.lang.String;",
+            resourceLocation
+        ) as String
+    }
+
+    private fun nmsEnchNamespacedKey(resourceKey: ResourceKey<*>): Any {
+        if (versionId > 12110) {
+            return dynamic(
+                DynamicOpcode.INVOKEVIRTUAL,
+                "net.minecraft.resources.ResourceKey#identifier()net.minecraft.resources.Identifier;",
+                resourceKey
+            ) as Any
+        }
+        return dynamic(
+            DynamicOpcode.INVOKEVIRTUAL,
+            "net.minecraft.resources.ResourceKey#location()net.minecraft.resources.ResourceLocation;",
+            resourceKey
+        ) as Any
+    }
+
     override fun getEnchants(item: ItemStack): Map<AiyatsbusEnchantment, Int> {
         val handle: NMSItemStack = if (item is CraftItemStack) item.handle else CraftItemStack.asNMSCopy(item)
         val stored = handle.get(DataComponents.STORED_ENCHANTMENTS) ?: handle.get(DataComponents.ENCHANTMENTS) ?: return emptyMap()
@@ -87,16 +118,9 @@ class NMSJ21Impl : NMSJ21() {
         }
         val map = Maps.newHashMapWithExpectedSize<AiyatsbusEnchantment, Int>(entries.size)
         for (entry in entries) {
-            if (MinecraftVersion.isHigherOrEqual(MinecraftVersion.V1_21)) {
-                map[CraftEnchantment.minecraftHolderToBukkit(entry.key) as AiyatsbusEnchantment] = entry.value
-            } else {
-                val ench = dynamic(
-                    DynamicOpcode.INVOKEVIRTUAL,
-                    "it.unimi.dsi.fastutil.objects.Object2IntMap.Entry#getKey()net.minecraft.world.item.enchantment.Enchantment;",
-                    entry
-                ) as Enchantment
-                map[CraftEnchantment.minecraftToBukkit(ench) as AiyatsbusEnchantment] = entry.value
-            }
+            map[aiyatsbusEt(
+                resourceLocationGetPath(nmsEnchNamespacedKey(entry.key.unwrapKey().get()))
+            )!!] = entry.value
         }
         return map
     }
@@ -110,17 +134,9 @@ class NMSJ21Impl : NMSJ21() {
         }
         val array = Array<Array<Any>>(entries.size) { arrayOf() }
         entries.forEachIndexed { i, entry ->
-            val ench = if (MinecraftVersion.isHigherOrEqual(MinecraftVersion.V1_21)) {
-                CraftEnchantment.minecraftHolderToBukkit(entry.key) as AiyatsbusEnchantment
-            } else {
-                val ench1 = dynamic(
-                    DynamicOpcode.INVOKEVIRTUAL,
-                    "it.unimi.dsi.fastutil.objects.Object2IntMap.Entry#getKey()net.minecraft.world.item.enchantment.Enchantment;",
-                    entry
-                ) as Enchantment
-                CraftEnchantment.minecraftToBukkit(ench1) as AiyatsbusEnchantment
-            }
-            array[i] = arrayOf(ench, entry.value)
+            array[i] = arrayOf(aiyatsbusEt(
+                resourceLocationGetPath(nmsEnchNamespacedKey(entry.key.unwrapKey().get()))
+            )!!, entry.value)
         }
         return array
     }
@@ -134,7 +150,8 @@ class NMSJ21Impl : NMSJ21() {
             dynamic(
                 DynamicOpcode.INVOKEVIRTUAL,
                 "net.minecraft.world.item.enchantment#getLevel(net.minecraft.world.item.enchantment.Enchantment;)I",
-                stored
+                stored,
+                enchant.enchantment
             ) as Int
         }
     }
@@ -152,9 +169,6 @@ class NMSJ21Impl : NMSJ21() {
          *   class、abstract class 还是 interface 上，一律使用此操作码即可。
          *   不需要区分 INVOKEINTERFACE，transformer 会根据目标类型自动处理
          */
-        // java.lang.IncompatibleClassChangeError: Found interface net.minecraft.core.component.DataComponentHolder, but class was expected
-        // 所以这里为了避免这个问题, 不能用父类/接口函数 net.minecraft.core.component.DataComponentHolder#get
-        // 要用 net.minecraft.world.item.ItemStack#get
         if (versionId > 12104) {
             return dynamic(
                 DynamicOpcode.INVOKEVIRTUAL,
