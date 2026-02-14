@@ -26,6 +26,10 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap
 import it.unimi.dsi.fastutil.ints.Int2ObjectMaps
 import net.minecraft.network.HashedPatchMap
 import net.minecraft.network.HashedStack
+import net.minecraft.network.protocol.game.PacketPlayOutEntityMetadata
+import net.minecraft.network.syncher.DataWatcher
+import net.minecraft.network.syncher.DataWatcherObject
+import net.minecraft.network.syncher.DataWatcherRegistry
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.network.ServerConfigurationPacketListenerImpl
 import net.minecraft.world.item.ItemStack
@@ -33,11 +37,14 @@ import org.bukkit.craftbukkit.entity.CraftPlayer
 import org.bukkit.craftbukkit.inventory.CraftItemStack
 import org.bukkit.entity.Player
 import taboolib.common.platform.function.submit
+import taboolib.library.reflex.Reflex.Companion.invokeConstructor
+import taboolib.library.reflex.Reflex.Companion.invokeMethod
 import taboolib.module.nms.MinecraftVersion.isUniversal
 import taboolib.module.nms.MinecraftVersion.versionId
 import taboolib.module.nms.PacketReceiveEvent
 import taboolib.module.nms.remap.DynamicOpcode
 import taboolib.module.nms.remap.dynamic
+import taboolib.module.nms.sendPacket
 import taboolib.platform.Folia
 import java.util.*
 
@@ -82,6 +89,21 @@ class DefaultMinecraftPacketHandler : MinecraftPacketHandler {
                 gameProfile
             )
         } as UUID
+    }
+
+    override fun setHandActive(player: Player, isHandActive: Boolean) {
+        val byte = (if (isHandActive) 0x01 else 0).toByte()
+        player.sendPacket(
+            PacketPlayOutEntityMetadata::class.java.invokeConstructor(
+                player.entityId,
+                listOf((createByteMeta(8, byte) as DataWatcher.Item<*>).invokeMethod<Any>("value"))
+            )
+        )
+    }
+
+    @Suppress("SameParameterValue")
+    private fun createByteMeta(index: Int, value: Byte): Any {
+        return DataWatcher.Item(DataWatcherObject(index, DataWatcherRegistry.BYTE), value)
     }
 
     /**

@@ -41,4 +41,7 @@ interface MinecraftPacketHandler {
     fun handleContainerClick(event: PacketReceiveEvent)
 
     fun synchronizeRegistries(player: Player)
+
+    /** 发送手部活动数据 */
+    fun setHandActive(player: Player, isHandActive: Boolean)
 }

@@ -53,7 +53,6 @@ subprojects {
     // 依赖
     dependencies {
         compileOnly(kotlin("stdlib"))
-
     }
 
     // 编译配置

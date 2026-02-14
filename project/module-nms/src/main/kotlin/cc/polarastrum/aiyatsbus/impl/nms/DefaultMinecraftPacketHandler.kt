@@ -21,18 +21,21 @@ package cc.polarastrum.aiyatsbus.impl.nms
 import cc.polarastrum.aiyatsbus.core.MinecraftPacketHandler
 import cc.polarastrum.aiyatsbus.core.toRevertMode
 import cc.polarastrum.aiyatsbus.core.util.isNull
-import net.minecraft.server.MinecraftServer
-import net.minecraft.server.network.ServerConfigurationPacketListenerImpl
-import org.bukkit.Bukkit
-import org.bukkit.craftbukkit.v1_20_R3.CraftServer
-import org.bukkit.craftbukkit.v1_20_R3.entity.CraftPlayer
+import net.minecraft.network.protocol.game.PacketPlayOutEntityMetadata
+import net.minecraft.network.syncher.DataWatcher
+import net.minecraft.network.syncher.DataWatcherObject
+import net.minecraft.network.syncher.DataWatcherRegistry
 import org.bukkit.craftbukkit.v1_20_R3.inventory.CraftItemStack
 import org.bukkit.entity.Player
-import taboolib.common.platform.function.submit
 import taboolib.library.reflex.Reflex.Companion.getProperty
+import taboolib.library.reflex.Reflex.Companion.invokeConstructor
+import taboolib.library.reflex.Reflex.Companion.invokeMethod
+import taboolib.library.reflex.Reflex.Companion.setProperty
+import taboolib.library.reflex.Reflex.Companion.unsafeInstance
 import taboolib.module.nms.MinecraftVersion.isUniversal
 import taboolib.module.nms.MinecraftVersion.versionId
 import taboolib.module.nms.PacketReceiveEvent
+import taboolib.module.nms.sendPacket
 
 /**
  * Aiyatsbus
@@ -57,6 +60,41 @@ class DefaultMinecraftPacketHandler : MinecraftPacketHandler {
 //                ?.packetListener as? ServerConfigurationPacketListenerImpl)
 //                ?.startConfiguration()
 //        }
+    }
+
+    override fun setHandActive(player: Player, isHandActive: Boolean) {
+        val byte = (if (isHandActive) 0x01 else 0).toByte()
+        when {
+            versionId >= 11903 -> {
+                player.sendPacket(
+                    PacketPlayOutEntityMetadata::class.java.invokeConstructor(
+                        player.entityId,
+                        listOf((createByteMeta(8, byte) as DataWatcher.Item<*>).invokeMethod<Any>("value"))
+                    )
+                )
+            }
+            isUniversal -> {
+                player.sendPacket(PacketPlayOutEntityMetadata::class.java.unsafeInstance().apply {
+                    setProperty("id", player.entityId)
+                    setProperty("packedItems", listOf((createByteMeta(8, byte) as DataWatcher.Item<*>)))
+                })
+            }
+            else -> {
+                player.sendPacket(net.minecraft.server.v1_16_R3.PacketPlayOutEntityMetadata().apply {
+                    setProperty("a", player.entityId)
+                    setProperty("b", listOf((createByteMeta(8, byte) as DataWatcher.Item<*>)))
+                })
+            }
+        }
+    }
+
+    @Suppress("SameParameterValue")
+    private fun createByteMeta(index: Int, value: Byte): Any {
+        return when {
+            // 1.19+
+            versionId >= 11900 -> DataWatcher.Item(DataWatcherObject(index, DataWatcherRegistry.BYTE), value)
+            else -> net.minecraft.server.v1_13_R2.DataWatcher.Item(net.minecraft.server.v1_13_R2.DataWatcherObject(index, net.minecraft.server.v1_13_R2.DataWatcherRegistry.a), value)
+        }
     }
 
     /**
