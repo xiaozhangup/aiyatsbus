@@ -9,6 +9,8 @@ import org.bukkit.entity.Entity
 import org.bukkit.entity.Item
 import org.bukkit.entity.Player
 import org.tabooproject.fluxon.runtime.FluxonRuntime
+import org.tabooproject.fluxon.runtime.FunctionSignature.returns
+import org.tabooproject.fluxon.runtime.Type
 import org.tabooproject.fluxon.runtime.java.Export
 import org.tabooproject.fluxon.runtime.java.Optional
 import taboolib.common.LifeCycle
@@ -26,11 +28,13 @@ import taboolib.common.platform.Awake
 @FluxonRelocate
 object FnGuard {
 
+    val TYPE = Type.fromClass(FnGuard::class.java)!!
+
     @Awake(LifeCycle.LOAD)
     fun init() {
         FluxonScriptHandler.DEFAULT_PACKAGE_AUTO_IMPORT += "aiy:guard"
         with(FluxonRuntime.getInstance()) {
-            registerFunction("aiy:guard", "guard", 0) { FnGuard }
+            registerFunction("aiy:guard", "guard", returns(TYPE).noParams()) { it.setReturnRef(FnGuard) }
             exportRegistry.registerClass(FnGuard::class.java, "aiy:guard")
         }
     }

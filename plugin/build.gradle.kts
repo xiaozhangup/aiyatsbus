@@ -38,10 +38,11 @@ repositories {
 dependencies {
 //    taboo("ink.ptms:um:1.0.9")
     taboo("com.github.Redempt:Crunch:1.0.7")
-    taboo("org.tabooproject.fluxon:core:1.5.7") { isTransitive = false }
-    taboo("org.tabooproject.fluxon:inst-core:1.5.7") { isTransitive = false }
-    taboo("org.tabooproject.fluxon.plugin:core:1.0.9") { isTransitive = false }
-    taboo("org.tabooproject.fluxon.plugin:platform-bukkit:1.0.9") { isTransitive = false }
+    taboo("org.tabooproject.fluxon:core:1.6.12") { isTransitive = false }
+    taboo("org.tabooproject.fluxon:inst-core:1.6.12") { isTransitive = false }
+    taboo("org.tabooproject.fluxon.plugin:core:1.1.0") { isTransitive = false }
+    taboo("org.tabooproject.fluxon.plugin:common:1.1.0") { isTransitive = false }
+    taboo("org.tabooproject.fluxon.plugin:platform-bukkit:1.1.0") { isTransitive = false }
 }
 
 tasks {

@@ -10,6 +10,8 @@ import org.tabooproject.fluxon.function.platform.FunctionExecutor
 import org.tabooproject.fluxon.runtime.Environment
 import org.tabooproject.fluxon.runtime.FluxonRuntime
 import org.tabooproject.fluxon.runtime.Function
+import org.tabooproject.fluxon.runtime.FunctionSignature.returns
+import org.tabooproject.fluxon.runtime.Type
 import org.tabooproject.fluxon.runtime.java.Export
 import org.tabooproject.fluxon.util.getFluxonScript
 import org.tabooproject.fluxon.util.invokeInline
@@ -31,21 +33,25 @@ object FunctionFolia {
             // Builder 模式
             exportRegistry.registerClass(TaskBuilder::class.java)
             registerExtension(FunctionExecutor.TaskBuilder::class.java)
-                .function("on", 1) {
-                    val builder = it.target ?: return@function null
-                    TaskBuilder(builder.env).apply {
-                        this.async = builder.async
-                        this.delay = builder.delay
-                        this.period = builder.period
-                    }.on(it.getArgument(0))
+                .function("on", returns(TaskBuilder.TYPE).params(Type.OBJECT)) {
+                    val builder = it.target!!
+                    it.setReturnRef(
+                        TaskBuilder(builder.env).apply {
+                            this.async = builder.async
+                            this.delay = builder.delay
+                            this.period = builder.period
+                        }.on(it.getRef(0))
+                    )
                 }
-                .function("scheduler", 1) {
-                    val builder = it.target ?: return@function null
-                    TaskBuilder(builder.env).apply {
-                        this.async = builder.async
-                        this.delay = builder.delay
-                        this.period = builder.period
-                    }.scheduler(it.getBoolean(0))
+                .function("scheduler", returns(TaskBuilder.TYPE).params(Type.Z)) {
+                    val builder = it.target!!
+                    it.setReturnRef(
+                        TaskBuilder(builder.env).apply {
+                            this.async = builder.async
+                            this.delay = builder.delay
+                            this.period = builder.period
+                        }.scheduler(it.getBool(0))
+                    )
                 }
         }
     }
@@ -104,6 +110,11 @@ object FunctionFolia {
      */
     @FluxonRelocate
     class TaskBuilder(val env: Environment) {
+
+        companion object {
+
+            val TYPE = Type.fromClass(FunctionExecutor::class.java)!!
+        }
 
         var async = false
         var delay = 0L

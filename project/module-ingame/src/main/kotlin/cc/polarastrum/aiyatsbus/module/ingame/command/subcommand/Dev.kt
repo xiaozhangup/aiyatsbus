@@ -26,6 +26,7 @@ import cc.polarastrum.aiyatsbus.core.toDisplayMode
 import cc.polarastrum.aiyatsbus.core.toRevertMode
 import cc.polarastrum.aiyatsbus.core.util.set
 import org.bukkit.NamespacedKey
+import org.bukkit.command.CommandSender
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
@@ -34,10 +35,12 @@ import org.bukkit.persistence.PersistentDataType
 import taboolib.common.platform.command.subCommand
 import taboolib.common.platform.function.submitAsync
 import taboolib.common5.util.createBar
+import taboolib.library.xseries.XEnchantment
 import taboolib.module.chat.colored
 import taboolib.module.nms.NMSItemTag
 import taboolib.platform.util.giveItem
 import taboolib.platform.util.modifyMeta
+import kotlin.jvm.optionals.getOrNull
 import kotlin.system.measureTimeMillis
 
 /**
@@ -48,8 +51,16 @@ import kotlin.system.measureTimeMillis
  * @date 2024/9/7 13:10
  */
 val devSubCommand = subCommand {
-    execute<Player> { sender, _, _ ->
-        sender.itemInHand.modifyMeta<ItemMeta> { this["aiyatsbus_item_capability", PersistentDataType.INTEGER] = 999 }
+    execute<CommandSender> { sender, _, _ ->
+//        sender.itemInHand.modifyMeta<ItemMeta> { this["aiyatsbus_item_capability", PersistentDataType.INTEGER] = 999 }
+//       printMap( Aiyatsbus.api().getEnchantmentManager().getEnchants())
+        try {
+            XEnchantment.of("wings").getOrNull()?.get()?.javaClass?.let { println(it) }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+
     }
 ////        sender.giveItem(sender.equipment.itemInMainHand.toDisplayMode(sender))
 //        val item = sender.equipment.itemInMainHand
@@ -126,4 +137,16 @@ private fun testItemStackHandle(item: ItemStack, player: Player) {
             player.sendActionBar("当前进度: " + createBar("&f|".colored(), "&a|".colored(), 100, c.toDouble() / 100000.0))
         }
     }.let { player.sendMessage(it.toString() + " ms") }
+}
+
+private fun printMap(map: Map<*, *>) {
+    val maxKeyLength = map.keys.maxByOrNull { it.toString().length }?.toString()?.length ?: 0
+
+    map.forEach { (key, value) ->
+        println("${key.toString().padEnd(maxKeyLength)} : $value")
+    }
+// 输出（键左对齐）：
+// username   : Alice
+// age        : 30
+// country    : United States
 }

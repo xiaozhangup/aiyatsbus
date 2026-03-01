@@ -8,6 +8,8 @@ import org.bukkit.Location
 import org.bukkit.Particle
 import org.bukkit.World
 import org.tabooproject.fluxon.runtime.FluxonRuntime
+import org.tabooproject.fluxon.runtime.FunctionSignature.returns
+import org.tabooproject.fluxon.runtime.Type
 import org.tabooproject.fluxon.runtime.java.Export
 import org.tabooproject.fluxon.runtime.java.Optional
 import taboolib.common.LifeCycle
@@ -27,11 +29,13 @@ import kotlin.math.sin
 @FluxonRelocate
 object FnWorld {
 
+    val TYPE = Type.fromClass(FnWorld::class.java)!!
+
     @Awake(LifeCycle.LOAD)
     fun init() {
         FluxonScriptHandler.DEFAULT_PACKAGE_AUTO_IMPORT += "aiy:world"
         with(FluxonRuntime.getInstance()) {
-            registerFunction("aiy:world", "world", 0) { FnWorld }
+            registerFunction("aiy:world", "world", returns(TYPE).noParams()) { it.setReturnRef(FnWorld) }
             exportRegistry.registerClass(FnWorld::class.java, "aiy:world")
         }
     }
