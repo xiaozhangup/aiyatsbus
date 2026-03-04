@@ -1,0 +1,16 @@
+#         Powered by TabooLib 6.2         #
+
+
+basic:
+  id: sickle
+  name: "镰刀"
+  max-level: 2
+
+rarity: 稀有
+targets:
+  - 锄
+
+display:
+  description:
+    general: "使用锄头时收割 3x3 范围内的成熟作物"
+    specific: "&7一级仅收割作物，二级在收割的同时自动补种"
