@@ -5,6 +5,7 @@ import cc.polarastrum.aiyatsbus.module.script.fluxon.relocate.FluxonRelocate
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.tabooproject.fluxon.Fluxon
+import org.tabooproject.fluxon.FluxonPlugin
 import org.tabooproject.fluxon.compiler.CompilationContext
 import org.tabooproject.fluxon.interpreter.bytecode.FluxonClassLoader
 import org.tabooproject.fluxon.runtime.FluxonRuntime
@@ -36,6 +37,10 @@ object Fluxon : FluxonHandler {
     private val compiledScripts = ConcurrentHashMap<String, RuntimeScriptBase>()
     private val classLoader = FluxonClassLoader(BukkitPlugin::class.java.classLoader)
     private val environment = FluxonRuntime.getInstance().newEnvironment()
+
+    init {
+        FluxonPlugin.DEFAULT_ALLOW_EXECUTE_TASK_ON_NON_SCRIPT_ENV = true
+    }
 
     override fun invoke(
         source: String,
@@ -73,8 +78,8 @@ object Fluxon : FluxonHandler {
                 id + System.currentTimeMillis(), // 这里要加一个时间，因为不能加载一样名称的类
                 classLoader
             )
-            compiledScripts[id] = result.createInstance(classLoader) as RuntimeScriptBase
             Files.write(newFile(newFolder(getDataFolder(), "classes"), "${id}.class").toPath(), result.mainClass)
+            compiledScripts[id] = result.createInstance(classLoader) as RuntimeScriptBase
         } catch (ex: ParseException) {
             warning("编译脚本 $source 时发生错误:")
             ex.printStackTrace()

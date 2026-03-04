@@ -5,7 +5,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     java
-    id("io.izzel.taboolib") version "2.0.27" apply false
+    id("io.izzel.taboolib") version "2.0.30" apply false
     id("org.jetbrains.kotlin.jvm") version "2.1.21" apply false
 }
 
@@ -41,7 +41,7 @@ subprojects {
             disableWhenPrimitiveLoaderError = true
         }
         version {
-            taboolib = "6.2.4-1645904"
+            taboolib = "6.2.4-a7c1695"
             coroutines = "1.10.2"
             skipKotlin = true
             skipKotlinRelocate = true

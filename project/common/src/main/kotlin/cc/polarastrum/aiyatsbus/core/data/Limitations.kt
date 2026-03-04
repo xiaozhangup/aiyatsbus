@@ -45,7 +45,7 @@ import taboolib.common.platform.function.registerLifeCycleTask
  * @since 2024/2/18 10:15
  */
 data class Limitations(
-    private val belonging: AiyatsbusEnchantment,
+    var belonging: AiyatsbusEnchantment,
     private val lines: List<String>
 ) {
 
@@ -53,7 +53,7 @@ data class Limitations(
     var conflictsWithEverything: Boolean = false
 
     /** 限制条件集合 */
-    val limitations = buildLimitations().toMutableSet()
+    val limitations = buildLimitations()
 
     /**
      * 构建限制条件集合
@@ -63,7 +63,7 @@ data class Limitations(
      *
      * @return 限制条件集合
      */
-    private fun buildLimitations(): Set<Pair<LimitType, String>> {
+    private fun buildLimitations(): MutableSet<Pair<LimitType, String>> {
         val result = mutableSetOf<Pair<LimitType, String>>()
         
         // 解析配置行
@@ -225,7 +225,7 @@ data class Limitations(
         ignoreSlot: Boolean
     ): Boolean {
         val itemType = item.type
-        val enchants = item.fast().getEnchants()
+        val enchants = item.fastFixedEnchants
         
         return when (type) {
             SLOT -> checkSlot(itemType, slot, ignoreSlot)
@@ -292,7 +292,7 @@ data class Limitations(
      * @param enchants 当前附魔列表
      * @return 检查结果
      */
-    private fun checkMaxCapability(item: ItemStack, enchants: Map<AiyatsbusEnchantment, Int>): Boolean {
+    private fun checkMaxCapability(item: ItemStack, enchants: Array<Array<Any>>): Boolean {
         return item.capability > enchants.size
     }
 
@@ -305,8 +305,8 @@ data class Limitations(
      * @param enchants 当前附魔列表
      * @return 检查结果
      */
-    private fun checkDependenceEnchant(value: String, enchants: Map<AiyatsbusEnchantment, Int>): Boolean {
-        return enchants.containsKey(aiyatsbusEt(value))
+    private fun checkDependenceEnchant(value: String, enchants: Array<Array<Any>>): Boolean {
+        return enchants.any { it[0] == aiyatsbusEt(value) }
     }
 
     /**
@@ -318,8 +318,8 @@ data class Limitations(
      * @param enchants 当前附魔列表
      * @return 检查结果
      */
-    private fun checkConflictEnchant(value: String, enchants: Map<AiyatsbusEnchantment, Int>): Boolean {
-        return !enchants.containsKey(aiyatsbusEt(value))
+    private fun checkConflictEnchant(value: String, enchants: Array<Array<Any>>): Boolean {
+        return enchants.none { it[0] == aiyatsbusEt(value) }
     }
 
     /**
@@ -331,8 +331,9 @@ data class Limitations(
      * @param enchants 当前附魔列表
      * @return 检查结果
      */
-    private fun checkDependenceGroup(value: String, enchants: Map<AiyatsbusEnchantment, Int>): Boolean {
-        return enchants.any { (enchant, _) -> 
+    private fun checkDependenceGroup(value: String, enchants: Array<Array<Any>>): Boolean {
+        return enchants.any { (enchant, _) ->
+            enchant as AiyatsbusEnchantment
             enchant.enchantment.isInGroup(value) && enchant.enchantmentKey != belonging.enchantmentKey 
         }
     }
@@ -346,10 +347,11 @@ data class Limitations(
      * @param enchants 当前附魔列表
      * @return 检查结果
      */
-    private fun checkConflictGroup(value: String, enchants: Map<AiyatsbusEnchantment, Int>): Boolean {
+    private fun checkConflictGroup(value: String, enchants: Array<Array<Any>>): Boolean {
         val group = aiyatsbusGroup(value)
         val maxCoexist = group?.maxCoexist ?: 10000
-        val conflictCount = enchants.count { (enchant, _) -> 
+        val conflictCount = enchants.count { (enchant, _) ->
+            enchant as AiyatsbusEnchantment
             enchant.enchantment.isInGroup(value) && enchant.enchantmentKey != belonging.enchantmentKey 
         }
         return conflictCount < maxCoexist

@@ -16,8 +16,9 @@
  */
 package cc.polarastrum.aiyatsbus.core
 
-import cc.polarastrum.aiyatsbus.core.data.*
-import cc.polarastrum.aiyatsbus.core.data.registry.*
+import cc.polarastrum.aiyatsbus.core.data.CheckType
+import cc.polarastrum.aiyatsbus.core.data.registry.Group
+import cc.polarastrum.aiyatsbus.core.data.registry.Rarity
 import cc.polarastrum.aiyatsbus.core.data.registry.Target
 import cc.polarastrum.aiyatsbus.core.util.get
 import org.bukkit.Material
@@ -32,7 +33,6 @@ import org.bukkit.persistence.PersistentDataType
 import taboolib.common.platform.ProxyCommandSender
 import taboolib.common.platform.function.getProxyPlayer
 import taboolib.common5.RandomList
-import taboolib.module.nms.getItemTag
 import taboolib.platform.util.modifyMeta
 
 /**
@@ -45,10 +45,6 @@ import taboolib.platform.util.modifyMeta
  * @author mical
  * @since 2024/2/17 22:12
  */
-
-fun ItemStack.fast(): AiyatsbusItemStack {
-    return Aiyatsbus.api().getMinecraftAPI().getItemOperator().createAiyatsbusItemStack(this)
-}
 
 /**
  * 使用 AiyatsbusLanguage 发送语言文件
@@ -282,10 +278,18 @@ var ItemMeta.fixedEnchants: Map<AiyatsbusEnchantment, Int>
  *
  * 获取物品上的所有附魔，并自动转换为 AiyatsbusEnchantment 格式。
  */
-@Deprecated("Use AiyatsbusItemStack#getEnchants() instead")
-var ItemStack?.fixedEnchants: Map<AiyatsbusEnchantment, Int>
-    get() = this?.itemMeta?.fixedEnchants ?: emptyMap()
-    set(value) { this?.modifyMeta<ItemMeta> { fixedEnchants = value } }
+val ItemStack?.fixedEnchants: Map<AiyatsbusEnchantment, Int>
+    get() { return Aiyatsbus.api().getMinecraftAPI().getItemOperator().getEnchants(this ?: return emptyMap()) }
+
+fun ItemStack?.eachFastFixedEnchants(func: (AiyatsbusEnchantment, Int) -> Unit) {
+    fastFixedEnchants.forEach { (enchant, level) -> func(enchant as AiyatsbusEnchantment, level as Int) }
+}
+
+val ItemStack?.fastFixedEnchants: Array<Array<Any>>
+    get() { return Aiyatsbus.api().getMinecraftAPI().getItemOperator().getFastEnchants(this ?: return emptyArray()) }
+
+val ItemStack?.isUnbreakable: Boolean
+    get() { return Aiyatsbus.api().getMinecraftAPI().getItemOperator().isUnbreakable(this ?: return false) }
 
 /**
  * 获取附魔等级，若不存在则为 -1
@@ -304,7 +308,9 @@ fun ItemMeta.etLevel(enchant: AiyatsbusEnchantment): Int {
  * @param enchant 要查询的附魔
  * @return 附魔等级，如果不存在则返回 -1
  */
-fun ItemStack.etLevel(enchant: AiyatsbusEnchantment) = fast().getEnchants()[enchant] ?: -1
+fun ItemStack.etLevel(enchant: AiyatsbusEnchantment) = fixedEnchants[enchant] ?: -1
+
+fun ItemStack.fastEtLevel(enchant: AiyatsbusEnchantment) = Aiyatsbus.api().getMinecraftAPI().getItemOperator().getEnchantLevel(this, enchant) ?: -1
 
 /**
  * 添加附魔

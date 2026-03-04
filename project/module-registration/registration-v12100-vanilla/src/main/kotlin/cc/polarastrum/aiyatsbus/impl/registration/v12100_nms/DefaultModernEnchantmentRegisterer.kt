@@ -18,6 +18,7 @@
  */
 package cc.polarastrum.aiyatsbus.impl.registration.v12100_nms
 
+import cc.polarastrum.aiyatsbus.core.Aiyatsbus
 import cc.polarastrum.aiyatsbus.core.AiyatsbusEnchantment
 import cc.polarastrum.aiyatsbus.core.AiyatsbusEnchantmentBase
 import cc.polarastrum.aiyatsbus.core.AiyatsbusEnchantmentManager
@@ -40,6 +41,7 @@ import taboolib.common.platform.PlatformFactory
 import taboolib.library.reflex.Reflex.Companion.getProperty
 import java.util.*
 import java.util.function.BiFunction
+import kotlin.collections.set
 
 /**
  * Aiyatsbus

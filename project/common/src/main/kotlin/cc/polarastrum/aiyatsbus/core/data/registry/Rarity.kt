@@ -56,6 +56,8 @@ data class Rarity @JvmOverloads constructor(
     val customModelBook: Int = root.getInt("custom-model-book", root.getInt("custom_model_book", -1)),
 ) : RegistryItem(root), Dependency {
 
+    private val temp = HashMap<String, String>()
+
     /**
      * 是否启用了菜单自定义模型
      *
@@ -84,7 +86,7 @@ data class Rarity @JvmOverloads constructor(
      * ```
      */
     fun displayName(text: String = name): String {
-        return color.replace("text" to text).component().buildColored().toLegacyText()
+        return temp.getOrPut(text) { color.replace("text" to text).component().buildColored().toLegacyText() }
     }
 
     /**

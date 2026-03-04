@@ -16,12 +16,10 @@
  */
 package cc.polarastrum.aiyatsbus.core.data.trigger.event
 
-import cc.polarastrum.aiyatsbus.core.Aiyatsbus
 import cc.polarastrum.aiyatsbus.core.AiyatsbusEnchantment
-import cc.polarastrum.aiyatsbus.core.AiyatsbusSettings
+import cc.polarastrum.aiyatsbus.core.data.trigger.Trigger
+import cc.polarastrum.aiyatsbus.core.data.trigger.TriggerType
 import cc.polarastrum.aiyatsbus.core.script.ScriptType
-import org.bukkit.command.CommandSender
-import taboolib.common.platform.function.warning
 import taboolib.library.configuration.ConfigurationSection
 
 /**
@@ -43,38 +41,7 @@ data class EventExecutor @JvmOverloads constructor(
     /** 监听的事件类型 */
     val listen: String = root.getString("listen")!!,
     /** 事件处理脚本 */
-    val handle: String = root.getString("handle") ?: "",
+    override val handle: String = root.getString("handle") ?: "",
     /** 执行优先级，默认为 0 */
-    val priority: Int = root.getInt("priority", 0)
-) {
-
-    private val internalId: String =
-        "Enchantment_" + enchant.basicData.id + "_Listener_" + root.name.replace("-", "_")
-
-    init {
-        if (AiyatsbusSettings.enableKetherPreheat) {
-            try {
-                Aiyatsbus.api().getScriptHandler().getScriptHandler(scriptType).preheat(handle, internalId)
-            } catch (ex: Throwable) {
-                warning("Unable to preheat the event executor ${root.name} of enchantment ${enchant.id}: $ex")
-            }
-        }
-    }
-
-    /**
-     * 执行事件脚本
-     *
-     * 使用指定的脚本处理器执行事件处理脚本。
-     *
-     * @param sender 命令发送者
-     * @param vars 变量映射表
-     * 
-     * @example
-     * ```kotlin
-     * executor.execute(player, mapOf("level" to 5, "damage" to 10.0))
-     * ```
-     */
-    fun execute(sender: CommandSender, vars: Map<String, Any?>) {
-        Aiyatsbus.api().getScriptHandler().getScriptHandler(scriptType).invoke(handle, internalId, sender, vars)
-    }
-}
+    override val priority: Int = root.getInt("priority", 0)
+) : Trigger(root, enchant, scriptType, handle, priority, TriggerType.LISTENER)

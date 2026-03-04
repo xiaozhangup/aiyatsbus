@@ -40,7 +40,12 @@ class LegacyAiyatsbusCraftEnchantment(
 
     init {
         enchant.enchantment = this
+        enchant.mechanism?.enchant = this
+        enchant.limitations.belonging = this
+        enchant.displayer.enchant = this
     }
+
+    private val hashCode = enchant.id.hashCode()
 
     override fun getName(): String = enchant.basicData.id.uppercase()
 
@@ -81,11 +86,11 @@ class LegacyAiyatsbusCraftEnchantment(
     override fun getActiveSlots(): MutableSet<EquipmentSlot> = mutableSetOf()
 
     override fun equals(other: Any?): Boolean {
-        return other is AiyatsbusEnchantment && this.enchantmentKey == other.enchantmentKey
+        return other is AiyatsbusEnchantment && this.hashCode() == other.hashCode() && this.id == other.id
     }
 
     override fun hashCode(): Int {
-        return this.enchantmentKey.hashCode()
+        return hashCode
     }
 
     override fun translationKey(): String = enchant.basicData.id

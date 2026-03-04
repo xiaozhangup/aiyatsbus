@@ -1,7 +1,7 @@
 package cc.polarastrum.aiyatsbus.module.script.fluxon.function.game
 
 import cc.polarastrum.aiyatsbus.core.belongedTargets
-import cc.polarastrum.aiyatsbus.core.fast
+import cc.polarastrum.aiyatsbus.core.isUnbreakable
 import cc.polarastrum.aiyatsbus.module.script.fluxon.FluxonScriptHandler
 import cc.polarastrum.aiyatsbus.module.script.fluxon.relocate.FluxonRelocate
 import org.bukkit.Material
@@ -44,6 +44,6 @@ object FnItem {
 
     @Export
     fun isUnbreakable(item: ItemStack): Boolean {
-        return item.fast().isUnbreakable()
+        return item.isUnbreakable
     }
 }

@@ -16,12 +16,14 @@
  */
 package cc.polarastrum.aiyatsbus.impl
 
-import com.google.common.collect.HashBasedTable
-import com.google.common.collect.Table
 import cc.polarastrum.aiyatsbus.core.*
 import cc.polarastrum.aiyatsbus.core.data.CheckType
+import cc.polarastrum.aiyatsbus.core.data.trigger.TriggerType
+import cc.polarastrum.aiyatsbus.core.data.trigger.ticker.Ticker
 import cc.polarastrum.aiyatsbus.core.util.isNull
 import cc.polarastrum.aiyatsbus.core.util.reloadable
+import com.google.common.collect.HashBasedTable
+import com.google.common.collect.Table
 import org.bukkit.inventory.ItemStack
 import taboolib.common.LifeCycle
 import taboolib.common.platform.Awake
@@ -31,6 +33,8 @@ import taboolib.common.platform.function.submit
 import taboolib.common.platform.service.PlatformExecutor
 import taboolib.platform.util.onlinePlayers
 import java.util.UUID
+import taboolib.platform.util.submit
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -68,75 +72,80 @@ class DefaultAiyatsbusTickHandler : AiyatsbusTickHandler {
     }
 
     private fun onTick() {
-        routine.cellSet() // 无需判断这里 trigger 是否为 null, 因为只有 Trigger 初始化时才会往这里扔 enchant
+        // 这里无需判断附魔是否有机制, 也无需判断是否有 Ticker
+        // 因为只有 Ticker 初始化时才会往这里扔附魔
+        routine.cellSet()
             .filter { counter % it.value == 0L }
-            .sortedBy { it.rowKey.trigger!!.tickerPriority }
+            .sortedBy { it.rowKey.mechanism!!.priority(TriggerType.TICKER) }
             .forEach {
                 val ench = it.rowKey
                 val id = it.columnKey
                 val slots = ench.targets.flatMap { it.activeSlots }.toSet()
 
                 onlinePlayers.forEach { player ->
-                    var flag = false
-                    val record = recorder.computeIfAbsent(player.uniqueId) { mutableSetOf() }
+                    player.submit {
+                        var flag = false
+                        val record = recorder.computeIfAbsent(player.uniqueId) { mutableSetOf() }
 
-                    // 一般能存在 routine 里的, trigger 和 tickers 必不为 null
-                    val ticker =
-                        ench.trigger!!.tickers[id] ?: error("Unknown ticker $id for enchantment ${ench.basicData.id}")
+                        // 一般能存在 routine 里的, trigger 和 tickers 必不为 null
+                        val ticker =
+                            (ench.mechanism!!.triggers(TriggerType.TICKER).firstOrNull { t -> t.id == id }
+                                ?: error("Unknown ticker $id for enchantment ${ench.basicData.id}")) as Ticker
 
-                    val variables = mutableMapOf(
-                        "player" to player,
-                        "enchant" to ench,
-                    )
+                        val variables = hashMapOf(
+                            "player" to player,
+                            "enchant" to ench,
+                            "maxLevel" to ench.basicData.maxLevel
+                        )
 
-                    variables += ench.variables.ordinary
+                        variables += ench.variables.ordinary
 
-                    slots.forEach slot@{ slot ->
-                        val item: ItemStack
-                        try {
-                            item = player.inventory.getItem(slot)
-                        } catch (_: Throwable) {
-                            // 离谱的低版本报错:
-                            // java.lang.NullPointerException: player.inventory.getItem(slot) must not be null
-                            return@slot
-                        }
-                        if (item.isNull) return@slot
-
-                        val level = item.etLevel(ench)
-
-                        if (level > 0) {
-                            val checkResult = ench.limitations.checkAvailable(CheckType.USE, item, player, slot)
-                            if (checkResult.isFailure) {
-                                sendDebug("----- DefaultAiyatsbusTickHandler -----")
-                                sendDebug("附魔: " + ench.basicData.name)
-                                sendDebug("原因: " + checkResult.reason)
-                                sendDebug("----- DefaultAiyatsbusTickHandler -----")
+                        slots.forEach slot@{ slot ->
+                            val item: ItemStack
+                            try {
+                                item = player.inventory.getItem(slot)
+                            } catch (_: Throwable) {
+                                // 离谱的低版本报错:
+                                // java.lang.NullPointerException: player.inventory.getItem(slot) must not be null
                                 return@slot
                             }
-                            flag = true
+                            if (item.isNull) return@slot
 
-                            val vars = variables.toMutableMap()
-                            vars += mapOf(
-                                "triggerSlot" to slot.name,
-                                "trigger-slot" to slot.name,
-                                "item" to item,
-                                "level" to level,
-                            )
+                            val level = item.fastEtLevel(ench)
 
-                            vars += ench.variables.variables(level, item, false)
+                            if (level > 0) {
+                                val checkResult = ench.limitations.checkAvailable(CheckType.USE, item, player, slot)
+                                if (checkResult.isFailure) {
+                                    sendDebug("----- DefaultAiyatsbusTickHandler -----")
+                                    sendDebug("附魔: " + ench.basicData.name)
+                                    sendDebug("原因: " + checkResult.reason)
+                                    sendDebug("----- DefaultAiyatsbusTickHandler -----")
+                                    return@slot
+                                }
+                                flag = true
 
-                            if (!record.contains(id)) {
-                                record += id
-                                ticker.executePreHandle(player, vars)
+                                val vars = HashMap(variables)
+                                vars += mapOf(
+                                    "triggerSlot" to slot.name,
+                                    "trigger-slot" to slot.name,
+                                    "item" to item,
+                                    "level" to level,
+                                )
+
+                                vars += ench.variables.variables(level, item, false)
+
+                                if (!record.contains(id)) {
+                                    record += id
+                                    ticker.executePreHandle(player, vars)
+                                }
+
+                                ticker.executeHandle(player, vars)
                             }
-
-                            ticker.executeHandle(player, vars)
                         }
-                    }
-
-                    if (!flag && record.contains(id)) {
-                        record -= id
-                        ticker.executePostHandle(player, variables)
+                        if (!flag && record.contains(id)) {
+                            record -= id
+                            ticker.executePostHandle(player, variables)
+                        }
                     }
                 }
             }

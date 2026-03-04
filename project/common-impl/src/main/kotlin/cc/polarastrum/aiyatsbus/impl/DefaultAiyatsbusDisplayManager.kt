@@ -67,6 +67,12 @@ class DefaultAiyatsbusDisplayManager : AiyatsbusDisplayManager {
         }.toTypedArray())
     }
 
+    override fun sortEnchants(enchants: List<Array<Any>>): LinkedHashMap<AiyatsbusEnchantment, Int> {
+        return linkedMapOf(*enchants.sortedBy { (enchant, level) ->
+            getSettings().rarityOrder.indexOf((enchant as AiyatsbusEnchantment).id) * 100000 + (if (getSettings().sortByLevel) level as Int else 0)
+        }.map { (it[0] as AiyatsbusEnchantment to it[1] as Int) }.toTypedArray())
+    }
+
     /**
      * 生成展示物品的 Lore
      */
@@ -80,10 +86,9 @@ class DefaultAiyatsbusDisplayManager : AiyatsbusDisplayManager {
 
         // 首先确保物品必须存在
         if (item == null) return emptyList()
-        val fast = item.fast()
-        val enchants = fast.getEnchants()
+        val enchants = item.fastFixedEnchants
         // 整理附魔
-        val sortedEnchants = enchants.ifEmpty { return emptyList() }.filter { it.key.displayer.display }.let(::sortEnchants)
+        val sortedEnchants = enchants.ifEmpty { return emptyList() }.filter { (it[0] as AiyatsbusEnchantment).displayer.display }.let(::sortEnchants)
         return buildList {
             // 如果合并模式已打开, 且达到附魔数量的最低要求
             if (settings.combine && sortedEnchants.size >= settings.combineMinimal) {
@@ -122,8 +127,11 @@ class DefaultAiyatsbusDisplayManager : AiyatsbusDisplayManager {
         // 首先确保物品必须存在
         if (item.isNull) return item
 
-        val fast = item.fast()
-        val enchants = fast.getEnchants()
+        var enchants = item.fastFixedEnchants
+
+        if (LevelFixer.fix(item, enchants)) {
+            enchants = item.fastFixedEnchants
+        }
 
         // 必须 **克隆** 物品, 不得修改原物品
         return item.clone().modifyMeta<ItemMeta> {
@@ -179,7 +187,7 @@ class DefaultAiyatsbusDisplayManager : AiyatsbusDisplayManager {
             // 设置显示 Lore
             lore(result)
             if (item.type == Material.ENCHANTED_BOOK && !hasCustomModelData()) {
-                val rarity = enchants.minBy { it.key.rarity.weight }.key.rarity
+                val rarity = (enchants.minBy { (it[0] as AiyatsbusEnchantment).rarity.weight }[0] as AiyatsbusEnchantment).rarity
                 if (rarity.isCustomModelBookEnabled) {
                     setCustomModelData(rarity.customModelBook)
                     this["custom_book", PersistentDataType.STRING] = "true" // 记录这物品被打上了自定义模型
@@ -189,7 +197,7 @@ class DefaultAiyatsbusDisplayManager : AiyatsbusDisplayManager {
             // 加附魔序列化数据
             // TODO: 尝试减少字符串的拼接与分割操作
             this["enchants_serialized", PersistentDataType.STRING] =
-                enchants.map { (enchant, level) -> "${enchant.basicData.id}:$level" }.joinToString("|")
+                enchants.map { (enchant, level) -> "${(enchant as AiyatsbusEnchantment).basicData.id}:$level" }.joinToString("|")
         }
     }
 

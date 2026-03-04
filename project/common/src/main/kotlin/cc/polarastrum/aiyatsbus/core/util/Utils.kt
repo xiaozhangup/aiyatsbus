@@ -18,6 +18,10 @@ package cc.polarastrum.aiyatsbus.core.util
 
 import com.google.common.base.Enums
 import com.google.gson.Gson
+import taboolib.common.LifeCycle
+import taboolib.common.TabooLib
+import taboolib.common.platform.function.severe
+import taboolib.common.util.t
 import taboolib.library.reflex.Reflex.Companion.invokeMethod
 import taboolib.library.reflex.ReflexClass
 import taboolib.library.reflex.UnsafeAccess
@@ -133,6 +137,22 @@ fun String.isValidJson(): Boolean {
 fun Field.setStaticFinal(value: Any) {
     val offset = UnsafeAccess.unsafe.staticFieldOffset(this)
     UnsafeAccess.unsafe.putObject(UnsafeAccess.unsafe.staticFieldBase(this), offset, value)
+}
+
+fun safeguard(cn: String, en: String, time: Long = 5000L, block: () -> Unit) {
+    try {
+        block()
+    } catch (t: Throwable) {
+        if (TabooLib.getCurrentLifeCycle() != LifeCycle.ACTIVE) {
+            severe("""
+                    无法初始化 $cn，为避免数据丢失，服务器将会被强制关闭！
+                    Failed to initialize $en. To avoid data loss, the server will be forced to shut down!
+                """.t())
+            t.printStackTrace()
+            Thread.sleep(time)
+            Runtime.getRuntime().halt(-1)
+        }
+    }
 }
 
 /**

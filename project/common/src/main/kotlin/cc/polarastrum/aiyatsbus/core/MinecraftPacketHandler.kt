@@ -16,6 +16,7 @@
  */
 package cc.polarastrum.aiyatsbus.core
 
+import org.bukkit.entity.Player
 import taboolib.module.nms.PacketReceiveEvent
 
 /**
@@ -38,4 +39,9 @@ interface MinecraftPacketHandler {
      * @param event 数据包接收事件
      */
     fun handleContainerClick(event: PacketReceiveEvent)
+
+    fun synchronizeRegistries(player: Player)
+
+    /** 发送手部活动数据 */
+    fun setHandActive(player: Player, isHandActive: Boolean)
 }

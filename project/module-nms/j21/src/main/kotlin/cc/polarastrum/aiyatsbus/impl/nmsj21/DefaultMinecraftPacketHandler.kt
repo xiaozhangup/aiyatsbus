@@ -21,15 +21,32 @@ package cc.polarastrum.aiyatsbus.impl.nmsj21
 import cc.polarastrum.aiyatsbus.core.MinecraftPacketHandler
 import cc.polarastrum.aiyatsbus.core.toDisplayMode
 import cc.polarastrum.aiyatsbus.core.util.isNull
+import com.mojang.authlib.GameProfile
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap
 import it.unimi.dsi.fastutil.ints.Int2ObjectMaps
 import net.minecraft.network.HashedPatchMap
 import net.minecraft.network.HashedStack
+import net.minecraft.network.protocol.game.PacketPlayOutEntityMetadata
+import net.minecraft.network.syncher.DataWatcher
+import net.minecraft.network.syncher.DataWatcherObject
+import net.minecraft.network.syncher.DataWatcherRegistry
+import net.minecraft.server.MinecraftServer
+import net.minecraft.server.network.ServerConfigurationPacketListenerImpl
 import net.minecraft.world.item.ItemStack
+import org.bukkit.craftbukkit.entity.CraftPlayer
 import org.bukkit.craftbukkit.inventory.CraftItemStack
 import org.bukkit.entity.Player
+import taboolib.common.platform.function.submit
+import taboolib.library.reflex.Reflex.Companion.invokeConstructor
+import taboolib.library.reflex.Reflex.Companion.invokeMethod
 import taboolib.module.nms.MinecraftVersion.isUniversal
+import taboolib.module.nms.MinecraftVersion.versionId
 import taboolib.module.nms.PacketReceiveEvent
+import taboolib.module.nms.remap.DynamicOpcode
+import taboolib.module.nms.remap.dynamic
+import taboolib.module.nms.sendPacket
+import taboolib.platform.Folia
+import java.util.*
 
 /**
  * Aiyatsbus
@@ -39,6 +56,55 @@ import taboolib.module.nms.PacketReceiveEvent
  * @since 2025/8/16 09:34
  */
 class DefaultMinecraftPacketHandler : MinecraftPacketHandler {
+
+    override fun synchronizeRegistries(player: Player) {
+        if (versionId < 12107) return // fixme 1.21.7 以前的版本有点问题
+        if (Folia.isFolia) return // fixme folia 有点问题
+        val uuid = player.uniqueId
+        (player as CraftPlayer).handle.connection.switchToConfig()
+
+        submit(delay = 10L) {
+            (MinecraftServer.getServer().connection.connections
+                .firstOrNull {
+                    it.packetListener is ServerConfigurationPacketListenerImpl &&
+                            getGameProfileId((it.packetListener as ServerConfigurationPacketListenerImpl).owner) == uuid
+                }
+                ?.packetListener as? ServerConfigurationPacketListenerImpl)
+                ?.startConfiguration()
+        }
+    }
+
+    private fun getGameProfileId(gameProfile: GameProfile): UUID {
+        return if (versionId >= 12109) {
+            // record
+            dynamic(
+                DynamicOpcode.INVOKEVIRTUAL,
+                "com.mojang.authlib.GameProfile#id()java.util.UUID;",
+                gameProfile
+            )
+        } else {
+            dynamic(
+                DynamicOpcode.INVOKEVIRTUAL,
+                "com.mojang.authlib.GameProfile#getId()java.util.UUID;",
+                gameProfile
+            )
+        } as UUID
+    }
+
+    override fun setHandActive(player: Player, isHandActive: Boolean) {
+        val byte = (if (isHandActive) 0x01 else 0).toByte()
+        player.sendPacket(
+            PacketPlayOutEntityMetadata::class.java.invokeConstructor(
+                player.entityId,
+                listOf((createByteMeta(8, byte) as DataWatcher.Item<*>).invokeMethod<Any>("value"))
+            )
+        )
+    }
+
+    @Suppress("SameParameterValue")
+    private fun createByteMeta(index: Int, value: Byte): Any {
+        return DataWatcher.Item(DataWatcherObject(index, DataWatcherRegistry.BYTE), value)
+    }
 
     /**
      * isUniversal -> carriedItem

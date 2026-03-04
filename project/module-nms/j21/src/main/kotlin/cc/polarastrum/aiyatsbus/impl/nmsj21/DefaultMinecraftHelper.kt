@@ -4,9 +4,9 @@ import cc.polarastrum.aiyatsbus.core.MinecraftHelper
 import cc.polarastrum.aiyatsbus.impl.nms.NMSItemStack
 import io.papermc.paper.adventure.AdventureComponent
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer
-import net.minecraft.network.chat.IChatBaseComponent
-import org.bukkit.craftbukkit.v1_20_R3.inventory.CraftItemStack
-import org.bukkit.craftbukkit.v1_20_R3.util.CraftChatMessage
+import net.minecraft.network.chat.Component
+import org.bukkit.craftbukkit.inventory.CraftItemStack
+import org.bukkit.craftbukkit.util.CraftChatMessage
 import org.bukkit.inventory.ItemStack
 import taboolib.module.nms.MinecraftVersion
 
@@ -30,7 +30,7 @@ class DefaultMinecraftHelper : MinecraftHelper {
                 return GsonComponentSerializer.gson().serialize(iChatBaseComponent.`adventure$component`())
             }
         }
-        return CraftChatMessage.toJSON(iChatBaseComponent as IChatBaseComponent)
+        return CraftChatMessage.toJSON(iChatBaseComponent as Component)
     }
 
     override fun asCraftMirror(nmsItemStack: Any): ItemStack {

@@ -16,7 +16,7 @@
  */
 package cc.polarastrum.aiyatsbus.impl.nmsj21
 
-import cc.polarastrum.aiyatsbus.core.AiyatsbusItemStack
+import cc.polarastrum.aiyatsbus.core.AiyatsbusEnchantment
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
@@ -40,7 +40,13 @@ abstract class NMSJ21 {
 
     abstract fun hurtAndBreak(nmsItem: Any, amount: Int, entity: LivingEntity)
 
-    abstract fun createAiyatsbusItemStack(item: ItemStack): AiyatsbusItemStack
+    abstract fun getEnchants(item: ItemStack): Map<AiyatsbusEnchantment, Int>
+
+    abstract fun getFastEnchants(item: ItemStack): Array<Array<Any>>
+
+    abstract fun getEnchantLevel(item: ItemStack, enchant: AiyatsbusEnchantment): Int?
+
+    abstract fun isUnbreakable(item: ItemStack): Boolean
 
     companion object {
 

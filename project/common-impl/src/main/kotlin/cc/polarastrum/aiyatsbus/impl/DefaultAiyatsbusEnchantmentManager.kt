@@ -25,17 +25,20 @@ import cc.polarastrum.aiyatsbus.core.util.FileWatcher.watch
 import cc.polarastrum.aiyatsbus.core.util.YamlUpdater
 import cc.polarastrum.aiyatsbus.core.util.deepRead
 import cc.polarastrum.aiyatsbus.core.util.reloadable
+import cc.polarastrum.aiyatsbus.core.util.safeguard
 import cc.polarastrum.aiyatsbus.impl.DefaultAiyatsbusAPI.Companion.proxy
 import cc.polarastrum.aiyatsbus.impl.enchant.InternalAiyatsbusEnchantment
 import org.bukkit.NamespacedKey
-import org.bukkit.entity.Player
 import taboolib.common.LifeCycle
 import taboolib.common.TabooLib
 import taboolib.common.io.newFolder
 import taboolib.common.io.runningResourcesInJar
 import taboolib.common.platform.Awake
 import taboolib.common.platform.PlatformFactory
-import taboolib.common.platform.function.*
+import taboolib.common.platform.function.console
+import taboolib.common.platform.function.getDataFolder
+import taboolib.common.platform.function.registerLifeCycleTask
+import taboolib.common.platform.function.releaseResourceFile
 import taboolib.common.util.replaceWithOrder
 import taboolib.common.util.t
 import taboolib.module.configuration.Configuration
@@ -63,6 +66,8 @@ class DefaultAiyatsbusEnchantmentManager : AiyatsbusEnchantmentManager {
     private val byKeyStringMap = ConcurrentHashMap<String, AiyatsbusEnchantment>()
     /** 按名称存储的附魔映射 */
     private val byNameMap = ConcurrentHashMap<String, AiyatsbusEnchantment>()
+    /** 按 NMSENchantment 存储的附魔映射 **/
+    private val byNMSMap = ConcurrentHashMap<Any, AiyatsbusEnchantment>()
 
     /** 等待被注册的附魔 */
     private val enchantmentsToRegister = CopyOnWriteArraySet<AiyatsbusEnchantmentBase>()
@@ -100,7 +105,7 @@ class DefaultAiyatsbusEnchantmentManager : AiyatsbusEnchantmentManager {
     }
 
     override fun unregister(enchantment: AiyatsbusEnchantment) {
-        enchantment.trigger?.onDisable()
+        enchantment.mechanism?.close()
         enchantmentsToRegister.remove(enchantment)
         Aiyatsbus.api().getEnchantmentRegisterer().unregister(enchantment)
         byKeyMap -= enchantment.enchantmentKey
@@ -109,6 +114,8 @@ class DefaultAiyatsbusEnchantmentManager : AiyatsbusEnchantmentManager {
     }
 
     override fun loadEnchantments() {
+        // 如果是重载, 记录当前附魔数量, 如果不一致得刷新在线玩家的附魔表
+        val enchantmentCount = byKeyMap.size
         clearEnchantments()
 
         val enchantsFolder = newFolder(getDataFolder(), "enchants")
@@ -130,6 +137,13 @@ class DefaultAiyatsbusEnchantmentManager : AiyatsbusEnchantmentManager {
         enchantmentsToRegister.forEach { register(it) }
 
         console().sendLang("loading-enchantments", byKeyMap.size, System.currentTimeMillis() - startTime)
+
+        if (enchantmentCount < byKeyMap.size) {
+            onlinePlayers.forEach {
+                Aiyatsbus.api().getMinecraftAPI().getPacketHandler()
+                    .synchronizeRegistries(it)
+            }
+        }
     }
 
     override fun loadFromFile(file: File) {
@@ -142,7 +156,7 @@ class DefaultAiyatsbusEnchantmentManager : AiyatsbusEnchantmentManager {
         if (!enchant.dependencies.checkAvailable()) return
 
         register(enchant)
-        enchant.trigger.init()
+        enchant.mechanism.init()
         setupFileWatcher(file, relativePath, key, id)
     }
 
@@ -211,15 +225,16 @@ class DefaultAiyatsbusEnchantmentManager : AiyatsbusEnchantmentManager {
      */
     private fun reloadEnchantment(file: File, key: NamespacedKey, id: String, startTime: Long) {
         val oldEnchant = getEnchant(key) ?: return
-        oldEnchant.trigger?.onDisable()
+        oldEnchant.mechanism?.close()
         unregister(oldEnchant)
 
-        val newEnchant = InternalAiyatsbusEnchantment(id, file, Configuration.loadFromFile(file))
-        if (!newEnchant.dependencies.checkAvailable()) return
-        
-        register(newEnchant)
-        getEnchant(key)!!.trigger?.init()
-        onlinePlayers.forEach(Player::updateInventory)
+        if (file.exists()) {
+            val newEnchant = InternalAiyatsbusEnchantment(id, file, Configuration.loadFromFile(file))
+            if (!newEnchant.dependencies.checkAvailable()) return
+
+            register(newEnchant)
+            getEnchant(key)!!.mechanism?.init()
+        }
         
         console().sendLang("enchantment-reload", id, System.currentTimeMillis() - startTime)
         EnchantRegistrationHooks.unregisterHooks()
@@ -269,17 +284,7 @@ class DefaultAiyatsbusEnchantmentManager : AiyatsbusEnchantmentManager {
             val registerer = modern(12104)
             DefaultAiyatsbusAPI.registerer = registerer
 
-            try {
-                registerer.replaceRegistry()
-            } catch (ex: Throwable) {
-                severe("""
-                    无法替换注册表，为避免数据丢失，服务器将会被强制关闭！
-                    Failed to replace registry. To avoid data loss, the server will be forced to shut down!
-                """.t())
-                ex.printStackTrace()
-                Thread.sleep(5000)
-                Runtime.getRuntime().halt(-1)
-            }
+            safeguard("注册表替换", "registry replacer") { registerer.replaceRegistry() }
             registerLifeCycleTask(LifeCycle.ACTIVE) {
                 registerer.replaceRegistry()
             }
@@ -288,19 +293,7 @@ class DefaultAiyatsbusEnchantmentManager : AiyatsbusEnchantmentManager {
             }
             reloadable {
                 registerLifeCycleTask(LifeCycle.ENABLE, StandardPriorities.ENCHANTMENT) {
-                    try {
-                        Aiyatsbus.api().getEnchantmentManager().loadEnchantments()
-                    } catch (ex: Throwable) {
-                        if (TabooLib.getCurrentLifeCycle() != LifeCycle.ACTIVE) {
-                            severe("""
-                                无法初始化附魔，为避免数据丢失，服务器将会被强制关闭！
-                                Failed to initialize enchantments. To avoid data loss, the server will be forced to shut down!
-                            """.t())
-                            ex.printStackTrace()
-                            Thread.sleep(5000)
-                            Runtime.getRuntime().halt(-1)
-                        }
-                    }
+                    safeguard("附魔", "enchantments") { Aiyatsbus.api().getEnchantmentManager().loadEnchantments() }
                 }
             }
         }

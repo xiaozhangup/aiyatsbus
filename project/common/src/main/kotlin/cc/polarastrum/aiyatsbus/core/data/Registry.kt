@@ -22,13 +22,10 @@ import cc.polarastrum.aiyatsbus.core.Aiyatsbus
 import cc.polarastrum.aiyatsbus.core.StandardPriorities
 import cc.polarastrum.aiyatsbus.core.sendLang
 import cc.polarastrum.aiyatsbus.core.util.reloadable
+import cc.polarastrum.aiyatsbus.core.util.safeguard
 import org.bukkit.entity.Player
-import taboolib.common.LifeCycle
-import taboolib.common.TabooLib
 import taboolib.common.platform.function.console
 import taboolib.common.platform.function.registerLifeCycleTask
-import taboolib.common.platform.function.severe
-import taboolib.common.util.t
 import taboolib.library.configuration.ConfigurationSection
 import taboolib.module.configuration.Configuration
 import taboolib.platform.util.onlinePlayers
@@ -90,7 +87,7 @@ abstract class Registry<T : RegistryItem>(
         // 注册生命周期任务，在插件启用时自动初始化
         reloadable {
             registerLifeCycleTask(StandardPriorities.getDataLifeCycle(registryId), StandardPriorities.getDataProperty(registryId)) {
-                try {
+                safeguard("附魔数据", "enchantment data") {
                     initialize()
                     // 监听配置文件重载事件
                     if (!isLoaded) {
@@ -102,16 +99,6 @@ abstract class Registry<T : RegistryItem>(
                             }.let { console().sendLang("configuration-reload", config.file!!.name, it) }
                         }
                         isLoaded = true
-                    }
-                } catch (ex: Throwable) {
-                    if (TabooLib.getCurrentLifeCycle() != LifeCycle.ACTIVE) {
-                        severe("""
-                            无法初始化附魔数据，为避免数据丢失，服务器将会被强制关闭！
-                            Failed to initialize enchantment data. To avoid data loss, the server will be forced to shut down!
-                        """.t())
-                        ex.printStackTrace()
-                        Thread.sleep(5000)
-                        Runtime.getRuntime().halt(-1)
                     }
                 }
             }

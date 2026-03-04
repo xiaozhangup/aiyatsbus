@@ -36,7 +36,7 @@ import taboolib.platform.type.BukkitProxyEvent
  * @author mical
  * @since 2024/5/3 16:02
  */
-class AiyatsbusPrepareAnvilEvent(
+data class AiyatsbusPrepareAnvilEvent(
     /** 左侧物品（主要物品） */
     val left: ItemStack, 
     /** 右侧物品（材料物品），可能为 null */

@@ -16,33 +16,26 @@
  */
 package cc.polarastrum.aiyatsbus.module.ingame.ui
 
-import cc.polarastrum.aiyatsbus.core.asLang
-import cc.polarastrum.aiyatsbus.core.asLangList
+import cc.polarastrum.aiyatsbus.core.*
 import cc.polarastrum.aiyatsbus.core.data.CheckType
-import cc.polarastrum.aiyatsbus.core.fast
-import cc.polarastrum.aiyatsbus.core.sendLang
 import cc.polarastrum.aiyatsbus.core.util.isNull
-import cc.polarastrum.aiyatsbus.module.ingame.ui.internal.MenuComponent
+import cc.polarastrum.aiyatsbus.core.util.variable
+import cc.polarastrum.aiyatsbus.core.util.variables
+import cc.polarastrum.aiyatsbus.module.ingame.mechanics.AnvilSupport
+import cc.polarastrum.aiyatsbus.module.ingame.ui.internal.*
 import cc.polarastrum.aiyatsbus.module.ingame.ui.internal.config.MenuConfiguration
 import cc.polarastrum.aiyatsbus.module.ingame.ui.internal.feature.util.MenuFunctionBuilder
-import cc.polarastrum.aiyatsbus.core.util.variables
-import cc.polarastrum.aiyatsbus.module.ingame.ui.internal.load
-import cc.polarastrum.aiyatsbus.module.ingame.ui.internal.setSlots
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
+import taboolib.common.LifeCycle
+import taboolib.common.platform.Awake
+import taboolib.common.platform.function.console
 import taboolib.module.chat.component
 import taboolib.module.configuration.Config
 import taboolib.module.configuration.Configuration
 import taboolib.module.ui.openMenu
 import taboolib.module.ui.type.Chest
-import cc.polarastrum.aiyatsbus.module.ingame.mechanics.AnvilSupport
-import cc.polarastrum.aiyatsbus.module.ingame.ui.internal.UIType
-import cc.polarastrum.aiyatsbus.core.util.variable
-import cc.polarastrum.aiyatsbus.module.ingame.ui.internal.record
-import taboolib.common.LifeCycle
-import taboolib.common.platform.Awake
-import taboolib.common.platform.function.console
 import kotlin.system.measureTimeMillis
 
 @MenuComponent("Anvil")
@@ -90,8 +83,8 @@ object AnvilUI {
                     info["level"] = player.asLang("ui-anvil-info-level", cost to "cost")
                     info["reasons"] = player.asLangList("ui-anvil-info-reasons-empty").joinToString("[](br)")
                 } else {
-                    val bugs = b.fast().getEnchants().mapNotNull { (enchant, _) ->
-                        val check = enchant.limitations.checkAvailable(CheckType.ANVIL, a, player)
+                    val bugs = b.fastFixedEnchants.mapNotNull { (enchant, _) ->
+                        val check = (enchant as AiyatsbusEnchantment).limitations.checkAvailable(CheckType.ANVIL, a, player)
                         if (check.isFailure) check.reason
                         else null
                     }
