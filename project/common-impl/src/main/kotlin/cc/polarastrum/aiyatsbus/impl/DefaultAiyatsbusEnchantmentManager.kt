@@ -18,6 +18,7 @@ package cc.polarastrum.aiyatsbus.impl
 
 import cc.polarastrum.aiyatsbus.core.*
 import cc.polarastrum.aiyatsbus.core.compat.EnchantRegistrationHooks
+import cc.polarastrum.aiyatsbus.core.enchant.FileDefinedHardcodedEnchantment
 import cc.polarastrum.aiyatsbus.core.registration.modern.ModernEnchantmentRegisterer
 import cc.polarastrum.aiyatsbus.core.util.FileWatcher.isProcessingByWatcher
 import cc.polarastrum.aiyatsbus.core.util.FileWatcher.unwatch
@@ -27,7 +28,7 @@ import cc.polarastrum.aiyatsbus.core.util.deepRead
 import cc.polarastrum.aiyatsbus.core.util.reloadable
 import cc.polarastrum.aiyatsbus.core.util.safeguard
 import cc.polarastrum.aiyatsbus.impl.DefaultAiyatsbusAPI.Companion.proxy
-import cc.polarastrum.aiyatsbus.impl.enchant.InternalAiyatsbusEnchantment
+import cc.polarastrum.aiyatsbus.core.enchant.InternalAiyatsbusEnchantment
 import cc.polarastrum.aiyatsbus.impl.registration.legacy.DefaultLegacyEnchantmentRegisterer
 import org.bukkit.NamespacedKey
 import taboolib.common.LifeCycle
@@ -42,6 +43,7 @@ import taboolib.common.platform.function.registerLifeCycleTask
 import taboolib.common.platform.function.releaseResourceFile
 import taboolib.common.util.replaceWithOrder
 import taboolib.common.util.t
+import taboolib.library.reflex.Reflex.Companion.invokeConstructor
 import taboolib.module.configuration.Configuration
 import taboolib.module.nms.MinecraftVersion.versionId
 import taboolib.platform.util.onlinePlayers
@@ -67,8 +69,6 @@ class DefaultAiyatsbusEnchantmentManager : AiyatsbusEnchantmentManager {
     private val byKeyStringMap = ConcurrentHashMap<String, AiyatsbusEnchantment>()
     /** 按名称存储的附魔映射 */
     private val byNameMap = ConcurrentHashMap<String, AiyatsbusEnchantment>()
-    /** 按 NMSENchantment 存储的附魔映射 **/
-    private val byNMSMap = ConcurrentHashMap<Any, AiyatsbusEnchantment>()
 
     /** 等待被注册的附魔 */
     private val enchantmentsToRegister = CopyOnWriteArraySet<AiyatsbusEnchantmentBase>()
@@ -92,7 +92,7 @@ class DefaultAiyatsbusEnchantmentManager : AiyatsbusEnchantmentManager {
     override fun register(enchantment: AiyatsbusEnchantmentBase) {
         // 如果不是内置附魔, 就添加进待注册附魔
         // 不从列表中删除, 是为了防止重载丢失第三方附魔的情况出现
-        if (enchantment !is InternalAiyatsbusEnchantment) {
+        if (enchantment !is InternalEnchantment) {
             enchantmentsToRegister += enchantment
         }
         // 在 LOAD 生命周期后调用本函数, 就注册该附魔
@@ -152,12 +152,13 @@ class DefaultAiyatsbusEnchantmentManager : AiyatsbusEnchantmentManager {
         val config = YamlUpdater.loadFromFile(relativePath, AiyatsbusSettings.enableUpdater, AiyatsbusSettings.updateContents)
         val id = config["basic.id"].toString()
         val key = NamespacedKey.minecraft(id)
+        val hardcoded = config.getString("hardcoded", "")!!
 
-        val enchant = InternalAiyatsbusEnchantment(id, file, config)
+        val enchant = if (hardcoded.isNotEmpty()) Class.forName(hardcoded).invokeConstructor(id, file, config) as FileDefinedHardcodedEnchantment else InternalAiyatsbusEnchantment(id, file, config)
         if (!enchant.dependencies.checkAvailable()) return
 
         register(enchant)
-        enchant.mechanism.init()
+        enchant.mechanism?.init()
         setupFileWatcher(file, relativePath, key, id)
     }
 
@@ -230,7 +231,9 @@ class DefaultAiyatsbusEnchantmentManager : AiyatsbusEnchantmentManager {
         unregister(oldEnchant)
 
         if (file.exists()) {
-            val newEnchant = InternalAiyatsbusEnchantment(id, file, Configuration.loadFromFile(file))
+            val config = Configuration.loadFromFile(file)
+            val hardcoded = config.getString("hardcoded", "")!!
+            val newEnchant = if (hardcoded.isNotEmpty()) Class.forName(hardcoded).invokeConstructor(id, file, config) as FileDefinedHardcodedEnchantment else InternalAiyatsbusEnchantment(id, file, config)
             if (!newEnchant.dependencies.checkAvailable()) return
 
             register(newEnchant)
@@ -246,8 +249,8 @@ class DefaultAiyatsbusEnchantmentManager : AiyatsbusEnchantmentManager {
         for (enchant in byKeyMap.values) {
             // 不卸载外部附魔
             if (enchant in enchantmentsToRegister) continue
-            enchant.file.isProcessingByWatcher = false
-            enchant.file.unwatch()
+            enchant.file?.isProcessingByWatcher = false
+            enchant.file?.unwatch()
             unregister(enchant)
         }
     }

@@ -25,6 +25,7 @@ import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import taboolib.library.configuration.ConfigurationSection
 import taboolib.module.chat.colored
+import taboolib.module.configuration.Configuration
 
 /**
  * 附魔显示类
@@ -139,5 +140,73 @@ data class Displayer(
         tmp["enchant_display_lore"] = display(tmp).replacePlaceholder(player)
         tmp["description"] = specificDescription.replace(tmp).colored().replacePlaceholder(player)
         return tmp
+    }
+
+    fun serialize(): ConfigurationSection {
+        return Configuration.empty().apply {
+            set("display", display)
+            set("format.previous", previous)
+            set("format.subsequent", subsequent)
+            set("description.general", generalDescription)
+            set("description.specific", specificDescription)
+        }
+    }
+
+    class Builder {
+
+        private var enchant: AiyatsbusEnchantment? = null
+        private var display: Boolean = true
+        private var previous: String = "{default_previous}"
+        private var subsequent: String = "{default_subsequent}"
+        private var generalDescription: String = "&7"
+        private var specificDescription: String? = null
+
+        fun enchant(enchant: AiyatsbusEnchantment): Builder {
+            this.enchant = enchant
+            return this
+        }
+
+        fun display(display: Boolean): Builder {
+            this.display = display
+            return this
+        }
+
+        fun previous(previous: String): Builder {
+            this.previous = previous
+            return this
+        }
+
+        fun subsequent(subsequent: String): Builder {
+            this.subsequent = subsequent
+            return this
+        }
+
+        fun generalDescription(generalDescription: String): Builder {
+            this.generalDescription = generalDescription
+            return this
+        }
+
+        fun specificDescription(specificDescription: String): Builder {
+            this.specificDescription = specificDescription
+            return this
+        }
+
+        fun build(): Displayer {
+            return Displayer(
+                Configuration.empty(),
+                requireNotNull(enchant) { "DisplayerBuilder requires enchant before build()" },
+                display,
+                previous,
+                subsequent,
+                generalDescription,
+                specificDescription ?: generalDescription
+            )
+        }
+    }
+
+    companion object {
+
+        @JvmStatic
+        fun builder() = Builder()
     }
 }

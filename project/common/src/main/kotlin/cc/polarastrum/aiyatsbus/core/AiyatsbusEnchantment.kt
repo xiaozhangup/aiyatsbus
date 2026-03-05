@@ -61,7 +61,7 @@ interface AiyatsbusEnchantment {
      * 
      * 存储附魔配置的 YAML 文件实例，包含所有附魔数据。
      */
-    val file: File
+    val file: File?
 
     /**
      * 附魔配置对象

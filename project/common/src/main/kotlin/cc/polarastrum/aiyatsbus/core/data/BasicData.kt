@@ -20,6 +20,7 @@ import cc.polarastrum.aiyatsbus.core.util.coerceInt
 import taboolib.library.configuration.ConfigurationSection
 import taboolib.module.chat.colored
 import taboolib.module.chat.uncolored
+import taboolib.module.configuration.Configuration
 
 /**
  * 附魔基本数据类
@@ -60,4 +61,73 @@ data class BasicData(
      * 通过比较原始名称和去色后的名称来判断是否包含颜色代码。
      */
     val nameHasColor: Boolean = originName != name
+
+    fun serialize(): ConfigurationSection {
+        return Configuration.empty().apply {
+            set("enable", enable)
+            set("disable-worlds", disableWorlds)
+            set("id", id)
+            set("name", name)
+            set("max-level", maxLevel)
+        }
+    }
+
+    class Builder {
+
+        private var enable: Boolean = true
+        private var disableWorlds: MutableList<String> = mutableListOf()
+        private var id: String = ""
+        private var name: String = ""
+        private var maxLevel: Int = -1
+
+        fun enable(enable: Boolean): Builder {
+            this.enable = enable
+            return this
+        }
+
+        fun disableWorlds(vararg ids: String): Builder {
+            this.disableWorlds = ids.toMutableList()
+            return this
+        }
+
+        fun disableWorlds(ids: MutableList<String>): Builder {
+            this.disableWorlds = ids
+            return this
+        }
+
+        fun addDisableWorld(name: String): Builder {
+            this.disableWorlds += name
+            return this
+        }
+
+        fun removeDisableWorld(name: String): Builder {
+            this.disableWorlds -= name
+            return this
+        }
+
+        fun id(id: String): Builder {
+            this.id = id
+            return this
+        }
+
+        fun name(name: String): Builder {
+            this.name = name
+            return this
+        }
+
+        fun maxLevel(maxLevel: Int): Builder {
+            this.maxLevel = maxLevel
+            return this
+        }
+
+        fun build(): BasicData {
+            return BasicData(Configuration.empty(), enable, disableWorlds, id, name, maxLevel)
+        }
+    }
+
+    companion object {
+
+        @JvmStatic
+        fun builder() = Builder()
+    }
 }

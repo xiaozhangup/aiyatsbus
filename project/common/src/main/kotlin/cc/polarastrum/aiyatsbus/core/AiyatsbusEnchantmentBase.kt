@@ -37,7 +37,7 @@ import java.io.File
  */
 abstract class AiyatsbusEnchantmentBase(
     final override val id: String,
-    final override val file: File,
+    final override val file: File?,
     final override val config: Configuration
 ) : AiyatsbusEnchantment {
 

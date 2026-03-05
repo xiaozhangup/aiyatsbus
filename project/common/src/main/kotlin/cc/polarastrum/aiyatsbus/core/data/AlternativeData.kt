@@ -19,6 +19,7 @@ package cc.polarastrum.aiyatsbus.core.data
 import cc.polarastrum.aiyatsbus.core.util.coerceBoolean
 import cc.polarastrum.aiyatsbus.core.util.coerceInt
 import taboolib.library.configuration.ConfigurationSection
+import taboolib.module.configuration.Configuration
 
 /**
  * 附魔额外数据类
@@ -60,6 +61,9 @@ data class AlternativeData(
 
     /** 是否不可获得，为 true 时玩家无法获得该附魔，默认为 false */
     val inaccessible: Boolean = root?.getBoolean("inaccessible", false).coerceBoolean(false),
+
+    /** 是否为内置触发器附魔 */
+    val hardcoded: Boolean = root?.getBoolean("hardcoded", false).coerceBoolean(false),
 ) {
 
     /**
@@ -117,5 +121,122 @@ data class AlternativeData(
      */
     fun getLootMaxLevelLimit(maxLevel: Int, globalLimit: Int): Int {
         return (if (lootMaxLevel != -1) lootMaxLevel else if (globalLimit != -1) globalLimit else maxLevel).coerceAtMost(maxLevel)
+    }
+
+    fun serialize(): ConfigurationSection {
+        return Configuration.empty().apply {
+            set("weight", weight)
+            set("is-vanilla", isVanilla)
+            set("grindstoneable", grindstoneable)
+            set("is-treasure", isTreasure)
+            set("is-cursed", isCursed)
+            set("is-tradeable", isTradeable)
+            set("is-discoverable", isDiscoverable)
+            set("trade-max-level", tradeMaxLevel)
+            set("enchant-max-level", enchantMaxLevel)
+            set("loot-max-level", lootMaxLevel)
+            set("inaccessible", inaccessible)
+            set("hardcoded", hardcoded)
+        }
+    }
+
+    class Builder {
+
+        private var weight: Int = 100
+        private var isVanilla: Boolean = false
+        private var grindstoneable: Boolean = true
+        private var isTreasure: Boolean = false
+        private var isCursed: Boolean = false
+        private var isTradeable: Boolean = true
+        private var isDiscoverable: Boolean = true
+        private var tradeMaxLevel: Int = -1
+        private var enchantMaxLevel: Int = -1
+        private var lootMaxLevel: Int = -1
+        private var inaccessible: Boolean = false
+        private var hardcoded: Boolean = false
+
+        fun weight(weight: Int): Builder {
+            this.weight = weight
+            return this
+        }
+
+        fun isVanilla(isVanilla: Boolean): Builder {
+            this.isVanilla = isVanilla
+            return this
+        }
+
+        fun grindstoneable(grindstoneable: Boolean): Builder {
+            this.grindstoneable = grindstoneable
+            return this
+        }
+
+        fun isTreasure(isTreasure: Boolean): Builder {
+            this.isTreasure = isTreasure
+            return this
+        }
+
+        fun isCursed(isCursed: Boolean): Builder {
+            this.isCursed = isCursed
+            return this
+        }
+
+        fun isTradeable(isTradeable: Boolean): Builder {
+            this.isTradeable = isTradeable
+            return this
+        }
+
+        fun isDiscoverable(isDiscoverable: Boolean): Builder {
+            this.isDiscoverable = isDiscoverable
+            return this
+        }
+
+        fun tradeMaxLevel(tradeMaxLevel: Int): Builder {
+            this.tradeMaxLevel = tradeMaxLevel
+            return this
+        }
+
+        fun enchantMaxLevel(enchantMaxLevel: Int): Builder {
+            this.enchantMaxLevel = enchantMaxLevel
+            return this
+        }
+
+        fun lootMaxLevel(lootMaxLevel: Int): Builder {
+            this.lootMaxLevel = lootMaxLevel
+            return this
+        }
+
+        fun inaccessible(inaccessible: Boolean): Builder {
+            this.inaccessible = inaccessible
+            return this
+        }
+
+        fun hardcoded(hardcoded: Boolean): Builder {
+            this.hardcoded = hardcoded
+            return this
+        }
+
+        fun build(): AlternativeData {
+            return AlternativeData(
+                Configuration.empty(),
+                weight,
+                isVanilla,
+                grindstoneable,
+                isTreasure,
+                isCursed,
+                isTradeable,
+                isDiscoverable,
+                tradeMaxLevel,
+                enchantMaxLevel,
+                lootMaxLevel,
+                inaccessible,
+                hardcoded
+            )
+        }
+    }
+
+    companion object {
+
+        @JvmStatic
+        fun builder() = Builder()
     }
 }

@@ -22,6 +22,7 @@ import redempt.crunch.functional.EvaluationEnvironment
 import redempt.crunch.functional.Function
 import taboolib.common.platform.function.warning
 import taboolib.common.util.random
+import java.util.concurrent.ThreadLocalRandom
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
@@ -35,6 +36,13 @@ import kotlin.random.Random
  * @author HamsterYDS
  * @since 2024/2/17 23:15
  */
+
+fun random(v: Double): Boolean {
+    if (v in 0.0..1.0) {
+        return ThreadLocalRandom.current().nextDouble() < v
+    }
+    return ThreadLocalRandom.current().nextDouble() * 100 < v
+}
 
 // 罗马数字转换相关常量
 private val romanUnits = intArrayOf(1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1)

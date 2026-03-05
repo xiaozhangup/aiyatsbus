@@ -19,6 +19,7 @@ package cc.polarastrum.aiyatsbus.core.util
 import cc.polarastrum.aiyatsbus.core.util.MathUtils.calculate
 import org.bukkit.entity.Player
 import taboolib.platform.compat.replacePlaceholder
+import java.util.regex.Pattern
 import kotlin.math.roundToInt
 
 /**
@@ -208,3 +209,23 @@ fun String.calcToDouble(vararg holders: Pair<String, Any>): Double = calculate(h
  * ```
  */
 fun String.calcToInt(vararg holders: Pair<String, Any>): Int = calcToDouble(*holders).roundToInt()
+
+private val CAMEL_TO_SNAKE_REGEX = Pattern.compile("(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])")
+
+fun String.camelToSnake(): String {
+    // 使用正则表达式匹配两种位置：
+    // 1. 小写字母后紧跟大写字母的位置（如：nP in "onPlayer"）
+    // 2. 连续大写字母后紧跟大写+小写的位置（如：PR in "HTTPRequest"）
+    return CAMEL_TO_SNAKE_REGEX.matcher(this)
+        .replaceAll("_")  // 在匹配位置插入下划线
+        .uppercase()      // 转换为全大写
+}
+
+fun String.snakeToPascal(): String {
+    return this.split('_')
+        .joinToString("") { word ->
+            // 处理空字符串情况
+            if (word.isEmpty()) ""
+            else word.lowercase().replaceFirstChar { it.uppercase() }
+        }
+}
