@@ -13,6 +13,7 @@ import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.inventory.ItemStack
 import taboolib.common.platform.event.EventPriority
 import taboolib.common.platform.event.SubscribeEvent
+import kotlin.compareTo
 
 /**
  * 平展附魔（平面）
@@ -56,7 +57,11 @@ object PanelEnchantment {
 
         // 根据附魔等级选择半径，等级1->1(3x3)，等级2->2(5x5)，以此类推，最大半径为5
         val radius = minOf(level, 5)
-        val face = player.facing
+        val face = when {
+            player.location.pitch <= -45f -> BlockFace.UP
+            player.location.pitch >= 45f  -> BlockFace.DOWN
+            else -> player.facing
+        }
 
         // 根据检测到的 face 确定 N x N 平面，并遍历（不包含中心方块）
         for (target in getPlaneBlocks(block, face, radius)) {

@@ -13,6 +13,7 @@ import org.bukkit.block.data.Ageable
 import org.bukkit.event.block.BlockBreakEvent
 import taboolib.common.platform.event.EventPriority
 import taboolib.common.platform.event.SubscribeEvent
+import taboolib.common.platform.function.submit
 
 /**
  * 镰刀附魔
@@ -58,6 +59,10 @@ object SickleEnchantment {
 
         // 根据附魔等级选择范围：等级1/2 为半径1(3x3)，等级3 及以上为半径2(5x5)
         val radius = if (level >= 3) 2 else 1
+
+        // 保存中心方块的作物类型（因为事件结束后原方块会被移除）
+        val centerCropType = block.type
+
         for (target in getSurrounding(block, radius)) {
             if (!isFullyGrownCrop(target)) continue
             val cropType = target.type
@@ -76,6 +81,20 @@ object SickleEnchantment {
                 }
             } finally {
                 target.unmark("block-ignored")
+            }
+        }
+
+        if (level >= 2 && AntiGriefChecker.canPlace(player, block.location)) {
+            submit(delay = 1L) {
+                val center = block.world.getBlockAt(block.x, block.y, block.z)
+                if (center.type.isAir) {
+                    center.mark("block-ignored")
+                    try {
+                        replantCrop(center, centerCropType)
+                    } finally {
+                        center.unmark("block-ignored")
+                    }
+                }
             }
         }
     }
