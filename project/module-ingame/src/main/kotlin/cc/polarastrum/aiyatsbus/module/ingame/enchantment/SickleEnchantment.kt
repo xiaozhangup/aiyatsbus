@@ -56,8 +56,9 @@ object SickleEnchantment {
 
         val toolCopy = tool.clone()
 
-        // 获取以中心方块为基准的 3x3 水平范围内的其他方块
-        for (target in getSurrounding3x3(block)) {
+        // 根据附魔等级选择范围：等级1/2 为半径1(3x3)，等级3 及以上为半径2(5x5)
+        val radius = if (level >= 3) 2 else 1
+        for (target in getSurrounding(block, radius)) {
             if (!isFullyGrownCrop(target)) continue
             val cropType = target.type
 
@@ -92,15 +93,16 @@ object SickleEnchantment {
     }
 
     /**
-     * 获取以指定方块为中心的 3x3 水平范围内的其他方块（不含中心方块）
+     * 获取以指定方块为中心的 N x N 水平范围内的其他方块（不含中心方块）
      *
      * @param center 中心方块
-     * @return 周围 8 个方块列表
+     * @param radius 半径（1 表示 3x3，2 表示 5x5）
+     * @return 周围方块列表
      */
-    private fun getSurrounding3x3(center: Block): List<Block> {
+    private fun getSurrounding(center: Block, radius: Int): List<Block> {
         val result = mutableListOf<Block>()
-        for (dx in -1..1) {
-            for (dz in -1..1) {
+        for (dx in -radius..radius) {
+            for (dz in -radius..radius) {
                 if (dx == 0 && dz == 0) continue
                 result.add(center.getRelative(dx, 0, dz))
             }

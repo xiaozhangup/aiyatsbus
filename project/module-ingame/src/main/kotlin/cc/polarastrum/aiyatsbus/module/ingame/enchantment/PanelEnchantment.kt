@@ -8,21 +8,20 @@ import cc.polarastrum.aiyatsbus.core.util.unmark
 import org.bukkit.GameMode
 import org.bukkit.Material
 import org.bukkit.block.Block
+import org.bukkit.block.BlockFace
 import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.inventory.ItemStack
 import taboolib.common.platform.event.EventPriority
 import taboolib.common.platform.event.SubscribeEvent
 
 /**
- * 立方附魔
+ * 平展附魔（平面）
  *
- * 为镐子提供 N x N x N 立方体范围挖掘能力。
- * 支持按附魔等级扩展范围：等级1 -> 半径1(3x3x3)，等级2 -> 半径2(5x5x5)，以此类推，半径最大为5。
+ * 为镐子提供 N x N 平面范围挖掘能力（在与玩家朝向垂直的平面内）。
+ * 支持按附魔等级扩展范围：等级1 -> 半径1(3x3)，等级2 -> 半径2(5x5)，以此类推，半径最大为5。
  * 在破坏额外方块前会通过 AntiGriefChecker 进行权限验证，避免越权问题。
- *
- * @author copilot
  */
-object CubicEnchantment {
+object PanelEnchantment {
 
     /** 不应被破坏的方块材质集合 */
     private val unbreakable = setOf(
@@ -48,18 +47,19 @@ object CubicEnchantment {
         if (player.gameMode == GameMode.CREATIVE || player.gameMode == GameMode.SPECTATOR) return
 
         val tool = player.inventory.itemInMainHand
-        val enchant = aiyatsbusEt("cubic") ?: return
+        val enchant = aiyatsbusEt("panel") ?: return
         val level = tool.etLevel(enchant)
         if (level < 1) return
 
         val block = e.block
         val toolCopy = tool.clone()
 
-        // 根据附魔等级选择半径，等级1->1(3x3x3)，等级2->2(5x5x5)，以此类推，最大半径为5
+        // 根据附魔等级选择半径，等级1->1(3x3)，等级2->2(5x5)，以此类推，最大半径为5
         val radius = minOf(level, 5)
+        val face = player.facing
 
-        // 遍历以中心方块为中心的立方体范围（不包含中心方块）
-        for (target in getCubeBlocks(block, radius)) {
+        // 根据检测到的 face 确定 N x N 平面，并遍历（不包含中心方块）
+        for (target in getPlaneBlocks(block, face, radius)) {
             if (target.type == Material.AIR || target.type in unbreakable) continue
             if (!AntiGriefChecker.canBreak(player, target.location)) continue
             breakBlockSafely(target, toolCopy)
@@ -67,19 +67,27 @@ object CubicEnchantment {
     }
 
     /**
-     * 获取以指定方块为中心的 (2*radius+1)^3 立方体内的方块（不包含中心方块）
+     * 根据玩家朝向获取以指定方块为中心的 N x N 平面内的方块（不含中心方块）
      *
      * @param center 中心方块
-     * @param radius 半径（例如 radius=1 表示 3x3x3，radius=2 表示 5x5x5）
+     * @param facing 玩家朝向
+     * @param radius 半径（例如 radius=1 表示 3x3，radius=2 表示 5x5）
+     * @return 平面内除中心外的方块列表
      */
-    private fun getCubeBlocks(center: Block, radius: Int): List<Block> {
+    private fun getPlaneBlocks(center: Block, facing: BlockFace, radius: Int): List<Block> {
         val result = mutableListOf<Block>()
-        for (dx in -radius..radius) {
-            for (dy in -radius..radius) {
-                for (dz in -radius..radius) {
-                    if (dx == 0 && dy == 0 && dz == 0) continue
-                    result.add(center.getRelative(dx, dy, dz))
+        for (i in -radius..radius) {
+            for (j in -radius..radius) {
+                if (i == 0 && j == 0) continue
+                val target = when (facing) {
+                    // 玩家朝南/北：平面为 X-Y（东西 × 垂直）
+                    BlockFace.NORTH, BlockFace.SOUTH -> center.getRelative(i, j, 0)
+                    // 玩家朝东/西：平面为 Z-Y（南北 × 垂直）
+                    BlockFace.EAST, BlockFace.WEST -> center.getRelative(0, j, i)
+                    // 玩家朝上/下：平面为 X-Z（东西 × 南北）
+                    else -> center.getRelative(i, 0, j)
                 }
+                result.add(target)
             }
         }
         return result

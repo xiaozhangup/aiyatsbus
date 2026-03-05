@@ -2,8 +2,8 @@
 
 
 basic:
-  id: cubic
-  name: "立方"
+  id: panel
+  name: "平展"
   max-level: 1
 
 rarity: 异宝
@@ -12,7 +12,7 @@ targets:
 
 display:
   description:
-    general: "&7挖掘时以破坏的方块为中心，同时破坏 &a{范围}x{范围}x{范围} &7范围内的方块"
+    general: "&7挖掘时以破坏的方块为中心，同时破坏 &a{范围}x{范围} &7范围内的方块"
 
 variables:
   leveled:
