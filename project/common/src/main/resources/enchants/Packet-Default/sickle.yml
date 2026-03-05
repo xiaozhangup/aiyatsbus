@@ -12,5 +12,9 @@ targets:
 
 display:
   description:
-    general: "使用锄头时收割 3x3 范围内的成熟作物"
-    specific: "&7一级仅收割作物，二级在收割的同时自动补种"
+    general: "&7收割范围内的成熟作物, 并在大于2级时自动补种"
+    specific: "&7收割&a{范围}x{范围}&7范围内的成熟作物"
+
+variables:
+  leveled:
+    范围: ":max({level}-1,1)*2+1"

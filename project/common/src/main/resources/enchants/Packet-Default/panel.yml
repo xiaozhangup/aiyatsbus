@@ -12,8 +12,9 @@ targets:
 
 display:
   description:
-    general: "&7挖掘时以破坏的方块为中心，同时破坏 &a{范围}x{范围} &7范围内的方块"
+    general: "&7挖掘时以破坏的方块为中心，同时破坏&a{范围}x{范围}&7范围内的方块"
+    specific: "&7同时挖掘&a{范围}x{范围}&7的方块"
 
 variables:
   leveled:
-    范围: ":{level}"
+    范围: ":{level}*2+1"
