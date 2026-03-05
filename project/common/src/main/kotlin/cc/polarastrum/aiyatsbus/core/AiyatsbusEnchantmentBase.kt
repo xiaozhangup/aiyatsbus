@@ -35,7 +35,7 @@ abstract class AiyatsbusEnchantmentBase(
 
     override lateinit var enchantment: Enchantment
 
-    /** 手动缓存, 节约性能 */
+    /** 手动缓存稀有度，避免重复解析配置 */
     private var _rarity: Rarity? = null
     override val rarity: Rarity
         get() = _rarity ?: (aiyatsbusRarity(config["rarity"].toString())
@@ -43,7 +43,7 @@ abstract class AiyatsbusEnchantmentBase(
 
     override val variables: Variables = Variables(config.getConfigurationSection("variables"))
 
-    /** 手动缓存, 节约性能 */
+    /** 手动缓存目标类型列表，避免重复解析配置 */
     private var _targets: List<Target>? = null
     override val targets: List<Target>
         get() = _targets ?: config.getStringList("targets").mapNotNull(::aiyatsbusTarget).also { _targets = it }
@@ -52,6 +52,11 @@ abstract class AiyatsbusEnchantmentBase(
 
     override val limitations: Limitations = Limitations(this, config.getStringList("limitations"))
 
+    /**
+     * 刷新附魔属性缓存
+     *
+     * 当品质或目标等配置重载时调用，确保下次访问重新解析配置。
+     */
     override fun updateEnchantment() {
         _rarity = null
         _targets = null

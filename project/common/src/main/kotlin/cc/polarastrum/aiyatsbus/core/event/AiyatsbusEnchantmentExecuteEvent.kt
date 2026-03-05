@@ -27,18 +27,21 @@ data class AiyatsbusEnchantmentExecuteEvent(
 
     override val allowCancelled: Boolean = true
 
+    /** 当前附魔等级 */
     var level: Int
         get() = variableMap["level"] as Int
         set(value) {
             variableMap.put("level", value)
         }
 
+    /** 触发脚本使用的物品 */
     var item: ItemStack?
         get() = variableMap["item"] as ItemStack?
         set(value) {
             variableMap.put("item", value)
         }
 
+    /** 关联的附魔实例 */
     var enchant: AiyatsbusEnchantment
         get() = variableMap["enchant"] as AiyatsbusEnchantment
         set(value) {
@@ -60,6 +63,7 @@ data class AiyatsbusEnchantmentExecuteEvent(
             variableMap.put("cooldown", value)
         }
 
+    /** 附魔作用的装备槽位（若适用） */
     var slot: EquipmentSlot?
         get() = variableMap["slot"] as EquipmentSlot?
         set(value) {

@@ -12,8 +12,10 @@ import org.bukkit.event.weather.LightningStrikeEvent
 import org.bukkit.inventory.EquipmentSlot
 
 /**
- * Iweleth
- * cc.polarastrum.iweleth.listener.EventFunctions
+ * 附魔事件回调接口
+ *
+ * 由硬编码/文件定义的内置附魔实现，用于覆盖各类事件回调。
+ * 默认实现为空，实现类按需重写具体事件方法。
  *
  * @author mical
  * @since 2025/8/6 15:11

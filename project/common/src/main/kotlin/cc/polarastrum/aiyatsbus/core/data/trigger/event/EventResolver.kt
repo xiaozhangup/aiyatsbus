@@ -29,6 +29,15 @@ data class EventResolver<in T : Event>(
 
     companion object {
 
+        /**
+         * 默认物品解析器
+         *
+         * 根据槽位从实体装备中获取物品。若低版本调用可能抛出 NPE，已捕获防止崩溃。
+         *
+         * @param entity 事件涉及的生物实体
+         * @param slot 目标槽位
+         * @return 物品及是否成功解析
+         */
         fun defaultItemResolver(entity: LivingEntity, slot: EquipmentSlot?): Pair1<ItemStack?, Boolean> {
             if (slot == null) return null to1 false
             return try {

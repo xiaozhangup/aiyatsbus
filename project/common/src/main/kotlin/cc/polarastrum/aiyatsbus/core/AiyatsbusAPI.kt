@@ -96,6 +96,13 @@ interface AiyatsbusAPI {
      */
     fun getScriptHandler(): AiyatsbusScriptHandler
 
+    /**
+     * 获取技能处理器
+     *
+     * 负责处理与技能触发、冷却、事件注册相关的全部逻辑。
+     *
+     * @return 技能处理器实例
+     */
     fun getSkillHandler(): AiyatsbusSkillHandler
 
     /**

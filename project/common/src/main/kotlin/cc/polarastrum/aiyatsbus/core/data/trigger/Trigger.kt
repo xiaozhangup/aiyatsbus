@@ -10,8 +10,10 @@ import taboolib.library.configuration.ConfigurationSection
 import java.io.Closeable
 
 /**
- * Aiyatsbus
- * com.mcstarrysky.aiyatsbus.core.data.trigger.Trigger
+ * 附魔触发器基类
+ *
+ * 不同触发方式（事件监听、定时器、技能）共用的抽象基类。
+ * 负责脚本预热、执行、事件封装等通用逻辑。
  *
  * @author mical
  * @since 2024/3/9 18:36
@@ -28,10 +30,17 @@ abstract class Trigger(
     val type: TriggerType
 ) : Closeable {
 
+    /** 触发器 ID（配置名） */
     val id: String = root.name
+    /** 运行时唯一 ID，供脚本预热与调用使用 */
     val internalId: String =
         "Enchantment_" + enchant.basicData.id + "_" + type.name.lowercase().replaceFirstChar { it.uppercase() } + "_" + id.replace("-", "_") + "_"
 
+    /**
+     * 初始化触发器
+     *
+     * 默认会预热脚本；子类可扩展后调用 super.init()。
+     */
     open fun init() {
         try {
             preheat()
@@ -41,6 +50,7 @@ abstract class Trigger(
         }
     }
 
+    /** 预热脚本，降低首次触发时的延迟 */
     open fun preheat() {
         with(Aiyatsbus.api().getScriptHandler().getScriptHandler(scriptType)) {
             preheat(handle, "${internalId}Handle")

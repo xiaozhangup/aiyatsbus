@@ -11,7 +11,7 @@ import cc.polarastrum.aiyatsbus.core.data.trigger.Mechanism
 import taboolib.module.configuration.Configuration
 
 /**
- * 此附魔不作为内部附魔注册
+ * 非内部硬编码附魔
  *
  * @author mical
  * @since 2026/3/5 22:04

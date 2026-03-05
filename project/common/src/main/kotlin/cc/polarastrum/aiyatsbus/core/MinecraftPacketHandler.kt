@@ -24,6 +24,13 @@ interface MinecraftPacketHandler {
      */
     fun handleContainerClick(event: PacketReceiveEvent)
 
+    /**
+     * 同步客户端注册表
+     *
+     * 在自定义附魔注册后向玩家同步注册表，确保客户端识别自定义附魔。
+     *
+     * @param player 目标玩家
+     */
     fun synchronizeRegistries(player: Player)
 
     /** 发送手部活动数据 */
