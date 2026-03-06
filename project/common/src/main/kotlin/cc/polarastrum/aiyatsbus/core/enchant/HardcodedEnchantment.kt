@@ -7,6 +7,7 @@ import cc.polarastrum.aiyatsbus.core.data.AlternativeData
 import cc.polarastrum.aiyatsbus.core.data.BasicData
 import cc.polarastrum.aiyatsbus.core.data.Displayer
 import cc.polarastrum.aiyatsbus.core.data.LimitType
+import cc.polarastrum.aiyatsbus.core.data.VariableType
 import cc.polarastrum.aiyatsbus.core.data.trigger.Mechanism
 import taboolib.module.configuration.Configuration
 
@@ -32,6 +33,7 @@ class HardcodedEnchantment(
         private var rarity: String = AiyatsbusSettings.defaultRarity
         private var limitations: MutableList<String> = mutableListOf()
         private var targets: MutableList<String> = mutableListOf()
+        private var variables: MutableMap<VariableType, MutableMap<String, String>> = mutableMapOf()
 
         private var eventExecutor: EventFunctions = object : EventFunctions {
         }
@@ -91,6 +93,18 @@ class HardcodedEnchantment(
             return this
         }
 
+        fun addVariables(type: VariableType, name: String, value: String, unit: String = ""): Builder {
+            val map = this.variables.getOrPut(type) { mutableMapOf() }
+            map[name] = "$unit:$value"
+            return this
+        }
+
+        fun removeVariables(type: VariableType, vararg variables: String): Builder {
+            val map = this.variables[type] ?: return this
+            variables.forEach { map.remove(it) }
+            return this
+        }
+
         fun limitations(vararg value: String): Builder {
             this.limitations = value.toMutableList()
             return this
@@ -111,6 +125,11 @@ class HardcodedEnchantment(
             config["rarity"] = rarity
             config["targets"] = targets
             config["limitations"] = limitations
+            for ((type, variable) in variables) {
+                for ((name, value) in variable) {
+                    config["variables.${type.name.lowercase()}.${name}"] = value
+                }
+            }
             return HardcodedEnchantment(basicData!!.id, config, eventExecutor)
         }
 
