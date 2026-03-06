@@ -1,19 +1,3 @@
-/*
- *  Copyright (C) 2022-2024 PolarAstrumLab
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
 package cc.polarastrum.aiyatsbus.core.data
 
 import cc.polarastrum.aiyatsbus.core.Aiyatsbus
@@ -25,7 +9,7 @@ import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import taboolib.library.configuration.ConfigurationSection
 import taboolib.module.chat.colored
-import taboolib.module.chat.uncolored
+import taboolib.module.configuration.Configuration
 
 /**
  * 附魔显示类
@@ -144,5 +128,73 @@ data class Displayer(
         tmp["enchant_display_lore"] = display(tmp).replacePlaceholder(player)
         tmp["description"] = specificDescription.replace(tmp).colored().replacePlaceholder(player)
         return tmp
+    }
+
+    fun serialize(): ConfigurationSection {
+        return Configuration.empty().apply {
+            set("display", display)
+            set("format.previous", previous)
+            set("format.subsequent", subsequent)
+            set("description.general", generalDescription)
+            set("description.specific", specificDescription)
+        }
+    }
+
+    class Builder {
+
+        private var enchant: AiyatsbusEnchantment? = null
+        private var display: Boolean = true
+        private var previous: String = "{default_previous}"
+        private var subsequent: String = "{default_subsequent}"
+        private var generalDescription: String = "&7"
+        private var specificDescription: String? = null
+
+        fun enchant(enchant: AiyatsbusEnchantment): Builder {
+            this.enchant = enchant
+            return this
+        }
+
+        fun display(display: Boolean): Builder {
+            this.display = display
+            return this
+        }
+
+        fun previous(previous: String): Builder {
+            this.previous = previous
+            return this
+        }
+
+        fun subsequent(subsequent: String): Builder {
+            this.subsequent = subsequent
+            return this
+        }
+
+        fun generalDescription(generalDescription: String): Builder {
+            this.generalDescription = generalDescription
+            return this
+        }
+
+        fun specificDescription(specificDescription: String): Builder {
+            this.specificDescription = specificDescription
+            return this
+        }
+
+        fun build(): Displayer {
+            return Displayer(
+                Configuration.empty(),
+                requireNotNull(enchant) { "DisplayerBuilder requires enchant before build()" },
+                display,
+                previous,
+                subsequent,
+                generalDescription,
+                specificDescription ?: generalDescription
+            )
+        }
+    }
+
+    companion object {
+
+        @JvmStatic
+        fun builder() = Builder()
     }
 }

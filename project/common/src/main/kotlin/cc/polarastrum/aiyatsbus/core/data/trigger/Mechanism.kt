@@ -25,9 +25,16 @@ data class Mechanism(
     var enchant: AiyatsbusEnchantment
 ) : Closeable {
 
+    /** 已注册的触发器与类型映射表 */
     private val triggers = HashMap<Trigger, TriggerType>()
+    /** 各触发器类型的优先级缓存 */
     private val priorities = EnumMap<TriggerType, Int>(TriggerType::class.java)
 
+    /**
+     * 初始化所有触发器
+     *
+     * 解析配置并注册监听器、定时器、技能触发器。此方法应在附魔加载时调用。
+     */
     fun init() = safeguard("附魔机制", "enchantment mechanisms") {
         // 初始化事件监听器
         section?.getConfigurationSection("listeners")?.let { listenersSection ->
@@ -55,14 +62,32 @@ data class Mechanism(
         }
     }
 
+    /**
+     * 获取指定触发器类型的优先级
+     *
+     * @param type 触发器类型
+     * @return 优先级数值，默认 0
+     */
     fun priority(type: TriggerType): Int {
         return priorities.getOrPut(type) { section?.getInt("priority-${type.name.lowercase()}", 0) ?: 0 }
     }
 
+    /**
+     * 获取指定类型的所有触发器
+     *
+     * @param type 触发器类型
+     * @return 对应触发器集合
+     */
     fun triggers(type: TriggerType): Collection<Trigger> {
         return triggers.filter { it.value == type }.keys
     }
 
+    /**
+     * 判断是否存在某类型触发器
+     *
+     * @param type 触发器类型
+     * @return 是否存在
+     */
     fun hasTrigger(type: TriggerType): Boolean {
         return triggers.containsValue(type)
     }

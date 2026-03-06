@@ -36,6 +36,7 @@ data class Ticker @JvmOverloads constructor(
     val interval: Long = root.getLong("interval", 20L)
 ) : Trigger(root, enchant, scriptType, handle, -1, TriggerType.TICKER) {
 
+    /** 注册定时任务 */
     override fun init() {
         super.init()
         Aiyatsbus.api().getTickHandler().getRoutine().put(enchant, id, interval)
@@ -68,11 +69,13 @@ data class Ticker @JvmOverloads constructor(
             .invoke(source, id, sender, vars)
     }
 
+    /** 执行预处理脚本 */
     fun executePreHandle(entity: LivingEntity, vars: MutableMap<String, Any?>) {
         if (!AiyatsbusEnchantmentExecuteEvent(entity, this, type, preHandle, vars).call()) return
         execute(preHandle, "${internalId}PreHandle", entity, vars)
     }
 
+    /** 执行后处理脚本 */
     fun executePostHandle(entity: LivingEntity, vars: MutableMap<String, Any?>) {
         if (!AiyatsbusEnchantmentExecuteEvent(entity, this, type, postHandle, vars).call()) return
         execute(postHandle, "${internalId}PostHandle", entity, vars)

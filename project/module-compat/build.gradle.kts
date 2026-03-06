@@ -2,7 +2,7 @@ repositories {
     mavenLocal()
     maven("https://repo.papermc.io/repository/maven-public/")                 // Paper, PlotSquared
     maven("https://maven.enginehub.org/repo/")                                // WorldGuard
-    maven("https://jitpack.io/")                                              // Lands, GriefPrevention
+    maven("https://jitpack.io/")                                              // Lands, GriefPrevention, NoBuildPlus
     maven("https://nexus.iridiumdevelopment.net/repository/maven-releases/")  // IridiumSkyBlock
     maven("https://repo.codemc.org/repository/maven-public/")                 // BentoBox
     maven("https://repo.essentialsx.net/releases/")                           // EssentialsX
@@ -31,7 +31,9 @@ dependencies {
     compileOnly("public:CitizensAPI:2.0.35")                                      // Citizens
     compileOnly("public:BlockLocker:1.13")                                        // BlockLocker
     compileOnly("com.sk89q.worldguard:worldguard-bukkit:7.0.9")                   // WorldGuard
+    compileOnly("com.mcstarrysky:land:1.0.1")                                     // Land
     compileOnly("com.github.angeschossen:LandsAPI:7.0.2")                         // Lands
+    compileOnly("com.github.Ez4p1xEL:NoBuildPlus:1.5.52")                         // NoBuildPlus (新版)
     compileOnly("com.iridium:IridiumSkyblock:4.0.8")                              // IridiumSkyBlock
     compileOnly("world.bentobox:bentobox:2.1.0-SNAPSHOT")                         // BentoBox
     compileOnly("com.griefdefender:api:2.1.0-SNAPSHOT")                           // GriefDefender
@@ -55,7 +57,7 @@ dependencies {
     compileOnly("public:CrashClaim:minimize")                                     // CrashClaim, 为维护作者权益已去除所有逻辑代码
     compileOnly("public:hClaims:minimize")                                        // hClaims, 为维护作者权益已去除所有逻辑代码
     compileOnly("public:KingdomsX:minimize")                                      // KingdomsX, 为维护作者权益已去除所有逻辑代码
-    compileOnly("public:NoBuildPlus:1.5.7:minimize")                              // NoBuildPlus, 为维护作者权益已去除所有逻辑代码
+    compileOnly("public:NoBuildPlus:1.5.7:minimize")                              // NoBuildPlus (旧版), 为维护作者权益已去除所有逻辑代码
     compileOnly("public:PreciousStones:1.17.1.2:minimize")                        // PreciousStones, 为维护作者权益已去除所有逻辑代码
     compileOnly("public:SuperiorSkyblock2:2023.3:minimize")                       // SuperiorSkyblock2, 为维护作者权益已去除所有逻辑代码
     compileOnly("public:XClaim:minimize")
