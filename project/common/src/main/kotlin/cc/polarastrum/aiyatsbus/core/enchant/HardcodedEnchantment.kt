@@ -121,7 +121,7 @@ class HardcodedEnchantment(
             if (alternativeData != null) {
                 config["alternative"] = alternativeData!!.serialize()
             }
-            config["displayer"] = displayer!!.serialize()
+            config["display"] = displayer!!.serialize()
             config["rarity"] = rarity
             config["targets"] = targets
             config["limitations"] = limitations
