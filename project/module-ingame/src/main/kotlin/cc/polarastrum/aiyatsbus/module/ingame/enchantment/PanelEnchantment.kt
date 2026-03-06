@@ -1,19 +1,19 @@
 package cc.polarastrum.aiyatsbus.module.ingame.enchantment
 
-import cc.polarastrum.aiyatsbus.core.aiyatsbusEt
 import cc.polarastrum.aiyatsbus.core.compat.AntiGriefChecker
-import cc.polarastrum.aiyatsbus.core.etLevel
+import cc.polarastrum.aiyatsbus.core.data.BasicData
+import cc.polarastrum.aiyatsbus.core.data.Displayer
+import cc.polarastrum.aiyatsbus.core.enchant.EventFunctions
+import cc.polarastrum.aiyatsbus.core.enchant.HardcodedEnchantment
 import cc.polarastrum.aiyatsbus.core.util.mark
 import cc.polarastrum.aiyatsbus.core.util.unmark
-import org.bukkit.GameMode
 import org.bukkit.Material
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.inventory.ItemStack
-import taboolib.common.platform.event.EventPriority
-import taboolib.common.platform.event.SubscribeEvent
-import kotlin.compareTo
+import taboolib.common.LifeCycle
+import taboolib.common.platform.Awake
 
 /**
  * 平展附魔（平面）
@@ -38,37 +38,43 @@ object PanelEnchantment {
         Material.JIGSAW
     )
 
-    @SubscribeEvent(priority = EventPriority.HIGH, ignoreCancelled = true)
-    fun onBlockBreak(e: BlockBreakEvent) {
-        // 防止递归触发：已被标记为正在处理的方块跳过
-        if (e.block.hasMetadata("block-ignored")) return
+    @Awake(LifeCycle.LOAD)
+    fun register() { // {level}*2+1
+        HardcodedEnchantment.builder()
+            .basicData(BasicData.builder().id("panel").name("平展").maxLevel(1).build())
+            .rarity("异宝")
+            .targets("镐")
+            .displayer(
+                Displayer.builder()
+                    .generalDescription("&7挖掘时以破坏的方块为中心，同时破坏&a{范围}x{范围}&7范围内的方块")
+                    .specificDescription("&7同时挖掘&a{范围}x{范围}&7的方块")
+                    .build()
+            )
+            .eventExecutor(object : EventFunctions {
+                override fun blockBreak(level: Int, event: BlockBreakEvent) {
+                    if (event.block.hasMetadata("block-ignored")) return
 
-        val player = e.player
-        // 只在生存/冒险模式下生效
-        if (player.gameMode == GameMode.CREATIVE || player.gameMode == GameMode.SPECTATOR) return
+                    val player = event.player
+                    val tool = player.inventory.itemInMainHand
+                    if (level < 1) return
 
-        val tool = player.inventory.itemInMainHand
-        val enchant = aiyatsbusEt("panel") ?: return
-        val level = tool.etLevel(enchant)
-        if (level < 1) return
+                    val block = event.block
+                    val toolCopy = tool.clone()
+                    val radius = minOf(level, 5)
+                    val face = when {
+                        player.location.pitch <= -45f -> BlockFace.UP
+                        player.location.pitch >= 45f  -> BlockFace.DOWN
+                        else -> player.facing
+                    }
 
-        val block = e.block
-        val toolCopy = tool.clone()
-
-        // 根据附魔等级选择半径，等级1->1(3x3)，等级2->2(5x5)，以此类推，最大半径为5
-        val radius = minOf(level, 5)
-        val face = when {
-            player.location.pitch <= -45f -> BlockFace.UP
-            player.location.pitch >= 45f  -> BlockFace.DOWN
-            else -> player.facing
-        }
-
-        // 根据检测到的 face 确定 N x N 平面，并遍历（不包含中心方块）
-        for (target in getPlaneBlocks(block, face, radius)) {
-            if (target.type == Material.AIR || target.type in unbreakable) continue
-            if (!AntiGriefChecker.canBreak(player, target.location)) continue
-            breakBlockSafely(target, toolCopy)
-        }
+                    for (target in getPlaneBlocks(block, face, radius)) {
+                        if (target.type == Material.AIR || target.type in unbreakable) continue
+                        if (!AntiGriefChecker.canBreak(player, target.location)) continue
+                        breakBlockSafely(target, toolCopy)
+                    }
+                }
+            })
+            .register()
     }
 
     /**

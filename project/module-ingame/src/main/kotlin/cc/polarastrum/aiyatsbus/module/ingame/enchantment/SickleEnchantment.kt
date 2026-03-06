@@ -2,6 +2,10 @@ package cc.polarastrum.aiyatsbus.module.ingame.enchantment
 
 import cc.polarastrum.aiyatsbus.core.aiyatsbusEt
 import cc.polarastrum.aiyatsbus.core.compat.AntiGriefChecker
+import cc.polarastrum.aiyatsbus.core.data.BasicData
+import cc.polarastrum.aiyatsbus.core.data.Displayer
+import cc.polarastrum.aiyatsbus.core.enchant.EventFunctions
+import cc.polarastrum.aiyatsbus.core.enchant.HardcodedEnchantment
 import cc.polarastrum.aiyatsbus.core.etLevel
 import cc.polarastrum.aiyatsbus.core.util.mark
 import cc.polarastrum.aiyatsbus.core.util.unmark
@@ -11,8 +15,8 @@ import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.Ageable
 import org.bukkit.event.block.BlockBreakEvent
-import taboolib.common.platform.event.EventPriority
-import taboolib.common.platform.event.SubscribeEvent
+import taboolib.common.LifeCycle
+import taboolib.common.platform.Awake
 import taboolib.common.platform.function.submit
 
 /**
@@ -37,66 +41,67 @@ object SickleEnchantment {
         Material.NETHER_WART to Material.NETHER_WART
     )
 
-    @SubscribeEvent(priority = EventPriority.HIGH, ignoreCancelled = true)
-    fun onBlockBreak(e: BlockBreakEvent) {
-        // 防止递归触发：已被标记为正在处理的方块跳过
-        if (e.block.hasMetadata("block-ignored")) return
+    @Awake(LifeCycle.LOAD)
+    fun register() { // max({level}-1,1)*2+1
+        HardcodedEnchantment.builder()
+            .basicData(BasicData.builder().id("sickle").name("镰刀").maxLevel(3).build())
+            .rarity("稀有")
+            .targets("锄")
+            .displayer(
+                Displayer.builder()
+                    .generalDescription("&7收割范围内的成熟作物, 并在大于2级时自动补种")
+                    .specificDescription("&7收割&a{范围}x{范围}&7范围内的成熟作物")
+                    .build()
+            )
+            .eventExecutor(object : EventFunctions {
+                override fun blockBreak(level: Int, event: BlockBreakEvent) {
+                    if (event.block.hasMetadata("block-ignored")) return
 
-        val player = e.player
-        // 只在生存/冒险模式下生效
-        if (player.gameMode == GameMode.CREATIVE || player.gameMode == GameMode.SPECTATOR) return
+                    val player = event.player
+                    val tool = player.inventory.itemInMainHand
+                    if (level < 1) return
 
-        val tool = player.inventory.itemInMainHand
-        val enchant = aiyatsbusEt("sickle") ?: return
-        val level = tool.etLevel(enchant)
-        if (level < 1) return
+                    val block = event.block
+                    if (!isFullyGrownCrop(block)) return
 
-        val block = e.block
-        // 仅当被破坏的方块本身是成熟作物时才触发
-        if (!isFullyGrownCrop(block)) return
+                    val toolCopy = tool.clone()
+                    val radius = if (level >= 3) 2 else 1
+                    val centerCropType = block.type
 
-        val toolCopy = tool.clone()
+                    for (target in getSurrounding(block, radius)) {
+                        if (!isFullyGrownCrop(target)) continue
+                        val cropType = target.type
 
-        // 根据附魔等级选择范围：等级1/2 为半径1(3x3)，等级3 及以上为半径2(5x5)
-        val radius = if (level >= 3) 2 else 1
+                        if (!AntiGriefChecker.canBreak(player, target.location)) continue
 
-        // 保存中心方块的作物类型（因为事件结束后原方块会被移除）
-        val centerCropType = block.type
+                        target.mark("block-ignored")
+                        try {
+                            target.breakNaturally(toolCopy)
 
-        for (target in getSurrounding(block, radius)) {
-            if (!isFullyGrownCrop(target)) continue
-            val cropType = target.type
+                            if (level >= 2 && AntiGriefChecker.canPlace(player, target.location)) {
+                                replantCrop(target, cropType)
+                            }
+                        } finally {
+                            target.unmark("block-ignored")
+                        }
+                    }
 
-            // 检查是否有破坏权限
-            if (!AntiGriefChecker.canBreak(player, target.location)) continue
-
-            // 标记方块防止递归，并执行自然破坏（保留工具附魔效果）
-            target.mark("block-ignored")
-            try {
-                target.breakNaturally(toolCopy)
-
-                // 二级附魔：自动补种
-                if (level >= 2 && AntiGriefChecker.canPlace(player, target.location)) {
-                    replantCrop(target, cropType)
-                }
-            } finally {
-                target.unmark("block-ignored")
-            }
-        }
-
-        if (level >= 2 && AntiGriefChecker.canPlace(player, block.location)) {
-            submit(delay = 1L) {
-                val center = block.world.getBlockAt(block.x, block.y, block.z)
-                if (center.type.isAir) {
-                    center.mark("block-ignored")
-                    try {
-                        replantCrop(center, centerCropType)
-                    } finally {
-                        center.unmark("block-ignored")
+                    if (level >= 2 && AntiGriefChecker.canPlace(player, block.location)) {
+                        submit(delay = 1L) {
+                            val center = block.world.getBlockAt(block.x, block.y, block.z)
+                            if (center.type.isAir) {
+                                center.mark("block-ignored")
+                                try {
+                                    replantCrop(center, centerCropType)
+                                } finally {
+                                    center.unmark("block-ignored")
+                                }
+                            }
+                        }
                     }
                 }
-            }
-        }
+            })
+            .register()
     }
 
     /**
