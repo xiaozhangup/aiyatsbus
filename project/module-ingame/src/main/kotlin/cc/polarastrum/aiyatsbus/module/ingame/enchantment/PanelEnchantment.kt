@@ -3,6 +3,7 @@ package cc.polarastrum.aiyatsbus.module.ingame.enchantment
 import cc.polarastrum.aiyatsbus.core.compat.AntiGriefChecker
 import cc.polarastrum.aiyatsbus.core.data.BasicData
 import cc.polarastrum.aiyatsbus.core.data.Displayer
+import cc.polarastrum.aiyatsbus.core.data.VariableType
 import cc.polarastrum.aiyatsbus.core.enchant.EventFunctions
 import cc.polarastrum.aiyatsbus.core.enchant.HardcodedEnchantment
 import cc.polarastrum.aiyatsbus.core.util.mark
@@ -39,7 +40,7 @@ object PanelEnchantment {
     )
 
     @Awake(LifeCycle.LOAD)
-    fun register() { // {level}*2+1
+    fun register() {
         HardcodedEnchantment.builder()
             .basicData(BasicData.builder().id("panel").name("平展").maxLevel(1).build())
             .rarity("异宝")
@@ -50,6 +51,7 @@ object PanelEnchantment {
                     .specificDescription("&7同时挖掘&a{范围}x{范围}&7的方块")
                     .build()
             )
+            .addVariables(VariableType.LEVELED, "范围", "{level}*2+1")
             .eventExecutor(object : EventFunctions {
                 override fun blockBreak(level: Int, event: BlockBreakEvent) {
                     if (event.block.hasMetadata("block-ignored")) return

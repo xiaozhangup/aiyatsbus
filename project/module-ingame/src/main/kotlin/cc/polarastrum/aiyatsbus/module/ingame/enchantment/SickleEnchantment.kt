@@ -4,6 +4,7 @@ import cc.polarastrum.aiyatsbus.core.aiyatsbusEt
 import cc.polarastrum.aiyatsbus.core.compat.AntiGriefChecker
 import cc.polarastrum.aiyatsbus.core.data.BasicData
 import cc.polarastrum.aiyatsbus.core.data.Displayer
+import cc.polarastrum.aiyatsbus.core.data.VariableType
 import cc.polarastrum.aiyatsbus.core.enchant.EventFunctions
 import cc.polarastrum.aiyatsbus.core.enchant.HardcodedEnchantment
 import cc.polarastrum.aiyatsbus.core.etLevel
@@ -42,7 +43,7 @@ object SickleEnchantment {
     )
 
     @Awake(LifeCycle.LOAD)
-    fun register() { // max({level}-1,1)*2+1
+    fun register() {
         HardcodedEnchantment.builder()
             .basicData(BasicData.builder().id("sickle").name("镰刀").maxLevel(3).build())
             .rarity("稀有")
@@ -53,6 +54,7 @@ object SickleEnchantment {
                     .specificDescription("&7收割&a{范围}x{范围}&7范围内的成熟作物")
                     .build()
             )
+            .addVariables(VariableType.LEVELED, "范围", "max({level}-1,1)*2+1")
             .eventExecutor(object : EventFunctions {
                 override fun blockBreak(level: Int, event: BlockBreakEvent) {
                     if (event.block.hasMetadata("block-ignored")) return
