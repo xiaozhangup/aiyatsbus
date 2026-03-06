@@ -93,13 +93,13 @@ class HardcodedEnchantment(
             return this
         }
 
-        fun addVariables(type: VariableType, name: String, value: String, unit: String = ""): Builder {
+        fun addVariable (type: VariableType, name: String, value: String, unit: String = ""): Builder {
             val map = this.variables.getOrPut(type) { mutableMapOf() }
             map[name] = "$unit:$value"
             return this
         }
 
-        fun removeVariables(type: VariableType, vararg variables: String): Builder {
+        fun removeVariable(type: VariableType, vararg variables: String): Builder {
             val map = this.variables[type] ?: return this
             variables.forEach { map.remove(it) }
             return this

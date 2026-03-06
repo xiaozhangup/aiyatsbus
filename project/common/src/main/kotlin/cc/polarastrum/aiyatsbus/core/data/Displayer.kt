@@ -24,7 +24,7 @@ data class Displayer(
     /** 配置根节点 */
     private val root: ConfigurationSection,
     /** 对应的附魔实例 */
-    var enchant: AiyatsbusEnchantment,
+    var enchant: AiyatsbusEnchantment?,
     /** 是否显示该附魔 */
     val display: Boolean = root.getBoolean("display", true),
     /** 附魔显示的前半部分，一般是名称和等级 */
@@ -107,6 +107,7 @@ data class Displayer(
         player: Player? = null,
         item: ItemStack? = null
     ): Map<String, String> {
+        val enchant = this.enchant!!
         val tmp = enchant.variables.variables(level, item, true)
             .mapValues { it.value.toString() }.toMutableMap() // 因为是显示，这里的变量可以直接转为字符串
         val lv = level
@@ -138,17 +139,11 @@ data class Displayer(
 
     class Builder {
 
-        private var enchant: AiyatsbusEnchantment? = null
         private var display: Boolean = true
         private var previous: String = "{default_previous}"
         private var subsequent: String = "{default_subsequent}"
         private var generalDescription: String = "&7"
         private var specificDescription: String? = null
-
-        fun enchant(enchant: AiyatsbusEnchantment): Builder {
-            this.enchant = enchant
-            return this
-        }
 
         fun display(display: Boolean): Builder {
             this.display = display
@@ -178,7 +173,7 @@ data class Displayer(
         fun build(): Displayer {
             return Displayer(
                 Configuration.empty(),
-                requireNotNull(enchant) { "DisplayerBuilder requires enchant before build()" },
+                null, // 可放心设置为 null，因为注册到 Minecraft NMS Registry 时会被赋值
                 display,
                 previous,
                 subsequent,
