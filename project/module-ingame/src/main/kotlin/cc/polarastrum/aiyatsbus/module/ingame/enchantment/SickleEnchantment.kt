@@ -1,11 +1,11 @@
 package cc.polarastrum.aiyatsbus.module.ingame.enchantment
 
+import cc.polarastrum.aiyatsbus.core.BuiltinAiyatsbusEnchantment
 import cc.polarastrum.aiyatsbus.core.compat.AntiGriefChecker
 import cc.polarastrum.aiyatsbus.core.data.BasicData
 import cc.polarastrum.aiyatsbus.core.data.Displayer
 import cc.polarastrum.aiyatsbus.core.data.VariableType
-import cc.polarastrum.aiyatsbus.core.enchant.EventFunctions
-import cc.polarastrum.aiyatsbus.core.enchant.HardcodedEnchantment
+import cc.polarastrum.aiyatsbus.core.data.trigger.builtin.EventFunctions
 import cc.polarastrum.aiyatsbus.core.util.mark
 import cc.polarastrum.aiyatsbus.core.util.unmark
 import org.bukkit.Material
@@ -15,7 +15,6 @@ import org.bukkit.block.data.Ageable
 import org.bukkit.event.block.BlockBreakEvent
 import taboolib.common.LifeCycle
 import taboolib.common.platform.Awake
-import taboolib.common.platform.function.info
 import taboolib.common.platform.function.submit
 
 /**
@@ -42,7 +41,7 @@ object SickleEnchantment {
 
     @Awake(LifeCycle.LOAD)
     fun register() {
-        HardcodedEnchantment.builder()
+        BuiltinAiyatsbusEnchantment.builder()
             .basicData(BasicData.builder().id("sickle").name("镰刀").maxLevel(3).build())
             .rarity("稀有")
             .targets("锄")

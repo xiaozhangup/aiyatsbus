@@ -1,11 +1,11 @@
 package cc.polarastrum.aiyatsbus.module.ingame.enchantment
 
+import cc.polarastrum.aiyatsbus.core.BuiltinAiyatsbusEnchantment
 import cc.polarastrum.aiyatsbus.core.compat.AntiGriefChecker
 import cc.polarastrum.aiyatsbus.core.data.BasicData
 import cc.polarastrum.aiyatsbus.core.data.Displayer
 import cc.polarastrum.aiyatsbus.core.data.VariableType
-import cc.polarastrum.aiyatsbus.core.enchant.EventFunctions
-import cc.polarastrum.aiyatsbus.core.enchant.HardcodedEnchantment
+import cc.polarastrum.aiyatsbus.core.data.trigger.builtin.EventFunctions
 import cc.polarastrum.aiyatsbus.core.util.mark
 import cc.polarastrum.aiyatsbus.core.util.unmark
 import org.bukkit.Material
@@ -42,7 +42,7 @@ object CubicEnchantment {
 
     @Awake(LifeCycle.LOAD)
     fun register() {
-        HardcodedEnchantment.builder()
+        BuiltinAiyatsbusEnchantment.builder()
             .basicData(BasicData.builder().id("cubic").name("立方").maxLevel(1).build())
             .rarity("异宝")
             .targets("镐")

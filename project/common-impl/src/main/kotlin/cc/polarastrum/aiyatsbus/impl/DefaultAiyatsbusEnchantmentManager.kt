@@ -11,7 +11,6 @@ import cc.polarastrum.aiyatsbus.core.util.deepRead
 import cc.polarastrum.aiyatsbus.core.util.reloadable
 import cc.polarastrum.aiyatsbus.core.util.safeguard
 import cc.polarastrum.aiyatsbus.impl.DefaultAiyatsbusAPI.Companion.proxy
-import cc.polarastrum.aiyatsbus.core.enchant.InternalAiyatsbusEnchantment
 import org.bukkit.NamespacedKey
 import taboolib.common.LifeCycle
 import taboolib.common.TabooLib
