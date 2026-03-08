@@ -47,12 +47,13 @@ data class BasicData(
     val nameHasColor: Boolean = originName != name
 
     fun serialize(): ConfigurationSection {
-        return Configuration.empty().apply {
-            set("enable", enable)
-            set("disable-worlds", disableWorlds)
-            set("id", id)
-            set("name", name)
-            set("max-level", maxLevel)
+        return Configuration.empty().let { config ->
+            config["enable"] = enable
+            config["disable-worlds"] = disableWorlds
+            config["id"] = id
+            config["name"] = name
+            config["max-level"] = maxLevel
+            config
         }
     }
 
