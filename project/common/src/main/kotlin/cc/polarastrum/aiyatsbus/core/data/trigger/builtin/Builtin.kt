@@ -1,11 +1,7 @@
 package cc.polarastrum.aiyatsbus.core.data.trigger.builtin
 
 import cc.polarastrum.aiyatsbus.core.AiyatsbusEnchantment
-import cc.polarastrum.aiyatsbus.core.BuiltinAiyatsbusEnchantment
-import cc.polarastrum.aiyatsbus.core.data.BasicData
 import cc.polarastrum.aiyatsbus.core.data.CheckType
-import cc.polarastrum.aiyatsbus.core.data.Displayer
-import cc.polarastrum.aiyatsbus.core.data.VariableType
 import cc.polarastrum.aiyatsbus.core.data.trigger.Trigger
 import cc.polarastrum.aiyatsbus.core.data.trigger.TriggerType
 import cc.polarastrum.aiyatsbus.core.fastFixedEnchants
@@ -19,7 +15,6 @@ import org.bukkit.entity.Entity
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import org.bukkit.event.Event
-import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
@@ -61,23 +56,10 @@ open class Builtin : Trigger(Configuration.empty(), null, ScriptType.FLUXON, "",
         val executors = ConcurrentHashMap<EventType, Method>()
 
         @Awake(LifeCycle.LOAD)
-        fun trigger() {
-            BuiltinAiyatsbusEnchantment.builder()
-                .basicData(BasicData.builder().id("test").name("测试").maxLevel(2).build())
-                .rarity("精良")
-                .targets("所有物品")
-                .addVariable(VariableType.LEVELED, "测试", "{level}*2", "点")
-                .displayer(Displayer.builder().generalDescription("测试描述").specificDescription("测试描述&a{测试}").build())
-                .eventExecutor(object : EventFunctions {
-                    override fun blockBreak(level: Int, event: BlockBreakEvent) {
-                        event.player.sendMessage("你妈死了")
-                    }
-                })
-                .register()
+        fun init() {
             executors.putAll(EventFunctions::class.java.declaredMethods.associateBy { method ->
                 EventType.valueOf(method.name.camelToSnake()) }
             )
-            println(executors)
         }
 
         fun execute(entity: Entity, type: EventType, event: Event, vararg slots: EquipmentSlot) {
