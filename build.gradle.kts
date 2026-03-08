@@ -7,6 +7,7 @@ plugins {
     java
     id("io.izzel.taboolib") version "2.0.30" apply false
     id("org.jetbrains.kotlin.jvm") version "2.1.21" apply false
+    id("org.jetbrains.dokka") version "1.8.20" apply false
 }
 
 subprojects {

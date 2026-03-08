@@ -1,7 +1,7 @@
-package cc.polarastrum.aiyatsbus.module.ingame.trigger
+package cc.polarastrum.aiyatsbus.module.ingame.builtin
 
-import cc.polarastrum.aiyatsbus.core.enchant.EventType
-import cc.polarastrum.aiyatsbus.core.enchant.FileDefinedHardcodedEnchantment
+import cc.polarastrum.aiyatsbus.core.data.trigger.builtin.Builtin
+import cc.polarastrum.aiyatsbus.core.data.trigger.builtin.EventType
 import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.block.BlockDamageEvent
 import org.bukkit.event.block.BlockDropItemEvent
@@ -20,17 +20,17 @@ object ListenerBlock {
 
     @SubscribeEvent(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     fun onBreakBlock(e: BlockBreakEvent) {
-        FileDefinedHardcodedEnchantment.execute(e.player, EventType.BLOCK_BREAK, e, EquipmentSlot.HAND, EquipmentSlot.OFF_HAND,
+        Builtin.execute(e.player, EventType.BLOCK_BREAK, e, EquipmentSlot.HAND, EquipmentSlot.OFF_HAND,
             EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     fun onDamageBlock(e: BlockDamageEvent) {
-        FileDefinedHardcodedEnchantment.execute(e.player, EventType.BLOCK_DAMAGE, e, EquipmentSlot.HAND, EquipmentSlot.OFF_HAND)
+        Builtin.execute(e.player, EventType.BLOCK_DAMAGE, e, EquipmentSlot.HAND, EquipmentSlot.OFF_HAND)
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     fun onBlockDropItem(e: BlockDropItemEvent) {
-        FileDefinedHardcodedEnchantment.execute(e.player, EventType.BLOCK_DROP_ITEM, e, EquipmentSlot.HAND, EquipmentSlot.OFF_HAND)
+        Builtin.execute(e.player, EventType.BLOCK_DROP_ITEM, e, EquipmentSlot.HAND, EquipmentSlot.OFF_HAND)
     }
 }

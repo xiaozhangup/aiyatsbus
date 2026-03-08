@@ -44,10 +44,7 @@ data class AlternativeData(
     val lootMaxLevel: Int = (root?.getInt("loot-max-level", -1) ?: root?.getInt("loot_max_level", -1)).coerceInt(-1),
 
     /** 是否不可获得，为 true 时玩家无法获得该附魔，默认为 false */
-    val inaccessible: Boolean = root?.getBoolean("inaccessible", false).coerceBoolean(false),
-
-    /** 是否为内置触发器附魔 */
-    val hardcoded: Boolean = root?.getBoolean("hardcoded", false).coerceBoolean(false),
+    val inaccessible: Boolean = root?.getBoolean("inaccessible", false).coerceBoolean(false)
 ) {
 
     /**
@@ -120,7 +117,6 @@ data class AlternativeData(
             set("enchant-max-level", enchantMaxLevel)
             set("loot-max-level", lootMaxLevel)
             set("inaccessible", inaccessible)
-            set("hardcoded", hardcoded)
         }
     }
 
@@ -212,8 +208,7 @@ data class AlternativeData(
                 tradeMaxLevel,
                 enchantMaxLevel,
                 lootMaxLevel,
-                inaccessible,
-                hardcoded
+                inaccessible
             )
         }
     }

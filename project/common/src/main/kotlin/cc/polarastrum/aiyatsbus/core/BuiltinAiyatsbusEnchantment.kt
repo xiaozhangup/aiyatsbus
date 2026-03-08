@@ -1,29 +1,26 @@
-package cc.polarastrum.aiyatsbus.core.enchant
+package cc.polarastrum.aiyatsbus.core
 
-import cc.polarastrum.aiyatsbus.core.Aiyatsbus
-import cc.polarastrum.aiyatsbus.core.AiyatsbusEnchantmentBase
-import cc.polarastrum.aiyatsbus.core.AiyatsbusSettings
-import cc.polarastrum.aiyatsbus.core.data.AlternativeData
-import cc.polarastrum.aiyatsbus.core.data.BasicData
-import cc.polarastrum.aiyatsbus.core.data.Displayer
-import cc.polarastrum.aiyatsbus.core.data.LimitType
-import cc.polarastrum.aiyatsbus.core.data.VariableType
+import cc.polarastrum.aiyatsbus.core.data.*
 import cc.polarastrum.aiyatsbus.core.data.trigger.Mechanism
+import cc.polarastrum.aiyatsbus.core.data.trigger.TriggerType
+import cc.polarastrum.aiyatsbus.core.data.trigger.builtin.Builtin
+import cc.polarastrum.aiyatsbus.core.data.trigger.builtin.EventFunctions
 import taboolib.module.configuration.Configuration
 
 /**
- * 非内部硬编码附魔
+ * 硬编码附魔，
+ * 不会被当作 Aiyatsbus 内部附魔，而是外部附魔
  *
  * @author mical
  * @since 2026/3/5 22:04
  */
-class HardcodedEnchantment(
+class BuiltinAiyatsbusEnchantment(
     id: String,
     config: Configuration,
     eventExecutor: EventFunctions
 ) : AiyatsbusEnchantmentBase(id, null, config), EventFunctions by eventExecutor {
 
-    override val mechanism: Mechanism? = null
+    override val mechanism: Mechanism = Mechanism(null, this)
 
     class Builder {
 
@@ -115,8 +112,8 @@ class HardcodedEnchantment(
             return this
         }
 
-        fun build(): HardcodedEnchantment {
-            val config = Configuration.empty()
+        fun build(): BuiltinAiyatsbusEnchantment {
+            val config = Configuration.Companion.empty()
             config["basic"] = basicData!!.serialize()
             if (alternativeData != null) {
                 config["alternative"] = alternativeData!!.serialize()
@@ -130,13 +127,15 @@ class HardcodedEnchantment(
                     config["variables.${type.name.lowercase()}.${name}"] = value
                 }
             }
-            return HardcodedEnchantment(basicData!!.id, config, eventExecutor)
+            return BuiltinAiyatsbusEnchantment(basicData!!.id, config, eventExecutor).apply {
+                mechanism.addTrigger(TriggerType.BUILTIN, object : Builtin(), EventFunctions by eventExecutor { })
+            }
         }
 
         /**
          * 生成并注册
          */
-        fun register(): HardcodedEnchantment {
+        fun register(): BuiltinAiyatsbusEnchantment {
             return build().also { Aiyatsbus.api().getEnchantmentManager().register(it) }
         }
     }
