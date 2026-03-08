@@ -18,6 +18,8 @@ import org.bukkit.event.Event
 import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
+import taboolib.common.LifeCycle
+import taboolib.common.platform.Awake
 import taboolib.common5.Baffle
 import taboolib.module.configuration.Configuration
 import java.io.File
@@ -54,9 +56,13 @@ open class FileDefinedHardcodedEnchantment(
         private val baffle = Baffle.of(150, TimeUnit.MILLISECONDS)
 
         val executors = ConcurrentHashMap<EventType, Method>()
-            .apply {
-                putAll(EventFunctions::class.java.declaredMethods.associateBy { method -> EventType.valueOf(method.name.camelToSnake()) })
-            }
+
+        @Awake(LifeCycle.ENABLE)
+        fun trigger() {
+            executors.putAll(EventFunctions::class.java.declaredMethods.associateBy { method ->
+                EventType.valueOf(method.name.camelToSnake()) }
+            )
+        }
 
 //        fun execute(entity: Entity, type: EventType, event: Event, slot: TriggerSlots) {
 //            execute(entity, type, event, *slot.slots.toTypedArray())
