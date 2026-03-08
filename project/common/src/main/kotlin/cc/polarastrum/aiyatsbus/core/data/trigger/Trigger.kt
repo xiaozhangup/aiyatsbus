@@ -22,7 +22,7 @@ abstract class Trigger(
     /** 配置根节点 */
     root: ConfigurationSection,
     /** 所属附魔 */
-    private val enchant: AiyatsbusEnchantment,
+    private val enchant: AiyatsbusEnchantment?,
     private val scriptType: ScriptType,
     open val handle: String,
     /** 执行优先级，默认为 0 */
@@ -34,7 +34,7 @@ abstract class Trigger(
     val id: String = root.name
     /** 运行时唯一 ID，供脚本预热与调用使用 */
     val internalId: String =
-        "Enchantment_" + enchant.basicData.id + "_" + type.name.lowercase().replaceFirstChar { it.uppercase() } + "_" + id.replace("-", "_") + "_"
+        "Enchantment_" + enchant?.basicData?.id + "_" + type.name.lowercase().replaceFirstChar { it.uppercase() } + "_" + id.replace("-", "_") + "_"
 
     /**
      * 初始化触发器
@@ -45,7 +45,7 @@ abstract class Trigger(
         try {
             preheat()
         } catch (ex: Throwable) {
-            warning("Unable to preheat the ${type.name.lowercase()} $id of enchantment ${enchant.id}")
+            warning("Unable to preheat the ${type.name.lowercase()} $id of enchantment ${enchant?.id}")
             ex.printStackTrace()
         }
     }

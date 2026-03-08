@@ -1,11 +1,15 @@
-package cc.polarastrum.aiyatsbus.core.enchant
+package cc.polarastrum.aiyatsbus.core.data.trigger.builtin
 
 import cc.polarastrum.aiyatsbus.core.AiyatsbusEnchantment
-import cc.polarastrum.aiyatsbus.core.AiyatsbusEnchantmentBase
-import cc.polarastrum.aiyatsbus.core.InternalEnchantment
+import cc.polarastrum.aiyatsbus.core.BuiltinAiyatsbusEnchantment
+import cc.polarastrum.aiyatsbus.core.data.BasicData
 import cc.polarastrum.aiyatsbus.core.data.CheckType
-import cc.polarastrum.aiyatsbus.core.data.trigger.Mechanism
+import cc.polarastrum.aiyatsbus.core.data.Displayer
+import cc.polarastrum.aiyatsbus.core.data.VariableType
+import cc.polarastrum.aiyatsbus.core.data.trigger.Trigger
+import cc.polarastrum.aiyatsbus.core.data.trigger.TriggerType
 import cc.polarastrum.aiyatsbus.core.fastFixedEnchants
+import cc.polarastrum.aiyatsbus.core.script.ScriptType
 import cc.polarastrum.aiyatsbus.core.util.camelToSnake
 import cc.polarastrum.aiyatsbus.core.util.isNull
 import cc.polarastrum.aiyatsbus.core.util.random
@@ -15,6 +19,7 @@ import org.bukkit.entity.Entity
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import org.bukkit.event.Event
+import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
@@ -22,33 +27,31 @@ import taboolib.common.LifeCycle
 import taboolib.common.platform.Awake
 import taboolib.common5.Baffle
 import taboolib.module.configuration.Configuration
-import java.io.File
 import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
 /**
- * 此附魔作为内部附魔注册，
- * 其他插件无需自行实现附魔文件读取加载，
- * 只需要作为附魔包释放到 Aiyatsbus 的附魔目录即可。
+ * Aiyatsbus
+ * cc.polarastrum.aiyatsbus.core.data.trigger.builtin.Builtin
  *
  * @author mical
- * @since 2026/3/5 19:33
+ * @since 2026/3/8 23:59
  */
-open class FileDefinedHardcodedEnchantment(
-    id: String,
-    file: File,
-    config: Configuration
-) : AiyatsbusEnchantmentBase(id, file, config), EventFunctions, InternalEnchantment {
+open class Builtin : Trigger(Configuration.empty(), null, ScriptType.FLUXON, "", 0, TriggerType.BUILTIN), EventFunctions {
 
-    override val mechanism: Mechanism? = null
-
-    /**
-     * 应该是给 Ticker 用的，现在还没有用到。
-     */
-    open fun call(level: Int, type: EventType, entity: LivingEntity, event: Event) {
+    fun call(level: Int, type: EventType, entity: LivingEntity, event: Event) {
         executors[type]?.invoke(this, level, event)
         executors[EventType.TRIGGER]?.invoke(this, level, type, event, entity)
+    }
+
+    override fun init() {
+    }
+
+    override fun preheat() {
+    }
+
+    override fun executeHandle(entity: LivingEntity, vars: MutableMap<String, Any?>) {
     }
 
     companion object {
@@ -57,16 +60,25 @@ open class FileDefinedHardcodedEnchantment(
 
         val executors = ConcurrentHashMap<EventType, Method>()
 
-        @Awake(LifeCycle.ENABLE)
+        @Awake(LifeCycle.LOAD)
         fun trigger() {
+            BuiltinAiyatsbusEnchantment.builder()
+                .basicData(BasicData.builder().id("test").name("测试").maxLevel(2).build())
+                .rarity("精良")
+                .targets("所有物品")
+                .addVariable(VariableType.LEVELED, "测试", "{level}*2", "点")
+                .displayer(Displayer.builder().generalDescription("测试描述").specificDescription("测试描述&a{测试}").build())
+                .eventExecutor(object : EventFunctions {
+                    override fun blockBreak(level: Int, event: BlockBreakEvent) {
+                        event.player.sendMessage("你妈死了")
+                    }
+                })
+                .register()
             executors.putAll(EventFunctions::class.java.declaredMethods.associateBy { method ->
                 EventType.valueOf(method.name.camelToSnake()) }
             )
+            println(executors)
         }
-
-//        fun execute(entity: Entity, type: EventType, event: Event, slot: TriggerSlots) {
-//            execute(entity, type, event, *slot.slots.toTypedArray())
-//        }
 
         fun execute(entity: Entity, type: EventType, event: Event, vararg slots: EquipmentSlot) {
             if (entity !is LivingEntity) return
@@ -76,13 +88,6 @@ open class FileDefinedHardcodedEnchantment(
                 execute(entity, item!!, type, event, slot)
             }
         }
-
-        /**
-         * 适用于三叉戟这种触发时物品不在手上的附魔
-         */
-//        fun execute(entity: Entity, type: EventType, event: Event, item: ItemStack, slot: TriggerSlots) {
-//            execute(entity, type, event, item, *slot.slots.toTypedArray())
-//        }
 
         /**
          * 适用于三叉戟这种触发时物品不在手上的附魔
@@ -108,19 +113,19 @@ open class FileDefinedHardcodedEnchantment(
                 if (event.damager !is AbstractArrow) return
             }
             for ((enchant, level) in item.fastFixedEnchants) {
-                val et = enchant as? FileDefinedHardcodedEnchantment ?: continue
-                et as AiyatsbusEnchantment
+                enchant as AiyatsbusEnchantment
                 level as Int
+                val builtin = enchant.mechanism?.triggersOfType<Builtin>(TriggerType.BUILTIN)?.firstOrNull() ?: continue
                 val chance = when {
-                    et.variables.leveled.contains("chance") -> et.variables.leveled("chance", level, false) as Double
-                    et.variables.leveled.contains("概率") -> et.variables.leveled("概率", level, false) as Double
+                    enchant.variables.leveled.contains("chance") -> enchant.variables.leveled("chance", level, false) as Double
+                    enchant.variables.leveled.contains("概率") -> enchant.variables.leveled("概率", level, false) as Double
                     else -> 100.0
                 }
-                if (et.basicData.enable &&
+                if (enchant.basicData.enable &&
                     random(chance) &&
-                    et.limitations.checkAvailable(CheckType.USE, item, entity, slot).isSuccess
+                    enchant.limitations.checkAvailable(CheckType.USE, item, entity, slot).isSuccess
                 ) {
-                    et.call(level, type, entity, event)
+                    builtin.call(level, type, entity, event)
                 }
             }
         }

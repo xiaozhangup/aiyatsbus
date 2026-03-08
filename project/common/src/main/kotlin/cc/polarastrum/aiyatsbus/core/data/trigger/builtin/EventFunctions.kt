@@ -1,4 +1,4 @@
-package cc.polarastrum.aiyatsbus.core.enchant
+package cc.polarastrum.aiyatsbus.core.data.trigger.builtin
 
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player

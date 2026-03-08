@@ -135,7 +135,7 @@ data class Displayer(
         tmp["enchant_display"] = enchant.displayName()
         tmp["enchant_display_roman"] = enchant.displayName(lv)
         tmp["enchant_display_number"] = enchant.displayName(lv, false)
-        tmp["enchant_display_tag"] = tags?.let { tags[lv] ?: "" } ?: ""
+        tmp["enchant_display_tag"] = tags?.get(lv) ?: ""
         tmp["enchant_display_lore"] = display(tmp).replacePlaceholder(player)
         tmp["description"] = specificDescription.replace(tmp).colored().replacePlaceholder(player)
         return tmp

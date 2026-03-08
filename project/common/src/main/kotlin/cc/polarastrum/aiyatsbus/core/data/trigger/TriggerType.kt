@@ -20,5 +20,8 @@ enum class TriggerType {
     TICKER,
 
     /** 技能动作触发 */
-    SKILL
+    SKILL,
+
+    /** 内置触发器触发，可用代码编写，包含了事件触发和定时触发 */
+    BUILTIN
 }

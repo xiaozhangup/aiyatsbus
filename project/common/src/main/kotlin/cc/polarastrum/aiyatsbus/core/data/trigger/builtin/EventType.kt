@@ -1,4 +1,4 @@
-package cc.polarastrum.aiyatsbus.core.enchant
+package cc.polarastrum.aiyatsbus.core.data.trigger.builtin
 
 /**
  * Iweleth

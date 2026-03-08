@@ -1,7 +1,5 @@
-package cc.polarastrum.aiyatsbus.core.enchant
+package cc.polarastrum.aiyatsbus.core
 
-import cc.polarastrum.aiyatsbus.core.AiyatsbusEnchantmentBase
-import cc.polarastrum.aiyatsbus.core.InternalEnchantment
 import cc.polarastrum.aiyatsbus.core.data.trigger.Mechanism
 import taboolib.module.configuration.Configuration
 import java.io.File
@@ -14,11 +12,11 @@ import java.io.File
  * @author mical
  * @date 2024/8/21 17:43
  */
-class InternalAiyatsbusEnchantment(
+open class InternalAiyatsbusEnchantment(
     id: String,
-    file: File,
+    file: File?,
     config: Configuration
-) : AiyatsbusEnchantmentBase(id, file, config), InternalEnchantment {
+) : AiyatsbusEnchantmentBase(id, file, config) {
 
     /**
      * 附魔机制
