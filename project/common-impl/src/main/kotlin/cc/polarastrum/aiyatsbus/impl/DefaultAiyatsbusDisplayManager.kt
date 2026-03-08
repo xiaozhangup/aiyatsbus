@@ -308,6 +308,15 @@ class DefaultAiyatsbusDisplayManager : AiyatsbusDisplayManager {
         @ConfigNode("lore_formation.without_lore")
         override var withoutLoreFormation = listOf<String>()
 
+        @ConfigNode("level.enable")
+        override var levelTag = false
+
+        @ConfigNode("level.format")
+        override var levelTagFormat = mapOf<String, Map<Int, String>>()
+
+        @ConfigNode("level.default")
+        override var levelTagFormatDefault = mapOf<Int, String>()
+
         @Awake(LifeCycle.ENABLE)
         fun init() {
             conf.onReload {

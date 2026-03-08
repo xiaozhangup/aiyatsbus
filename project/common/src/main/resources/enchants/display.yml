@@ -52,3 +52,30 @@ combine:
     - "{previous_1}{subsequent_1}" # 只有一个的情况
     - "{previous_1}&7, {previous_2}{subsequent_1}{subsequent_2}" # 有两个的情况
     - "{previous_1}&7, {previous_2}&7, {previous_3}{subsequent_1}{subsequent_2}{subsequent_3}" # 有三个的情况
+# 自定义等级显示
+level:
+  enable: false # 是否开启自定义等级显示
+  default: # 在没有特殊规定时，默认显示的数字
+    1: "I"
+    2: "II"
+    3: "III"
+    4: "IV"
+    5: "V"
+    6: "VI"
+    7: "VII"
+    8: "VIII"
+    9: "IX"
+    10: "X"
+  format:
+    普通: # 规定某个等级的显示内容
+      1: "一"
+      2: "二"
+      3: "三"
+      4: "四"
+      5: "五"
+    经验修补: # 规定某个附魔的等级显示内容
+      1: "壹"
+      2: "贰"
+      3: "叁"
+      4: "肆"
+      5: "伍"

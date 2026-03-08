@@ -111,9 +111,22 @@ data class Displayer(
         val tmp = enchant.variables.variables(level, item, true)
             .mapValues { it.value.toString() }.toMutableMap() // 因为是显示，这里的变量可以直接转为字符串
         val lv = level
+        var tags: Map<Int, String>? = null // 后面的优先级更高，覆盖前面的
+        if (displayManagerSettings.levelTag) {
+            displayManagerSettings.levelTagFormat[enchant.rarity.id]?.let { tags = it }
+            displayManagerSettings.levelTagFormat[enchant.rarity.name]?.let { tags = it }
+            displayManagerSettings.levelTagFormat[enchant.basicData.id]?.let { tags = it }
+            displayManagerSettings.levelTagFormat[enchant.basicData.name]?.let { tags = it }
+
+            if (tags == null) {
+                tags = displayManagerSettings.levelTagFormatDefault
+            }
+        }
+
         tmp["id"] = enchant.basicData.id
         tmp["name"] = enchant.basicData.name
         tmp["level"] = "$lv"
+        tmp["tag_level"] = "&r${tags?.get(lv) ?: ""}"
         tmp["roman_level"] = lv.roman(enchant.basicData.maxLevel == 1)
         tmp["roman_level_with_a_blank"] = lv.roman(enchant.basicData.maxLevel == 1, true)
         tmp["max_level"] = "${enchant.basicData.maxLevel}"
@@ -122,6 +135,7 @@ data class Displayer(
         tmp["enchant_display"] = enchant.displayName()
         tmp["enchant_display_roman"] = enchant.displayName(lv)
         tmp["enchant_display_number"] = enchant.displayName(lv, false)
+        tmp["enchant_display_tag"] = tags?.let { tags[lv] ?: "" } ?: ""
         tmp["enchant_display_lore"] = display(tmp).replacePlaceholder(player)
         tmp["description"] = specificDescription.replace(tmp).colored().replacePlaceholder(player)
         return tmp

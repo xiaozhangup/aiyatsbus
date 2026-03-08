@@ -98,5 +98,14 @@ interface AiyatsbusDisplayManager {
 
         /** 是否独立在最后单行显示拥有特殊显示的附魔 */
         var separateSpecial: Boolean
+
+        /** 是否使用自定义附魔等级显示 */
+        var levelTag: Boolean
+
+        /** 自定义附魔等级显示格式，Map<附魔名称, Map<等级, 显示文本>> */
+        var levelTagFormat: Map<String, Map<Int, String>>
+
+        /** 默认的附魔等级显示格式，Map<等级, 显示文本> */
+        var levelTagFormatDefault: Map<Int, String>
     }
 }

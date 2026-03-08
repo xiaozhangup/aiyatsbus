@@ -167,6 +167,19 @@ interface AiyatsbusEnchantment {
     }
 
     /**
+     * 获取显示名称并使用标签
+     *
+     * @param level 等级
+     * @param tags 标签映射
+     * @return 附魔显示名称
+     */
+    fun displayName(level: Int? = null, tags: Map<Int, String>): String {
+        val tag = level?.let { tags[it] } ?: ""
+        val name = basicData.name.colored() + "&r$tag"
+        return if (basicData.nameHasColor) name else rarity.displayName(name)
+    }
+
+    /**
      * 更新附魔
      * 用于品质和对象更新后重新加载
      */
