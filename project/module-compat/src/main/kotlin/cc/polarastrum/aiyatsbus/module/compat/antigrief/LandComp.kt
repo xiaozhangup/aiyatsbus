@@ -67,7 +67,7 @@ class LandComp : AntiGrief {
 
         @Awake(LifeCycle.ACTIVE)
         fun init() {
-            AntiGriefChecker.registerNewCompatibility(LandComp())
+            AntiGriefChecker.registerNewCompatibility("Land") { LandComp() }
         }
     }
 }

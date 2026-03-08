@@ -52,7 +52,7 @@ object CubicEnchantment {
                     .specificDescription("&7同时挖掘&a{范围}x{范围}x{范围}&7的方块")
                     .build()
             )
-            .addVariables(VariableType.LEVELED, "范围", "{level}*2+1")
+            .addVariable(VariableType.LEVELED, "范围", "{level}*2+1")
             .eventExecutor(object : EventFunctions {
                 override fun blockBreak(level: Int, event: BlockBreakEvent) {
                     if (event.block.hasMetadata("block-ignored")) return

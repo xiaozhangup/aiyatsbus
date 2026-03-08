@@ -13,7 +13,6 @@ import cc.polarastrum.aiyatsbus.core.util.reloadable
 import cc.polarastrum.aiyatsbus.core.util.safeguard
 import cc.polarastrum.aiyatsbus.impl.DefaultAiyatsbusAPI.Companion.proxy
 import cc.polarastrum.aiyatsbus.core.enchant.InternalAiyatsbusEnchantment
-import cc.polarastrum.aiyatsbus.impl.registration.legacy.DefaultLegacyEnchantmentRegisterer
 import org.bukkit.NamespacedKey
 import taboolib.common.LifeCycle
 import taboolib.common.TabooLib
@@ -26,10 +25,8 @@ import taboolib.common.platform.function.getDataFolder
 import taboolib.common.platform.function.registerLifeCycleTask
 import taboolib.common.platform.function.releaseResourceFile
 import taboolib.common.util.replaceWithOrder
-import taboolib.common.util.t
 import taboolib.library.reflex.Reflex.Companion.invokeConstructor
 import taboolib.module.configuration.Configuration
-import taboolib.module.nms.MinecraftVersion.versionId
 import taboolib.platform.util.onlinePlayers
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap

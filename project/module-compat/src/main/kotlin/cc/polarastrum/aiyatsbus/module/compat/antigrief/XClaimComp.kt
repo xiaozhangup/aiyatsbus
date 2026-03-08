@@ -66,7 +66,7 @@ class XClaimComp : AntiGrief {
 
         @Awake(LifeCycle.ACTIVE)
         fun init() {
-            AntiGriefChecker.registerNewCompatibility(XClaimComp())
+            AntiGriefChecker.registerNewCompatibility("XClaim") { XClaimComp() }
         }
     }
 }

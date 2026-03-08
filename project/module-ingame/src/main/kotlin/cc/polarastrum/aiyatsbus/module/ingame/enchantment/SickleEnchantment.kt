@@ -1,16 +1,13 @@
 package cc.polarastrum.aiyatsbus.module.ingame.enchantment
 
-import cc.polarastrum.aiyatsbus.core.aiyatsbusEt
 import cc.polarastrum.aiyatsbus.core.compat.AntiGriefChecker
 import cc.polarastrum.aiyatsbus.core.data.BasicData
 import cc.polarastrum.aiyatsbus.core.data.Displayer
 import cc.polarastrum.aiyatsbus.core.data.VariableType
 import cc.polarastrum.aiyatsbus.core.enchant.EventFunctions
 import cc.polarastrum.aiyatsbus.core.enchant.HardcodedEnchantment
-import cc.polarastrum.aiyatsbus.core.etLevel
 import cc.polarastrum.aiyatsbus.core.util.mark
 import cc.polarastrum.aiyatsbus.core.util.unmark
-import org.bukkit.GameMode
 import org.bukkit.Material
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
@@ -18,6 +15,7 @@ import org.bukkit.block.data.Ageable
 import org.bukkit.event.block.BlockBreakEvent
 import taboolib.common.LifeCycle
 import taboolib.common.platform.Awake
+import taboolib.common.platform.function.info
 import taboolib.common.platform.function.submit
 
 /**
@@ -54,7 +52,7 @@ object SickleEnchantment {
                     .specificDescription("&7收割&a{范围}x{范围}&7范围内的成熟作物")
                     .build()
             )
-            .addVariables(VariableType.LEVELED, "范围", "max({level}-1,1)*2+1")
+            .addVariable(VariableType.LEVELED, "范围", "max({level}-1,1)*2+1")
             .eventExecutor(object : EventFunctions {
                 override fun blockBreak(level: Int, event: BlockBreakEvent) {
                     if (event.block.hasMetadata("block-ignored")) return
