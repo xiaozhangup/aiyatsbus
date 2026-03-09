@@ -1,19 +1,3 @@
-/*
- *  Copyright (C) 2022-2024 PolarAstrumLab
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
 package cc.polarastrum.aiyatsbus.impl
 
 import cc.polarastrum.aiyatsbus.core.*
@@ -27,7 +11,6 @@ import cc.polarastrum.aiyatsbus.core.util.deepRead
 import cc.polarastrum.aiyatsbus.core.util.reloadable
 import cc.polarastrum.aiyatsbus.core.util.safeguard
 import cc.polarastrum.aiyatsbus.impl.DefaultAiyatsbusAPI.Companion.proxy
-import cc.polarastrum.aiyatsbus.impl.enchant.InternalAiyatsbusEnchantment
 import cc.polarastrum.aiyatsbus.impl.registration.legacy.DefaultLegacyEnchantmentRegisterer
 import org.bukkit.NamespacedKey
 import taboolib.common.LifeCycle
@@ -67,8 +50,6 @@ class DefaultAiyatsbusEnchantmentManager : AiyatsbusEnchantmentManager {
     private val byKeyStringMap = ConcurrentHashMap<String, AiyatsbusEnchantment>()
     /** 按名称存储的附魔映射 */
     private val byNameMap = ConcurrentHashMap<String, AiyatsbusEnchantment>()
-    /** 按 NMSENchantment 存储的附魔映射 **/
-    private val byNMSMap = ConcurrentHashMap<Any, AiyatsbusEnchantment>()
 
     /** 等待被注册的附魔 */
     private val enchantmentsToRegister = CopyOnWriteArraySet<AiyatsbusEnchantmentBase>()
@@ -230,7 +211,8 @@ class DefaultAiyatsbusEnchantmentManager : AiyatsbusEnchantmentManager {
         unregister(oldEnchant)
 
         if (file.exists()) {
-            val newEnchant = InternalAiyatsbusEnchantment(id, file, Configuration.loadFromFile(file))
+            val config = Configuration.loadFromFile(file)
+            val newEnchant = InternalAiyatsbusEnchantment(id, file, config)
             if (!newEnchant.dependencies.checkAvailable()) return
 
             register(newEnchant)
@@ -246,8 +228,8 @@ class DefaultAiyatsbusEnchantmentManager : AiyatsbusEnchantmentManager {
         for (enchant in byKeyMap.values) {
             // 不卸载外部附魔
             if (enchant in enchantmentsToRegister) continue
-            enchant.file.isProcessingByWatcher = false
-            enchant.file.unwatch()
+            enchant.file?.isProcessingByWatcher = false
+            enchant.file?.unwatch()
             unregister(enchant)
         }
     }

@@ -1,19 +1,3 @@
-/*
- *  Copyright (C) 2022-2024 PolarAstrumLab
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
 package cc.polarastrum.aiyatsbus.core.util
 
 import redempt.crunch.CompiledExpression
@@ -22,6 +6,7 @@ import redempt.crunch.functional.EvaluationEnvironment
 import redempt.crunch.functional.Function
 import taboolib.common.platform.function.warning
 import taboolib.common.util.random
+import java.util.concurrent.ThreadLocalRandom
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
@@ -35,6 +20,13 @@ import kotlin.random.Random
  * @author HamsterYDS
  * @since 2024/2/17 23:15
  */
+
+fun random(v: Double): Boolean {
+    if (v in 0.0..1.0) {
+        return ThreadLocalRandom.current().nextDouble() < v
+    }
+    return ThreadLocalRandom.current().nextDouble() * 100 < v
+}
 
 // 罗马数字转换相关常量
 private val romanUnits = intArrayOf(1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1)

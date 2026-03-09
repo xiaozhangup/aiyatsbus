@@ -28,10 +28,13 @@ import cc.polarastrum.aiyatsbus.core.compat.AntiGriefChecker
 import org.bukkit.Location
 import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
+import p1xel.nobuildplus.API.NBPAPI
 import p1xel.nobuildplus.Flags
 import p1xel.nobuildplus.NoBuildPlus
 import taboolib.common.LifeCycle
 import taboolib.common.platform.Awake
+import taboolib.common.util.unsafeLazy
+import taboolib.library.reflex.Reflex.Companion.invokeMethod
 
 /**
  * Aiyatsbus
@@ -42,37 +45,75 @@ import taboolib.common.platform.Awake
  */
 class NoBuildPlusComp : AntiGrief {
 
+    private var api: NoBuildPlusApi
+
+    init {
+        try {
+            p1xel.nobuildplus.api.NBPAPI::class.java
+            api = NoBuildPlusImpl2()
+        } catch (_: Throwable) {
+            api = NoBuildPlusImpl1()
+        }
+    }
+
+    private interface NoBuildPlusApi {
+
+        fun canExecute(world: String, flags: Flags): Boolean
+    }
+
+    private class NoBuildPlusImpl1 : NoBuildPlusApi {
+
+        private val api by unsafeLazy {
+            NoBuildPlus.getInstance().invokeMethod<NBPAPI>("getAPI")!!
+        }
+
+        override fun canExecute(world: String, flags: Flags): Boolean {
+            return api.canExecute(world, flags)
+        }
+    }
+
+    private class NoBuildPlusImpl2 : NoBuildPlusApi {
+
+        private val api by unsafeLazy {
+            NoBuildPlus.getInstance().api
+        }
+
+        override fun canExecute(world: String, flags: Flags): Boolean {
+            return api.canExecute(world, flags)
+        }
+    }
+
     override fun canPlace(player: Player, location: Location): Boolean {
-        return !NoBuildPlus.getInstance().api.canExecute(player.world.name, Flags.build)
+        return !api.canExecute(player.world.name, Flags.build)
     }
 
     override fun canBreak(player: Player, location: Location): Boolean {
-        return !NoBuildPlus.getInstance().api.canExecute(player.world.name, Flags.destroy)
+        return !api.canExecute(player.world.name, Flags.destroy)
     }
 
     override fun canInteract(player: Player, location: Location): Boolean {
-        return !NoBuildPlus.getInstance().api.canExecute(player.world.name, Flags.use)
+        return !api.canExecute(player.world.name, Flags.use)
     }
 
     override fun canInteractEntity(player: Player, entity: Entity): Boolean {
         val world = player.world.name
         return !when (entity.type.name.uppercase()) {
-            "VILLAGER" -> NoBuildPlus.getInstance().api.canExecute(world, Flags.villager)
-            "HORSE", "DONKEY", "MULE", "SKELETON_HORSE", "ZOMBIE_HORSE", "MINECART", "MINECART_CHEST", "MINECART_FURNACE", "MINECART_HOPPER", "MINECART_TNT" -> NoBuildPlus.getInstance().api.canExecute(
+            "VILLAGER" -> api.canExecute(world, Flags.villager)
+            "HORSE", "DONKEY", "MULE", "SKELETON_HORSE", "ZOMBIE_HORSE", "MINECART", "MINECART_CHEST", "MINECART_FURNACE", "MINECART_HOPPER", "MINECART_TNT" -> api.canExecute(
                 world,
                 Flags.ride
             )
 
-            "ITEM_FRAME", "GLOW_ITEM_FRAME" -> NoBuildPlus.getInstance().api.canExecute(world, Flags.frame)
-            "ARMOR_STAND" -> NoBuildPlus.getInstance().api.canExecute(world, Flags.armorstand)
-            "PAINTING" -> NoBuildPlus.getInstance().api.canExecute(world, Flags.painting)
-            "FISHING_HOOK" -> NoBuildPlus.getInstance().api.canExecute(world, Flags.hook)
+            "ITEM_FRAME", "GLOW_ITEM_FRAME" -> api.canExecute(world, Flags.frame)
+            "ARMOR_STAND" -> api.canExecute(world, Flags.armorstand)
+            "PAINTING" -> api.canExecute(world, Flags.painting)
+            "FISHING_HOOK" -> api.canExecute(world, Flags.hook)
             else -> false
         }
     }
 
     override fun canDamage(player: Player, entity: Entity): Boolean {
-        return !NoBuildPlus.getInstance().api.canExecute(
+        return !api.canExecute(
             player.world.name,
             if (entity is Player) Flags.pvp else Flags.mob_damage
         )
@@ -84,7 +125,7 @@ class NoBuildPlusComp : AntiGrief {
 
     companion object {
 
-        // @Awake(LifeCycle.ACTIVE)
+        @Awake(LifeCycle.ACTIVE)
         fun init() {
             AntiGriefChecker.registerNewCompatibility(NoBuildPlusComp())
         }

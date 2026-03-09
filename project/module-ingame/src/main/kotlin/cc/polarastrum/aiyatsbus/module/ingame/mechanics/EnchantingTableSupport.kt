@@ -1,21 +1,5 @@
 @file:Suppress("DuplicatedCode")
 
-/*
- *  Copyright (C) 2022-2024 PolarAstrumLab
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
 package cc.polarastrum.aiyatsbus.module.ingame.mechanics
 
 import cc.polarastrum.aiyatsbus.core.*
@@ -271,7 +255,7 @@ object EnchantingTableSupport {
                 lines.forEach { line ->
                     val type = line.substringBefore(":")
                     onlinePlayers.forEach {
-                        val text = it.asLangOrNull(line.substringAfter(":"), event.enchanter.name to "player", enchant.displayName(level, true) to "enchant") ?: return@forEach
+                        val text = it.asLangOrNull(line.substringAfter(":"), event.enchanter.name to "player", enchant.displayName(level) to "enchant") ?: return@forEach
                         when (type) {
                             "actionbar" -> it.sendActionBar(text)
                             "message" -> it.sendMessage(text)

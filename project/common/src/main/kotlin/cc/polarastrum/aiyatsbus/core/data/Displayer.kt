@@ -1,19 +1,3 @@
-/*
- *  Copyright (C) 2022-2024 PolarAstrumLab
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
 package cc.polarastrum.aiyatsbus.core.data
 
 import cc.polarastrum.aiyatsbus.core.Aiyatsbus
@@ -25,6 +9,7 @@ import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import taboolib.library.configuration.ConfigurationSection
 import taboolib.module.chat.colored
+import taboolib.module.configuration.Configuration
 
 /**
  * 附魔显示类
@@ -39,7 +24,7 @@ data class Displayer(
     /** 配置根节点 */
     private val root: ConfigurationSection,
     /** 对应的附魔实例 */
-    var enchant: AiyatsbusEnchantment,
+    var enchant: AiyatsbusEnchantment?,
     /** 是否显示该附魔 */
     val display: Boolean = root.getBoolean("display", true),
     /** 附魔显示的前半部分，一般是名称和等级 */
@@ -49,7 +34,9 @@ data class Displayer(
     /** 描述 */
     val generalDescription: String = root.getString("description.general", "&7")!!,
     /** 一般有变量的描述会用这个替换变量，这个不写默认为普通描述 */
-    val specificDescription: String = root.getString("description.specific", generalDescription)!!
+    val specificDescription: String = root.getString("description.specific", generalDescription)!!,
+    /** 附魔等级贴图设置 */
+    val displayTags: Map<Int, String> = root.getConfigurationSection("display-tags")?.getKeys(false)?.associate { it.toInt() to root.getString("display-tags.$it")!! } ?: emptyMap()
 ) {
 
     /** 显示管理器设置 */
@@ -61,6 +48,16 @@ data class Displayer(
      * @return true 表示使用默认格式
      */
     fun isDefaultDisplay() = previous == "{default_previous}" && subsequent == "{default_subsequent}"
+
+    private var _levelDisplayType: LevelDisplayType? = null
+
+    fun getLevelDisplayType(): LevelDisplayType = _levelDisplayType ?: when {
+        previous.contains("{default_previous}") -> Aiyatsbus.api().getDisplayManager().getSettings().defaultLevelDisplayType
+        previous.contains("{enchant_display_roman}") -> LevelDisplayType.ROMAN
+        previous.contains("{enchant_display_number}") -> LevelDisplayType.NUMBER
+        previous.contains("{enchant_display_tag}") -> LevelDisplayType.TAG
+        else -> error("Unknown level display type: $previous")
+    }.apply { _levelDisplayType = this }
 
     /**
      * 生成本附魔在当前状态下的显示，在非合并模式下
@@ -122,22 +119,100 @@ data class Displayer(
         player: Player? = null,
         item: ItemStack? = null
     ): Map<String, String> {
+        val enchant = this.enchant!!
         val tmp = enchant.variables.variables(level, item, true)
             .mapValues { it.value.toString() }.toMutableMap() // 因为是显示，这里的变量可以直接转为字符串
         val lv = level
+        val tags = displayTags.ifEmpty { with(Aiyatsbus.api().getDisplayManager().getSettings()) { levelTagFormat[enchant.rarity.name] ?: levelTagFormat[enchant.rarity.id] ?: levelTagFormatDefault } }
+
         tmp["id"] = enchant.basicData.id
         tmp["name"] = enchant.basicData.name
         tmp["level"] = "$lv"
+        tmp["tag_level"] = "&r${tags[lv] ?: ""}"
         tmp["roman_level"] = lv.roman(enchant.basicData.maxLevel == 1)
         tmp["roman_level_with_a_blank"] = lv.roman(enchant.basicData.maxLevel == 1, true)
         tmp["max_level"] = "${enchant.basicData.maxLevel}"
         tmp["rarity"] = enchant.rarity.name
         tmp["rarity_display"] = enchant.rarity.displayName()
-        tmp["enchant_display"] = enchant.displayName()
-        tmp["enchant_display_roman"] = enchant.displayName(lv)
-        tmp["enchant_display_number"] = enchant.displayName(lv, false)
+        tmp["enchant_display"] = displayName()
+        tmp["enchant_display_roman"] = displayName(lv, LevelDisplayType.ROMAN)
+        tmp["enchant_display_number"] = displayName(lv, LevelDisplayType.NUMBER)
+        tmp["enchant_display_tag"] = displayName(lv, LevelDisplayType.TAG)
         tmp["enchant_display_lore"] = display(tmp).replacePlaceholder(player)
         tmp["description"] = specificDescription.replace(tmp).colored().replacePlaceholder(player)
         return tmp
+    }
+
+    @JvmOverloads
+    fun displayName(level: Int? = null, type: LevelDisplayType = getLevelDisplayType()): String {
+        val tags = displayTags.ifEmpty { with(Aiyatsbus.api().getDisplayManager().getSettings()) { levelTagFormat[enchant?.rarity?.name] ?: levelTagFormat[enchant?.rarity?.id] ?: levelTagFormatDefault } }
+        val name = enchant?.basicData?.name?.colored() + if (level == null) "" else when (type) {
+            LevelDisplayType.ROMAN -> level.roman(enchant?.basicData?.maxLevel == 1, true)
+            LevelDisplayType.NUMBER -> if (enchant?.basicData?.maxLevel == 1) "" else " $level"
+            LevelDisplayType.TAG -> " ${tags[level]}"
+        }
+        return if (enchant?.basicData?.nameHasColor == true) name else enchant?.rarity?.displayName(name) ?: name
+    }
+
+    fun serialize(): ConfigurationSection {
+        return Configuration.empty().apply {
+            set("display", display)
+            set("format.previous", previous)
+            set("format.subsequent", subsequent)
+            set("description.general", generalDescription)
+            set("description.specific", specificDescription)
+        }
+    }
+
+    class Builder {
+
+        private var display: Boolean = true
+        private var previous: String = "{default_previous}"
+        private var subsequent: String = "{default_subsequent}"
+        private var generalDescription: String = "&7"
+        private var specificDescription: String? = null
+
+        fun display(display: Boolean): Builder {
+            this.display = display
+            return this
+        }
+
+        fun previous(previous: String): Builder {
+            this.previous = previous
+            return this
+        }
+
+        fun subsequent(subsequent: String): Builder {
+            this.subsequent = subsequent
+            return this
+        }
+
+        fun generalDescription(generalDescription: String): Builder {
+            this.generalDescription = generalDescription
+            return this
+        }
+
+        fun specificDescription(specificDescription: String): Builder {
+            this.specificDescription = specificDescription
+            return this
+        }
+
+        fun build(): Displayer {
+            return Displayer(
+                Configuration.empty(),
+                null, // 可放心设置为 null，因为注册到 Minecraft NMS Registry 时会被赋值
+                display,
+                previous,
+                subsequent,
+                generalDescription,
+                specificDescription ?: generalDescription
+            )
+        }
+    }
+
+    companion object {
+
+        @JvmStatic
+        fun builder() = Builder()
     }
 }
