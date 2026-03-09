@@ -1,5 +1,7 @@
 package cc.polarastrum.aiyatsbus.core
 
+import cc.polarastrum.aiyatsbus.core.data.LevelDisplayType
+import cc.polarastrum.aiyatsbus.core.data.registry.Rarity
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import taboolib.module.configuration.Configuration
@@ -66,6 +68,9 @@ interface AiyatsbusDisplayManager {
         /** 默认附魔前缀 */
         var defaultPrevious: String
 
+        /** 默认附魔登记显示类型 */
+        val defaultLevelDisplayType: LevelDisplayType
+
         /** 默认附魔后缀 */
         var defaultSubsequent: String
 
@@ -99,13 +104,10 @@ interface AiyatsbusDisplayManager {
         /** 是否独立在最后单行显示拥有特殊显示的附魔 */
         var separateSpecial: Boolean
 
-        /** 是否使用自定义附魔等级显示 */
-        var levelTag: Boolean
-
-        /** 自定义附魔等级显示格式，Map<附魔名称, Map<等级, 显示文本>> */
-        var levelTagFormat: Map<String, Map<Int, String>>
+        /** 品质等级显示格式，Map<Rarity, Map<等级, 显示文本>> */
+        val levelTagFormat: Map<String, Map<Int, String>>
 
         /** 默认的附魔等级显示格式，Map<等级, 显示文本> */
-        var levelTagFormatDefault: Map<Int, String>
+        val levelTagFormatDefault: Map<Int, String>
     }
 }

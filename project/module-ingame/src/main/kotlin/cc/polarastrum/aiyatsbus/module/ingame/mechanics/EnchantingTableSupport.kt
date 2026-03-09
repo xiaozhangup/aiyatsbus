@@ -255,7 +255,7 @@ object EnchantingTableSupport {
                 lines.forEach { line ->
                     val type = line.substringBefore(":")
                     onlinePlayers.forEach {
-                        val text = it.asLangOrNull(line.substringAfter(":"), event.enchanter.name to "player", enchant.displayName(level, true) to "enchant") ?: return@forEach
+                        val text = it.asLangOrNull(line.substringAfter(":"), event.enchanter.name to "player", enchant.displayName(level) to "enchant") ?: return@forEach
                         when (type) {
                             "actionbar" -> it.sendActionBar(text)
                             "message" -> it.sendMessage(text)

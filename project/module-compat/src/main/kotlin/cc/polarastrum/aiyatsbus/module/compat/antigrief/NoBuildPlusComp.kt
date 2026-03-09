@@ -33,6 +33,7 @@ import p1xel.nobuildplus.Flags
 import p1xel.nobuildplus.NoBuildPlus
 import taboolib.common.LifeCycle
 import taboolib.common.platform.Awake
+import taboolib.common.util.unsafeLazy
 import taboolib.library.reflex.Reflex.Companion.invokeMethod
 
 /**
@@ -62,7 +63,9 @@ class NoBuildPlusComp : AntiGrief {
 
     private class NoBuildPlusImpl1 : NoBuildPlusApi {
 
-        private val api = NoBuildPlus.getInstance().invokeMethod<NBPAPI>("getAPI")!!
+        private val api by unsafeLazy {
+            NoBuildPlus.getInstance().invokeMethod<NBPAPI>("getAPI")!!
+        }
 
         override fun canExecute(world: String, flags: Flags): Boolean {
             return api.canExecute(world, flags)
@@ -71,7 +74,9 @@ class NoBuildPlusComp : AntiGrief {
 
     private class NoBuildPlusImpl2 : NoBuildPlusApi {
 
-        private val api = NoBuildPlus.getInstance().api
+        private val api by unsafeLazy {
+            NoBuildPlus.getInstance().api
+        }
 
         override fun canExecute(world: String, flags: Flags): Boolean {
             return api.canExecute(world, flags)
