@@ -15,6 +15,8 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.potion.PotionEffect
 import org.bukkit.util.Vector
 import org.tabooproject.fluxon.runtime.FluxonRuntime
+import org.tabooproject.fluxon.runtime.FunctionSignature.returns
+import org.tabooproject.fluxon.runtime.Type
 import org.tabooproject.fluxon.runtime.java.Export
 import org.tabooproject.fluxon.runtime.java.Optional
 import taboolib.common.LifeCycle
@@ -34,11 +36,13 @@ import taboolib.module.nms.getI18nName
 @FluxonRelocate
 object FnEntity {
 
+    val TYPE = Type.fromClass(FnEntity::class.java)!!
+
     @Awake(LifeCycle.LOAD)
     fun init() {
         FluxonScriptHandler.DEFAULT_PACKAGE_AUTO_IMPORT += "aiy:entity"
         with(FluxonRuntime.getInstance()) {
-            registerFunction("aiy:entity", "entity", 0) { FnEntity }
+            registerFunction("aiy:entity", "entity", returns(TYPE).noParams()) { it.setReturnRef(FnEntity) }
             exportRegistry.registerClass(FnEntity::class.java, "aiy:entity")
         }
     }

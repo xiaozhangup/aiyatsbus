@@ -8,6 +8,8 @@ import org.bukkit.block.Block
 import org.bukkit.entity.Entity
 import org.bukkit.inventory.ItemStack
 import org.tabooproject.fluxon.runtime.FluxonRuntime
+import org.tabooproject.fluxon.runtime.FunctionSignature.returns
+import org.tabooproject.fluxon.runtime.Type
 import org.tabooproject.fluxon.runtime.java.Export
 import org.tabooproject.fluxon.runtime.java.Optional
 import taboolib.common.LifeCycle
@@ -25,11 +27,13 @@ import taboolib.common.platform.Awake
 @FluxonRelocate
 object FnBlock {
 
+    val TYPE = Type.fromClass(Block::class.java)!!
+
     @Awake(LifeCycle.LOAD)
     fun init() {
         FluxonScriptHandler.DEFAULT_PACKAGE_AUTO_IMPORT += "aiy:block"
         with(FluxonRuntime.getInstance()) {
-            registerFunction("aiy:block", "block", 0) { FnBlock }
+            registerFunction("aiy:block", "block", returns(TYPE).noParams()) { it.setReturnRef(FnBlock) }
             exportRegistry.registerClass(FnBlock::class.java, "aiy:block")
         }
     }
