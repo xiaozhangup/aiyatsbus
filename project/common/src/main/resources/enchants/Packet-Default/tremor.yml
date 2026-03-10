@@ -41,12 +41,12 @@ mechanisms:
       type: fluxon
       listen: 'aiyatsbus-bow-charge-released'
       handle: |-
-        &event::player::setMeta("quake-not-using-hand", true)
+        &event::player::setMeta("quake-not-using-hand", "true")
     on-break:
       type: fluxon
       listen: 'aiyatsbus-bow-charge-break'
       handle: |-
-        &event::player::setMeta("quake-not-using-hand", true)
+        &event::player::setMeta("quake-not-using-hand", "true")
     on-prepare:
       type: fluxon
       listen: 'aiyatsbus-bow-charge-prepare'
@@ -169,7 +169,7 @@ mechanisms:
                 hasParticles = if &effect != null then &effect::hasParticles() else false
                 entity::removePotionEffect(&player, SLOWNESS)
                 entity::addPotionEffect(&player, SLOWNESS, 20, 20, &isAmbient, &hasParticles)
-                &player::setMeta("quake-stuck", true)
+                &player::setMeta("quake-stuck", "true")
             }
 
             &counter += 1

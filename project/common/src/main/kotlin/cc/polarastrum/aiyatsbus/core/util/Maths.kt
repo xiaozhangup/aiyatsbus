@@ -4,6 +4,7 @@ import redempt.crunch.CompiledExpression
 import redempt.crunch.Crunch
 import redempt.crunch.functional.EvaluationEnvironment
 import redempt.crunch.functional.Function
+import taboolib.common.env.RuntimeDependency
 import taboolib.common.platform.function.warning
 import taboolib.common.util.random
 import java.util.concurrent.ThreadLocalRandom
@@ -114,6 +115,12 @@ fun Any.isInt(): Boolean {
  * 提供表达式计算和权重选择功能。
  * 使用 Crunch 库进行高性能的数学表达式计算。
  */
+@RuntimeDependency(
+    repository = "https://repo.tabooproject.org/repository/releases",
+    value = "!com.github.Redempt:Crunch:1.0.7",
+    test = "!redempt.crunch.Crunch",
+    relocate = ["!redempt", "!cc.polarastrum.aiyatsbus.library"]
+)
 object MathUtils {
 
     // 内置数学函数

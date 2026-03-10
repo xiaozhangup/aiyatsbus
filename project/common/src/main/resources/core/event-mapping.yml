@@ -96,6 +96,17 @@ mappings:
       - LEGS
       - FEET
 
+  # 玩家移动事件
+  player-move:
+    class: 'org.bukkit.event.player.PlayerMoveEvent'
+    slots:
+      - HAND
+      - OFF_HAND
+      - HEAD
+      - CHEST
+      - LEGS
+      - FEET
+
   # 箭射中东西事件
   projectile-hit:
     class: 'org.bukkit.event.entity.ProjectileHitEvent'
@@ -127,7 +138,7 @@ mappings:
       - LEGS
       - FEET
       -
-  # 玩家弓蓄力准备事件
+      # 玩家弓蓄力准备事件
   aiyatsbus-bow-charge-prepare:
     class: 'cc.polarastrum.aiyatsbus.core.event.AiyatsbusBowChargeEvent$Prepare'
     slots:
