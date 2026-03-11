@@ -31,8 +31,6 @@ subprojects {
                 BukkitUI,
                 BukkitUtil,
                 I18n,
-                JavaScript,
-                Kether,
                 MinecraftChat,
                 MinecraftEffect,
                 Metrics,

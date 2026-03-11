@@ -76,7 +76,7 @@ mechanisms:
                     oldTargetLocation = &oldTarget::eyeLocation()
                     traceDirection = &oldTargetLocation::toVector::subtract(&arrowLocation::toVector())::normalize()
                     distance = &arrowLocation::distance(&oldTargetLocation)
-                    traceResult = &world::rayTraceBlocks(&arrowLocation, &traceDirection, &distance, static org.bukkit.FluidCollisionMode.NEVER)
+                    traceResult = &world::rayTraceBlocks(&arrowLocation, &traceDirection, &distance, fluidCollisionMode("NEVER"))
                     if &traceResult == null || &traceResult::hitBlock() == null then true
                     cosTheta = &traceDirection::dot(&arrowVelocity::clone::normalize())
                     if &cosTheta < 0.5 then true

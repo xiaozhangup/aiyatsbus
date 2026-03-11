@@ -35,16 +35,6 @@ repositories {
     mavenLocal()
 }
 
-dependencies {
-//    taboo("ink.ptms:um:1.0.9")
-    taboo("com.github.Redempt:Crunch:1.0.7")
-//    taboo("org.tabooproject.fluxon:core:1.6.14-2") { isTransitive = false }
-//    taboo("org.tabooproject.fluxon:inst-core:1.6.14-2") { isTransitive = false }
-//    taboo("org.tabooproject.fluxon.plugin:core:1.1.3-2") { isTransitive = false }
-//    taboo("org.tabooproject.fluxon.plugin:common:1.1.3-2") { isTransitive = false }
-//    taboo("org.tabooproject.fluxon.plugin:platform-bukkit:1.1.3-2") { isTransitive = false }
-}
-
 tasks {
     jar {
         // 构件名
