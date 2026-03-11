@@ -5,6 +5,7 @@
 
 basic:
   enable: true
+  disable_worlds: [ ]
   id: planter
   name: "播种机"
   max_level: 3
@@ -40,7 +41,6 @@ mechanisms:
   listeners:
     on-right-click:
       listen: "player-interact"
-      type: fluxon
       handle: |-
         def getSeed(player, seed) = {
             if &seed == "ALL" then {

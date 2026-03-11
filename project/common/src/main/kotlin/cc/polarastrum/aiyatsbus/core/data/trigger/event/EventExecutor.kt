@@ -21,7 +21,7 @@ data class EventExecutor @JvmOverloads constructor(
     /** 所属附魔 */
     private val enchant: AiyatsbusEnchantment,
     /** 脚本类型，默认为 KETHER */
-    val scriptType: ScriptType = ScriptType.valueOf(root.getString("type")?.uppercase() ?: "KETHER"),
+    val scriptType: ScriptType = ScriptType.valueOf(root.getString("type")?.uppercase() ?: "FLUXON"),
     /** 监听的事件类型 */
     val listen: String = root.getString("listen")!!,
     /** 事件处理脚本 */

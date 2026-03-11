@@ -35,7 +35,6 @@ variables:
 mechanisms:
   listeners:
     on-damage:
-      type: fluxon
       listen: "entity-damage-other"
       handle: |-
         total = int(variables::modifiable(&enchant, &item, "当前累计"))
@@ -50,7 +49,6 @@ mechanisms:
         total = int(variables::modifiable(&enchant, &item, "当前累计"))
 
     on-kill:
-      type: fluxon
       listen: "entity-death"
       handle: |-
         total = int(variables::modifiable(&enchant, &item, "当前累计"))

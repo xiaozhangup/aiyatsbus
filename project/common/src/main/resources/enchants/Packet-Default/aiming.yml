@@ -4,6 +4,8 @@
 
 
 basic:
+  enable: true
+  disable_worlds: [ ]
   id: aiming
   name: "索敌"
   max_level: 3
@@ -63,7 +65,6 @@ variables:
 mechanisms:
   listeners:
     on-shoot-bow:
-      type: fluxon
       listen: "entity-shoot-bow"
       handle: |-
         def findTarget(shooter, oldTarget, arrow, isNew) = {

@@ -4,6 +4,8 @@
 
 
 basic:
+  enable: true
+  disable_worlds: [ ]
   id: jelly_legs
   name: "弹跳鞋"
   max_level: 3
@@ -31,7 +33,6 @@ variables:
 mechanisms:
   listeners:
     on-entity-damage:
-      type: "fluxon"
       listen: "entity-damage"
       handle: |-
         fallDistance = &event::entity::fallDistance()

@@ -4,6 +4,8 @@
 
 
 basic:
+  enable: true
+  disable_worlds: [ ]
   id: tremor
   name: "震地"
   max-level: 3
@@ -31,25 +33,21 @@ variables:
 mechanisms:
   listeners:
     on-move:
-      type: fluxon
-      listen: 'player-move'
+      listen: "player-move"
       handle: |-
         if &event::player::hasMeta("quake-stuck") then {
             &event::setCancelled(true)
         }
     on-released:
-      type: fluxon
-      listen: 'aiyatsbus-bow-charge-released'
+      listen: "aiyatsbus-bow-charge-released"
       handle: |-
         &event::player::setMeta("quake-not-using-hand", "true")
     on-break:
-      type: fluxon
-      listen: 'aiyatsbus-bow-charge-break'
+      listen: "aiyatsbus-bow-charge-break"
       handle: |-
         &event::player::setMeta("quake-not-using-hand", "true")
     on-prepare:
-      type: fluxon
-      listen: 'aiyatsbus-bow-charge-prepare'
+      listen: "aiyatsbus-bow-charge-prepare"
       handle: |-
         def sendBar(player, counter) = {
             bar = ""

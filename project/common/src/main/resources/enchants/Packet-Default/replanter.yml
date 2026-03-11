@@ -4,6 +4,8 @@
 
 
 basic:
+  enable: true
+  disable_worlds: [ ]
   id: replanter
   name: "再植"
   max_level: 3
@@ -26,7 +28,6 @@ variables:
 mechanisms:
   listeners:
     on-physical:
-      type: "fluxon"
       listen: "player-interact"
       handle: |-
         if string(&event::action()) == PHYSICAL then {
