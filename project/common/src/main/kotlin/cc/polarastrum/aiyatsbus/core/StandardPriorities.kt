@@ -1,19 +1,3 @@
-/*
- *  Copyright (C) 2022-2024 PolarAstrumLab
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
 package cc.polarastrum.aiyatsbus.core
 
 import taboolib.common.LifeCycle
@@ -36,6 +20,8 @@ object StandardPriorities {
     const val TARGET = 1
     /** 事件执行器优先级，用于处理附魔相关的事件 */
     const val EVENT_EXECUTORS = 2
+    /** 技能触发器优先级，与事件执行器同级，用于处理附魔技能相关的事件 */
+    const val SKILL_HANDLER = 2
     /** 内置触发器优先级，用于系统内置的触发机制 */
     const val INTERNAL_TRIGGERS = 3
     /** 定时器优先级，与内置触发器同级，用于定时执行的任务 */

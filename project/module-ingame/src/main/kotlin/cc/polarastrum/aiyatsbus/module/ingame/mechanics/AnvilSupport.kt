@@ -1,19 +1,3 @@
-/*
- *  Copyright (C) 2022-2024 PolarAstrumLab
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
 package cc.polarastrum.aiyatsbus.module.ingame.mechanics
 
 import cc.polarastrum.aiyatsbus.core.*
@@ -114,7 +98,7 @@ object AnvilSupport {
         }
     }
 
-    @SubscribeEvent(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    @SubscribeEvent(priority = EventPriority.LOWEST)
     fun onAnvil(e: PrepareAnvilEvent) {
         e.inventory.maximumRepairCost = maxCost
         val renameText = e.inventory.renameText ?: ""
@@ -238,10 +222,12 @@ object AnvilSupport {
         // 这里需要向左面的物品的克隆中添加附魔, 来检测附魔冲突
         val tempLeftItem = left.clone()
         val leftEnchants = left.fixedEnchants
-        val rightEnchants = right.fixedEnchants
+        val rightEnchants = right.fastFixedEnchants
         val outEnchants = leftEnchants.toMutableMap()
 
         for ((rightEnchant, level) in rightEnchants) {
+            rightEnchant as AiyatsbusEnchantment
+            level as Int
             val maxLevel = rightEnchant.basicData.maxLevel
             val previousLevel = outEnchants.remove(rightEnchant)
             // 如果左面物品附魔已有要添加的附魔, 则视为合并

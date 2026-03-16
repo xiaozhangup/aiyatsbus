@@ -1,19 +1,3 @@
-/*
- *  Copyright (C) 2022-2024 PolarAstrumLab
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
 package cc.polarastrum.aiyatsbus.impl
 
 import cc.polarastrum.aiyatsbus.core.*
@@ -25,18 +9,20 @@ import cc.polarastrum.aiyatsbus.core.util.FileWatcher.watch
 import cc.polarastrum.aiyatsbus.core.util.YamlUpdater
 import cc.polarastrum.aiyatsbus.core.util.deepRead
 import cc.polarastrum.aiyatsbus.core.util.reloadable
+import cc.polarastrum.aiyatsbus.core.util.safeguard
 import cc.polarastrum.aiyatsbus.impl.DefaultAiyatsbusAPI.Companion.proxy
-import cc.polarastrum.aiyatsbus.impl.enchant.InternalAiyatsbusEnchantment
 import cc.polarastrum.aiyatsbus.impl.registration.legacy.DefaultLegacyEnchantmentRegisterer
 import org.bukkit.NamespacedKey
-import org.bukkit.entity.Player
 import taboolib.common.LifeCycle
 import taboolib.common.TabooLib
 import taboolib.common.io.newFolder
 import taboolib.common.io.runningResourcesInJar
 import taboolib.common.platform.Awake
 import taboolib.common.platform.PlatformFactory
-import taboolib.common.platform.function.*
+import taboolib.common.platform.function.console
+import taboolib.common.platform.function.getDataFolder
+import taboolib.common.platform.function.registerLifeCycleTask
+import taboolib.common.platform.function.releaseResourceFile
 import taboolib.common.util.replaceWithOrder
 import taboolib.common.util.t
 import taboolib.module.configuration.Configuration
@@ -101,7 +87,7 @@ class DefaultAiyatsbusEnchantmentManager : AiyatsbusEnchantmentManager {
     }
 
     override fun unregister(enchantment: AiyatsbusEnchantment) {
-        enchantment.trigger?.onDisable()
+        enchantment.mechanism?.close()
         enchantmentsToRegister.remove(enchantment)
         Aiyatsbus.api().getEnchantmentRegisterer().unregister(enchantment)
         byKeyMap -= enchantment.enchantmentKey
@@ -110,6 +96,8 @@ class DefaultAiyatsbusEnchantmentManager : AiyatsbusEnchantmentManager {
     }
 
     override fun loadEnchantments() {
+        // 如果是重载, 记录当前附魔数量, 如果不一致得刷新在线玩家的附魔表
+        val enchantmentCount = byKeyMap.size
         clearEnchantments()
 
         val enchantsFolder = newFolder(getDataFolder(), "enchants")
@@ -123,9 +111,7 @@ class DefaultAiyatsbusEnchantmentManager : AiyatsbusEnchantmentManager {
         
         // 加载所有附魔文件
         enchantsFolder.listFiles { file, _ -> file.isDirectory }?.toList()?.let { directories ->
-            directories
-                .map { it.deepRead("yml") }
-                .flatten()
+            directories.flatMap { it.deepRead("yml") }
                 .forEach { file -> loadFromFile(file) }
         }
 
@@ -133,6 +119,13 @@ class DefaultAiyatsbusEnchantmentManager : AiyatsbusEnchantmentManager {
         enchantmentsToRegister.forEach { register(it) }
 
         console().sendLang("loading-enchantments", byKeyMap.size, System.currentTimeMillis() - startTime)
+
+        if (enchantmentCount < byKeyMap.size) {
+            onlinePlayers.forEach {
+                Aiyatsbus.api().getMinecraftAPI().getPacketHandler()
+                    .synchronizeRegistries(it)
+            }
+        }
     }
 
     override fun loadFromFile(file: File) {
@@ -145,6 +138,7 @@ class DefaultAiyatsbusEnchantmentManager : AiyatsbusEnchantmentManager {
         if (!enchant.dependencies.checkAvailable()) return
 
         register(enchant)
+        enchant.mechanism.init()
         setupFileWatcher(file, relativePath, key, id)
     }
 
@@ -213,14 +207,17 @@ class DefaultAiyatsbusEnchantmentManager : AiyatsbusEnchantmentManager {
      */
     private fun reloadEnchantment(file: File, key: NamespacedKey, id: String, startTime: Long) {
         val oldEnchant = getEnchant(key) ?: return
-        oldEnchant.trigger?.onDisable()
+        oldEnchant.mechanism?.close()
         unregister(oldEnchant)
 
-        val newEnchant = InternalAiyatsbusEnchantment(id, file, Configuration.loadFromFile(file))
-        if (!newEnchant.dependencies.checkAvailable()) return
-        
-        register(newEnchant)
-        onlinePlayers.forEach(Player::updateInventory)
+        if (file.exists()) {
+            val config = Configuration.loadFromFile(file)
+            val newEnchant = InternalAiyatsbusEnchantment(id, file, config)
+            if (!newEnchant.dependencies.checkAvailable()) return
+
+            register(newEnchant)
+            getEnchant(key)!!.mechanism?.init()
+        }
         
         console().sendLang("enchantment-reload", id, System.currentTimeMillis() - startTime)
         EnchantRegistrationHooks.unregisterHooks()
@@ -231,8 +228,8 @@ class DefaultAiyatsbusEnchantmentManager : AiyatsbusEnchantmentManager {
         for (enchant in byKeyMap.values) {
             // 不卸载外部附魔
             if (enchant in enchantmentsToRegister) continue
-            enchant.file.isProcessingByWatcher = false
-            enchant.file.unwatch()
+            enchant.file?.isProcessingByWatcher = false
+            enchant.file?.unwatch()
             unregister(enchant)
         }
     }
@@ -268,17 +265,7 @@ class DefaultAiyatsbusEnchantmentManager : AiyatsbusEnchantmentManager {
             DefaultAiyatsbusAPI.registerer = registerer
 
             if (registerer is ModernEnchantmentRegisterer) {
-                try {
-                    registerer.replaceRegistry()
-                } catch (ex: Throwable) {
-                    severe("""
-                        无法替换注册表，为避免数据丢失，服务器将会被强制关闭！
-                        Failed to replace registry. To avoid data loss, the server will be forced to shut down!
-                    """.t())
-                    ex.printStackTrace()
-                    Thread.sleep(5000)
-                    Runtime.getRuntime().halt(-1)
-                }
+                safeguard("注册表替换", "registry replacer") { registerer.replaceRegistry() }
                 registerLifeCycleTask(LifeCycle.ACTIVE) {
                     registerer.replaceRegistry()
                 }
@@ -288,19 +275,7 @@ class DefaultAiyatsbusEnchantmentManager : AiyatsbusEnchantmentManager {
             }
             reloadable {
                 registerLifeCycleTask(LifeCycle.ENABLE, StandardPriorities.ENCHANTMENT) {
-                    try {
-                        Aiyatsbus.api().getEnchantmentManager().loadEnchantments()
-                    } catch (ex: Throwable) {
-                        if (TabooLib.getCurrentLifeCycle() != LifeCycle.ACTIVE) {
-                            severe("""
-                                无法初始化附魔，为避免数据丢失，服务器将会被强制关闭！
-                                Failed to initialize enchantments. To avoid data loss, the server will be forced to shut down!
-                            """.t())
-                            ex.printStackTrace()
-                            Thread.sleep(5000)
-                            Runtime.getRuntime().halt(-1)
-                        }
-                    }
+                    safeguard("附魔", "enchantments") { Aiyatsbus.api().getEnchantmentManager().loadEnchantments() }
                 }
             }
         }

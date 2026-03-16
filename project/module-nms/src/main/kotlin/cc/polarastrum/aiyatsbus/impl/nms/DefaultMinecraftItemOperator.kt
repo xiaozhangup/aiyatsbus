@@ -1,33 +1,19 @@
-/*
- *  Copyright (C) 2022-2024 PolarAstrumLab
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
 package cc.polarastrum.aiyatsbus.impl.nms
 
-import cc.polarastrum.aiyatsbus.core.Aiyatsbus
-import cc.polarastrum.aiyatsbus.core.MinecraftItemOperator
-import cc.polarastrum.aiyatsbus.core.toDisplayMode
+import cc.polarastrum.aiyatsbus.core.*
 import cc.polarastrum.aiyatsbus.core.util.isNull
 import cc.polarastrum.aiyatsbus.impl.nmsj21.NMSJ21
 import io.papermc.paper.adventure.PaperAdventure
 import net.kyori.adventure.util.Codec
 import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.world.entity.EnumItemSlot
+import net.minecraft.world.item.ItemAir
+import net.minecraft.world.item.ItemEnchantedBook
+import net.minecraft.world.item.Items
 import net.minecraft.world.item.trading.MerchantRecipeList
 import org.bukkit.Bukkit
 import org.bukkit.Material
+import org.bukkit.NamespacedKey
 import org.bukkit.craftbukkit.v1_20_R3.entity.CraftLivingEntity
 import org.bukkit.craftbukkit.v1_20_R3.inventory.CraftItemStack
 import org.bukkit.entity.LivingEntity
@@ -38,6 +24,7 @@ import taboolib.library.reflex.Reflex.Companion.setProperty
 import taboolib.module.nms.MinecraftVersion.versionId
 import taboolib.module.nms.NMSItemTag
 import java.io.IOException
+import kotlin.experimental.and
 
 /**
  * Aiyatsbus
@@ -158,6 +145,91 @@ class DefaultMinecraftItemOperator : MinecraftItemOperator {
                 (enumItemSlot as? EnumItemSlot)?.let { entityLiving.broadcastBreakEvent(it) }
             }
         }
+    }
+
+    override fun getEnchants(item: ItemStack): Map<AiyatsbusEnchantment, Int> {
+        if (versionId >= 12005) {
+            return NMSJ21.instance.getEnchants(item)
+        }
+        val handle = (if (item is CraftItemStack) Aiyatsbus.api().getMinecraftAPI().getHelper().getCraftItemStackHandle(item) else CraftItemStack.asNMSCopy(item)) as NMSItemStack
+        val enchantmentNBT = if (handle.item == Items.ENCHANTED_BOOK)
+            ItemEnchantedBook.getEnchantments(handle)
+        else handle.enchantmentTags
+
+        val map = HashMap<AiyatsbusEnchantment, Int>()
+
+        for (base in enchantmentNBT) {
+            val compound = base as NBTTagCompound
+            val key = NamespacedKey.fromString(compound.getString("id"))
+            val level = ('\uffff'.code.toShort() and compound.getShort("lvl")).toInt()
+            if (key != null) {
+                val enchant = aiyatsbusEt(key)
+                if (enchant != null) {
+                    map[enchant] = level
+                }
+            }
+        }
+        return map
+    }
+
+    override fun getFastEnchants(item: ItemStack): Array<Array<Any>> {
+        if (versionId >= 12005) {
+            return NMSJ21.instance.getFastEnchants(item)
+        }
+        val handle = (if (item is CraftItemStack) Aiyatsbus.api().getMinecraftAPI().getHelper().getCraftItemStackHandle(item) else CraftItemStack.asNMSCopy(item)) as NMSItemStack
+        val enchantmentNBT = if (handle.item == Items.ENCHANTED_BOOK)
+            ItemEnchantedBook.getEnchantments(handle)
+        else handle.enchantmentTags
+
+        val array = Array<Array<Any>>(enchantmentNBT.size) { arrayOf() }
+
+        enchantmentNBT.forEachIndexed { i, base ->
+            val compound = base as NBTTagCompound
+            val key = NamespacedKey.fromString(compound.getString("id"))
+            val level = ('\uffff'.code.toShort() and compound.getShort("lvl")).toInt()
+            if (key != null) {
+                val enchant = aiyatsbusEt(key)
+                if (enchant != null) {
+                    array[i] = arrayOf(enchant, level)
+                }
+            }
+        }
+        return array
+    }
+
+    override fun getEnchantLevel(item: ItemStack, enchant: AiyatsbusEnchantment): Int? {
+        if (versionId >= 12005) {
+            return NMSJ21.instance.getEnchantLevel(item, enchant)
+        }
+        val handle = (if (item is CraftItemStack) Aiyatsbus.api().getMinecraftAPI().getHelper().getCraftItemStackHandle(item) else CraftItemStack.asNMSCopy(item)) as NMSItemStack
+        val enchantmentNBT = if (handle.item == Items.ENCHANTED_BOOK)
+            ItemEnchantedBook.getEnchantments(handle)
+        else handle.enchantmentTags
+
+        for (base in enchantmentNBT) {
+            val compound = base as NBTTagCompound
+            val key = compound.getString("id")
+            if (key != enchant.id) {
+                continue
+            }
+            return ('\uffff'.code.toShort() and compound.getShort("lvl")).toInt()
+        }
+        return null
+    }
+
+    override fun isUnbreakable(item: ItemStack): Boolean {
+        if (versionId >= 12005) {
+            return NMSJ21.instance.isUnbreakable(item)
+        }
+        val handle = (if (item is CraftItemStack) Aiyatsbus.api().getMinecraftAPI().getHelper().getCraftItemStackHandle(item) else CraftItemStack.asNMSCopy(item)) as NMSItemStack
+        return handle.tag?.getBoolean("Unbreakable") == true
+    }
+
+    override fun isAir(item: ItemStack?): Boolean {
+        if (item == null) return true
+        if (item.amount == 0) return true
+        val handle = (if (item is CraftItemStack) Aiyatsbus.api().getMinecraftAPI().getHelper().getCraftItemStackHandle(item) else CraftItemStack.asNMSCopy(item)) as NMSItemStack
+        return handle.item is ItemAir
     }
 }
 

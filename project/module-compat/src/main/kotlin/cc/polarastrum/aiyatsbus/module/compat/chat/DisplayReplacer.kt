@@ -1,21 +1,6 @@
-/*
- *  Copyright (C) 2022-2024 PolarAstrumLab
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
 package cc.polarastrum.aiyatsbus.module.compat.chat
 
+import cc.polarastrum.aiyatsbus.module.compat.chat.display.DisplayReplacerComponents
 import cc.polarastrum.aiyatsbus.module.compat.chat.display.DisplayReplacerDataComponents
 import cc.polarastrum.aiyatsbus.module.compat.chat.display.DisplayReplacerNBT
 import org.bukkit.entity.Player
@@ -38,7 +23,9 @@ interface DisplayReplacer {
     companion object {
 
         val inst by unsafeLazy {
-            if (MinecraftVersion.versionId >= 12005) {
+            if (MinecraftVersion.versionId >= 12105) {
+                DisplayReplacerComponents
+            } else if (MinecraftVersion.versionId >= 12005) {
                 DisplayReplacerDataComponents
             } else {
                 DisplayReplacerNBT

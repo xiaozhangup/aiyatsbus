@@ -5,8 +5,9 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     java
-    id("io.izzel.taboolib") version "2.0.27" apply false
+    id("io.izzel.taboolib") version "2.0.36" apply false
     id("org.jetbrains.kotlin.jvm") version "1.8.22" apply false
+    id("org.jetbrains.dokka") version "1.8.20" apply false
 }
 
 subprojects {
@@ -23,24 +24,24 @@ subprojects {
         }
         env {
             install(
+                CommandHelper,
                 Bukkit,
                 BukkitHook,
-                BukkitNMSItemTag,
+                BukkitNMSUtil,
                 BukkitUI,
                 BukkitUtil,
                 I18n,
-                JavaScript,
-                Kether,
                 MinecraftChat,
                 MinecraftEffect,
-                Metrics
+                Metrics,
             )
             forceDownloadInDev = false
             disableOnSkippedVersion = false
             disableWhenPrimitiveLoaderError = true
+            enableLegacyDependencyResolver = true
         }
         version {
-            taboolib = "6.2.4-1645904"
+            taboolib = "6.2.4-3d34097"
         }
     }
 
@@ -52,7 +53,6 @@ subprojects {
     // 依赖
     dependencies {
         compileOnly(kotlin("stdlib"))
-        compileOnly("io.papermc.paper:paper-api:1.20.2-R0.1-SNAPSHOT")
     }
 
     // 编译配置

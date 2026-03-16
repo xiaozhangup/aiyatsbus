@@ -1,27 +1,13 @@
-/*
- *  Copyright (C) 2022-2024 PolarAstrumLab
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
 package cc.polarastrum.aiyatsbus.core.util
 
 import redempt.crunch.CompiledExpression
 import redempt.crunch.Crunch
 import redempt.crunch.functional.EvaluationEnvironment
 import redempt.crunch.functional.Function
+import taboolib.common.env.RuntimeDependency
 import taboolib.common.platform.function.warning
 import taboolib.common.util.random
+import java.util.concurrent.ThreadLocalRandom
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
@@ -35,6 +21,13 @@ import kotlin.random.Random
  * @author HamsterYDS
  * @since 2024/2/17 23:15
  */
+
+fun random(v: Double): Boolean {
+    if (v in 0.0..1.0) {
+        return ThreadLocalRandom.current().nextDouble() < v
+    }
+    return ThreadLocalRandom.current().nextDouble() * 100 < v
+}
 
 // 罗马数字转换相关常量
 private val romanUnits = intArrayOf(1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1)
@@ -104,11 +97,30 @@ fun Double.isInteger(): Boolean {
 }
 
 /**
+ * 是否为整数
+ */
+fun Any.isInt(): Boolean {
+    return try {
+        Integer.parseInt(toString())
+        true
+    } catch (ex: Exception) {
+        false
+    }
+}
+
+
+/**
  * 数学工具对象
  * 
  * 提供表达式计算和权重选择功能。
  * 使用 Crunch 库进行高性能的数学表达式计算。
  */
+@RuntimeDependency(
+    repository = "https://repo.tabooproject.org/repository/releases",
+    value = "!com.github.Redempt:Crunch:1.0.7",
+    test = "!redempt.crunch.Crunch",
+    relocate = ["!redempt", "!cc.polarastrum.aiyatsbus.library"]
+)
 object MathUtils {
 
     // 内置数学函数

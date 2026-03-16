@@ -1,27 +1,13 @@
-/*
- *  Copyright (C) 2022-2024 PolarAstrumLab
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
 package cc.polarastrum.aiyatsbus.impl
 
-import com.google.common.collect.HashBasedTable
-import com.google.common.collect.Table
 import cc.polarastrum.aiyatsbus.core.*
 import cc.polarastrum.aiyatsbus.core.data.CheckType
+import cc.polarastrum.aiyatsbus.core.data.trigger.TriggerType
+import cc.polarastrum.aiyatsbus.core.data.trigger.ticker.Ticker
 import cc.polarastrum.aiyatsbus.core.util.isNull
 import cc.polarastrum.aiyatsbus.core.util.reloadable
+import com.google.common.collect.HashBasedTable
+import com.google.common.collect.Table
 import org.bukkit.inventory.ItemStack
 import taboolib.common.LifeCycle
 import taboolib.common.platform.Awake
@@ -31,7 +17,7 @@ import taboolib.common.platform.function.submit
 import taboolib.common.platform.service.PlatformExecutor
 import taboolib.platform.util.onlinePlayers
 import taboolib.platform.util.submit
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -69,9 +55,11 @@ class DefaultAiyatsbusTickHandler : AiyatsbusTickHandler {
     }
 
     private fun onTick() {
-        routine.cellSet() // 无需判断这里 trigger 是否为 null, 因为只有 Trigger 初始化时才会往这里扔 enchant
+        // 这里无需判断附魔是否有机制, 也无需判断是否有 Ticker
+        // 因为只有 Ticker 初始化时才会往这里扔附魔
+        routine.cellSet()
             .filter { counter % it.value == 0L }
-            .sortedBy { it.rowKey.trigger!!.tickerPriority }
+            .sortedBy { it.rowKey.mechanism!!.priority(TriggerType.TICKER) }
             .forEach {
                 val ench = it.rowKey
                 val id = it.columnKey
@@ -84,11 +72,13 @@ class DefaultAiyatsbusTickHandler : AiyatsbusTickHandler {
 
                         // 一般能存在 routine 里的, trigger 和 tickers 必不为 null
                         val ticker =
-                            ench.trigger!!.tickers[id] ?: error("Unknown ticker $id for enchantment ${ench.basicData.id}")
+                            (ench.mechanism!!.triggers(TriggerType.TICKER).firstOrNull { t -> t.id == id }
+                                ?: error("Unknown ticker $id for enchantment ${ench.basicData.id}")) as Ticker
 
-                        val variables = mutableMapOf(
+                        val variables = hashMapOf(
                             "player" to player,
                             "enchant" to ench,
+                            "maxLevel" to ench.basicData.maxLevel
                         )
 
                         variables += ench.variables.ordinary
@@ -104,7 +94,7 @@ class DefaultAiyatsbusTickHandler : AiyatsbusTickHandler {
                             }
                             if (item.isNull) return@slot
 
-                            val level = item.etLevel(ench)
+                            val level = item.fastEtLevel(ench)
 
                             if (level > 0) {
                                 val checkResult = ench.limitations.checkAvailable(CheckType.USE, item, player, slot)
@@ -117,7 +107,7 @@ class DefaultAiyatsbusTickHandler : AiyatsbusTickHandler {
                                 }
                                 flag = true
 
-                                val vars = variables.toMutableMap()
+                                val vars = HashMap(variables)
                                 vars += mapOf(
                                     "triggerSlot" to slot.name,
                                     "trigger-slot" to slot.name,
@@ -129,15 +119,15 @@ class DefaultAiyatsbusTickHandler : AiyatsbusTickHandler {
 
                                 if (!record.contains(id)) {
                                     record += id
-                                    ticker.execute(ticker.preHandle, player, vars)
+                                    ticker.executePreHandle(player, vars)
                                 }
 
-                                ticker.execute(ticker.handle, player, vars)
+                                ticker.executeHandle(player, vars)
                             }
                         }
                         if (!flag && record.contains(id)) {
                             record -= id
-                            ticker.execute(ticker.postHandle, player, variables)
+                            ticker.executePostHandle(player, variables)
                         }
                     }
                 }

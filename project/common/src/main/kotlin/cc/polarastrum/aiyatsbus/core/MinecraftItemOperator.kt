@@ -1,19 +1,3 @@
-/*
- *  Copyright (C) 2022-2024 PolarAstrumLab
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
 package cc.polarastrum.aiyatsbus.core
 
 import org.bukkit.entity.LivingEntity
@@ -80,4 +64,42 @@ interface MinecraftItemOperator {
      * @param player 玩家
      */
     fun adaptMerchantRecipe(merchantRecipeList: Any, player: Player)
+
+    /**
+     * 获取物品上的附魔并转换为 Aiyatsbus 附魔映射
+     *
+     * @param item 目标物品
+     * @return Aiyatsbus 附魔到等级的映射
+     */
+    fun getEnchants(item: ItemStack): Map<AiyatsbusEnchantment, Int>
+
+    /**
+     * Array<Array<AiyatsbusEnchantment and Int>>
+     */
+    fun getFastEnchants(item: ItemStack): Array<Array<Any>>
+
+    /**
+     * 获取物品上指定附魔的等级
+     *
+     * @param item 目标物品
+     * @param enchant 要查询的附魔
+     * @return 等级，不存在则返回 null
+     */
+    fun getEnchantLevel(item: ItemStack, enchant: AiyatsbusEnchantment): Int?
+
+    /**
+     * 判断物品是否不可损坏
+     *
+     * @param item 目标物品
+     * @return 是否为不可损坏物品
+     */
+    fun isUnbreakable(item: ItemStack): Boolean
+
+    /**
+     * 判断物品是否为空气
+     *
+     * @param item 目标物品
+     * @return 为空或 AIR 时返回 true
+     */
+    fun isAir(item: ItemStack?): Boolean
 }

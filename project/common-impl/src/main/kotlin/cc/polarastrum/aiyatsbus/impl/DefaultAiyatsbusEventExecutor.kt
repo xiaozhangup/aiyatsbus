@@ -1,37 +1,27 @@
-/*
- *  Copyright (C) 2022-2024 PolarAstrumLab
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
 package cc.polarastrum.aiyatsbus.impl
 
-import com.google.common.collect.HashBasedTable
-import com.google.common.collect.Table
 import cc.polarastrum.aiyatsbus.core.*
 import cc.polarastrum.aiyatsbus.core.data.CheckType
+import cc.polarastrum.aiyatsbus.core.data.trigger.TriggerType
+import cc.polarastrum.aiyatsbus.core.data.trigger.event.EventExecutor
 import cc.polarastrum.aiyatsbus.core.data.trigger.event.EventMapping
 import cc.polarastrum.aiyatsbus.core.data.trigger.event.EventResolver
+import cc.polarastrum.aiyatsbus.core.event.AiyatsbusBowChargeEvent
 import cc.polarastrum.aiyatsbus.core.event.AiyatsbusPrepareAnvilEvent
 import cc.polarastrum.aiyatsbus.core.util.*
+import com.google.common.collect.HashBasedTable
+import com.google.common.collect.Table
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import org.bukkit.entity.Projectile
+import org.bukkit.entity.Trident
 import org.bukkit.event.Event
 import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.block.BlockDamageEvent
 import org.bukkit.event.block.BlockDropItemEvent
 import org.bukkit.event.block.BlockPlaceEvent
+import org.bukkit.event.enchantment.EnchantItemEvent
+import org.bukkit.event.enchantment.PrepareItemEnchantEvent
 import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.bukkit.event.entity.EntityDeathEvent
 import org.bukkit.event.entity.EntityEvent
@@ -87,45 +77,72 @@ class DefaultAiyatsbusEventExecutor : AiyatsbusEventExecutor {
         resolvers += Event::class.java to EventResolver<Event>(
             // 最后面返回 true 是因为这是最后一步直接解析, 如果这都解析不到那就没必要再重复一次解析了
             entityResolver = { event, playerReference ->
-                event.invokeMethodDeep<LivingEntity?>(playerReference ?: return@EventResolver null to1 true).checkedIfIsNPC()
+                event.invokeMethodDeep<LivingEntity?>(playerReference ?: return@EventResolver null to1 true)
+                    .checkedIfIsNPC()
             },
-            itemResolver = { event, itemReference, _ -> event.invokeMethodDeep<ItemStack?>(itemReference ?: return@EventResolver null to1 true) to1 true }
+            itemResolver = { event, itemReference, entity, slot ->
+                val (item, itemResolved) = EventResolver.defaultItemResolver(entity, slot)
+                if (!itemResolved || item.isNull) {
+                    return@EventResolver event.invokeMethodDeep<ItemStack?>(
+                        itemReference ?: return@EventResolver null to1 true
+                    ) to1 true
+                } else {
+                    return@EventResolver item to1 true
+                }
+            }
         )
         resolvers += PlayerEvent::class.java to EventResolver<PlayerEvent>({ event, _ -> event.player.checkedIfIsNPC() })
         resolvers += PlayerMoveEvent::class.java to EventResolver<PlayerMoveEvent>(
             entityResolver = { event, _ -> event.player.checkedIfIsNPC() },
-            eventResolver = { event ->
-                /* 过滤视角转动 */
-                if (event.from.world == event.to.world && event.from.distance(event.to) < 1e-1) return@EventResolver
-            }
+//            eventResolver = { event ->
+//                /* 过滤视角转动 */
+//                if (event.from.world == event.to.world && event.from.distance(event.to) < 1e-1) return@EventResolver
+//            }
         )
         resolvers += BlockDropItemEvent::class.java to EventResolver<BlockDropItemEvent>({ event, _ -> event.player.checkedIfIsNPC() })
         resolvers += BlockDamageEvent::class.java to EventResolver<BlockDamageEvent>({ event, _ -> event.player.checkedIfIsNPC() })
         resolvers += BlockPlaceEvent::class.java to EventResolver<BlockPlaceEvent>({ event, _ -> event.player.checkedIfIsNPC() })
         resolvers += BlockBreakEvent::class.java to EventResolver<BlockBreakEvent>({ event, _ -> event.player.checkedIfIsNPC() })
-        resolvers += ProjectileHitEvent::class.java to EventResolver<ProjectileHitEvent>({ event, _ -> (event.entity.shooter as? LivingEntity).checkedIfIsNPC() })
-        resolvers += EntityDamageByEntityEvent::class.java to EventResolver<EntityDamageByEntityEvent>({ event, playerReference ->
-            // 攻击者和受害者有任何一方是 NPC 就都不应触发此事件
-            if (event.damager.checkIfIsNPC() || event.entity.checkIfIsNPC()) {
-                null to false
+        resolvers += ProjectileHitEvent::class.java to EventResolver<ProjectileHitEvent>(
+            entityResolver = { event, _ -> (event.entity.shooter as? LivingEntity).checkedIfIsNPC() },
+            itemResolver = { event, _, entity, slot ->
+                if (event.entity is Trident) {
+                    return@EventResolver (event.entity as Trident).item to1 true
+                }
+                return@EventResolver EventResolver.defaultItemResolver(entity, slot)
             }
-            when (playerReference) {
-                "damager", null -> when (event.damager) {
-                    is Player -> event.damager as? LivingEntity
-                    is Projectile -> ((event.damager as Projectile).shooter as? LivingEntity)
-                    else -> null
-                }.checkedIfIsNPC()
-                "entity" -> (event.entity as? LivingEntity).checkedIfIsNPC()
-                else -> null to1 false
+        )
+        resolvers += EntityDamageByEntityEvent::class.java to EventResolver<EntityDamageByEntityEvent>(
+            entityResolver = { event, playerReference ->
+                // 攻击者和受害者有任何一方是 NPC 就都不应触发此事件
+                if (event.damager.checkIfIsNPC() || event.entity.checkIfIsNPC()) {
+                    null to1 false
+                }
+                when (playerReference) {
+                    "damager", null -> when (event.damager) {
+                        is Player -> event.damager as? LivingEntity
+                        is Projectile -> ((event.damager as Projectile).shooter as? LivingEntity)
+                        else -> null
+                    }.checkedIfIsNPC()
+
+                    "entity" -> (event.entity as? LivingEntity).checkedIfIsNPC()
+                    else -> null to1 false
+                }
+            },
+            itemResolver = { event, _, entity, slot ->
+                if (event.damager is Trident) {
+                    return@EventResolver (event.damager as Trident).item to1 true
+                }
+                return@EventResolver EventResolver.defaultItemResolver(entity, slot)
             }
-        })
+        )
         resolvers += EntityDeathEvent::class.java to EventResolver<EntityDeathEvent>({ event, _ -> event.killer.checkedIfIsNPC() })
         resolvers += EntityEvent::class.java to EventResolver<EntityEvent>({ event, _ -> (event.entity as? LivingEntity).checkedIfIsNPC() })
         resolvers += InventoryClickEvent::class.java to EventResolver<InventoryClickEvent>({ event, _ -> (event.whoClicked).checkedIfIsNPC() })
         resolvers += InventoryEvent::class.java to EventResolver<InventoryEvent>({ event, _ -> (event.view.player).checkedIfIsNPC() })
         resolvers += AiyatsbusPrepareAnvilEvent::class.java to EventResolver<AiyatsbusPrepareAnvilEvent>(
             entityResolver = { event, _ -> event.player.checkedIfIsNPC() },
-            itemResolver = { event, itemReference, _ ->
+            itemResolver = { event, itemReference, _, _ ->
                 when (itemReference) {
                     "left" -> event.left to1 true
                     "right" -> event.right to1 true
@@ -134,8 +151,11 @@ class DefaultAiyatsbusEventExecutor : AiyatsbusEventExecutor {
                 }
             }
         )
-//        resolvers += AiyatsbusBowChargeEvent.Prepare::class.java to EventResolver<AiyatsbusBowChargeEvent.Prepare>({ event, _ -> (event.player).checkedIfIsNPC() })
-//        resolvers += AiyatsbusBowChargeEvent.Released::class.java to EventResolver<AiyatsbusBowChargeEvent.Released>({ event, _ -> (event.player).checkedIfIsNPC() })
+        resolvers += EnchantItemEvent::class.java to EventResolver<EnchantItemEvent>({ event, _ -> event.enchanter.checkedIfIsNPC() })
+        resolvers += PrepareItemEnchantEvent::class.java to EventResolver<PrepareItemEnchantEvent>({ event, _ -> event.enchanter.checkedIfIsNPC() })
+        resolvers += AiyatsbusBowChargeEvent.Prepare::class.java to EventResolver<AiyatsbusBowChargeEvent.Prepare>({ event, _ -> (event.player).checkedIfIsNPC() })
+        resolvers += AiyatsbusBowChargeEvent.Released::class.java to EventResolver<AiyatsbusBowChargeEvent.Released>({ event, _ -> (event.player).checkedIfIsNPC() })
+        resolvers += AiyatsbusBowChargeEvent.Break::class.java to EventResolver<AiyatsbusBowChargeEvent.Break>({ event, _ -> (event.player).checkedIfIsNPC() })
     }
 
     override fun registerListener(listen: String, eventMapping: EventMapping) {
@@ -178,7 +198,7 @@ class DefaultAiyatsbusEventExecutor : AiyatsbusEventExecutor {
     }
 
     @Suppress("UNCHECKED_CAST")
-    override fun <T: Event> getResolver(instance: T): EventResolver<T>? {
+    override fun <T : Event> getResolver(instance: T): EventResolver<T>? {
         var currentClass: Class<*>? = instance::class.java
         while (currentClass != null) {
             val resolver = resolvers[currentClass] as? EventResolver<T>
@@ -213,24 +233,14 @@ class DefaultAiyatsbusEventExecutor : AiyatsbusEventExecutor {
         if (eventMapping.slots.isNotEmpty()) {
             eventMapping.slots.forEach { slot ->
 //                println("检测槽位: $slot")
-                val item: ItemStack?
-                try {
-                    item = entity.equipment?.getItem(slot)
-                } catch (_: Throwable) {
-                    // 离谱的低版本报错:
-                    // java.lang.NullPointerException: player.inventory.getItem(slot) must not be null
-                    return@forEach
-                }
+                val (item, itemResolved) = resolver.itemResolver.apply(event, eventMapping.itemReference, entity, slot)
 //                println("尝试锁定物品: $item")
-
-                if (item.isNull) return@forEach
-
+                if (!itemResolved || item.isNull) return@forEach
 //                println("锁定物品: $item")
-
                 item!!.triggerEts(listen, event, entity, slot, false)
             }
         } else {
-            var (item, itemResolved) = resolver.itemResolver.apply(event, eventMapping.itemReference, entity)
+            var (item, itemResolved) = resolver.itemResolver.apply(event, eventMapping.itemReference, entity, null)
 //            println("我尝试使用 resolver 获取物品, 结果是: $item")
             if (item.isAir && !itemResolved) {
                 item = event.invokeMethodDeep(eventMapping.itemReference ?: return) as? ItemStack ?: return
@@ -242,43 +252,45 @@ class DefaultAiyatsbusEventExecutor : AiyatsbusEventExecutor {
     }
 
     private fun ItemStack.triggerEts(listen: String, event: Event, entity: LivingEntity, slot: EquipmentSlot?, ignoreSlot: Boolean = false) {
-
-        val enchants = fixedEnchants.entries
-            .filter { it.key.trigger != null }
-            .sortedBy { it.key.trigger!!.listenerPriority }
-
-        for (enchantPair in enchants) {
-            val enchant = enchantPair.key
-
+        val enchants = fastFixedEnchants
+            .filter { (it[0] as AiyatsbusEnchantment).mechanism?.hasTrigger(TriggerType.LISTENER) == true }
+            .sortedBy { (it[0] as AiyatsbusEnchantment).mechanism!!.priority(TriggerType.LISTENER) }
+//        println("listen: " + listen)
+//        println("event: " + event)
+//        println("获取可触发物品附魔: " + enchants)
+        for ((enchant, level) in enchants) {
+            enchant as AiyatsbusEnchantment
+            level as Int
+//            println("遍历到附魔: " + enchant.id)
             val checkResult = enchant.limitations.checkAvailable(CheckType.USE, this, entity, slot, ignoreSlot)
 
             if (checkResult.isFailure) {
-                sendDebug("----- DefaultAiyatsbusEventExecutor -----")
-                sendDebug("附魔: " + enchant.basicData.name)
-                sendDebug("原因: " + checkResult.reason)
-                sendDebug("----- DefaultAiyatsbusEventExecutor -----")
+//                println("----- DefaultAiyatsbusEventExecutor -----")
+//                println("附魔: " + enchant.basicData.name)
+//                println("原因: " + checkResult.reason)
+//                println("----- DefaultAiyatsbusEventExecutor -----")
                 continue
             }
 
-            enchant.trigger!!.listeners
-                .filterValues { it.listen == listen }
-                .entries
-                .sortedBy { it.value.priority }
-                .forEach { (_, executor) ->
-//                    println("执行事件: $executor")
-                    val vars = mutableMapOf(
+            enchant.mechanism!!.triggers(TriggerType.LISTENER)
+                .filter { (it as EventExecutor).listen == listen }
+                .sortedBy { it.priority }
+                .forEach { executor ->
+//                    println("执行事件: ${executor.id}")
+                    val vars = hashMapOf(
                         "triggerSlot" to slot?.name,
                         "trigger-slot" to slot?.name,
                         "event" to event,
                         "player" to (entity as? Player ?: entity),
                         "item" to this,
                         "enchant" to enchant,
-                        "level" to enchantPair.value,
+                        "level" to level,
+                        "maxLevel" to enchant.basicData.maxLevel
                     )
 
-                    vars += enchant.variables.variables(enchantPair.value, this, false)
+                    vars += enchant.variables.variables(level, this, false)
 
-                    executor.execute(entity, vars)
+                    executor.executeHandle(entity, vars)
                 }
         }
     }

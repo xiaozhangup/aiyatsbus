@@ -1,24 +1,7 @@
-/*
- *  Copyright (C) 2022-2024 PolarAstrumLab
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
 package cc.polarastrum.aiyatsbus.core.data
 
 import cc.polarastrum.aiyatsbus.core.*
 import cc.polarastrum.aiyatsbus.core.data.LimitType.*
-import cc.polarastrum.aiyatsbus.core.util.coerceBoolean
 import cc.polarastrum.aiyatsbus.core.util.reloadable
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
@@ -31,8 +14,6 @@ import org.bukkit.inventory.ItemStack
 import taboolib.common.LifeCycle
 import taboolib.common.platform.Awake
 import taboolib.common.platform.function.registerLifeCycleTask
-import taboolib.module.kether.compileToJexl
-import taboolib.platform.compat.replacePlaceholder
 
 /**
  * 附魔限制管理类
@@ -48,7 +29,7 @@ import taboolib.platform.compat.replacePlaceholder
  * @since 2024/2/18 10:15
  */
 data class Limitations(
-    private val belonging: AiyatsbusEnchantment,
+    var belonging: AiyatsbusEnchantment,
     private val lines: List<String>
 ) {
 
@@ -56,7 +37,7 @@ data class Limitations(
     var conflictsWithEverything: Boolean = false
 
     /** 限制条件集合 */
-    val limitations = buildLimitations().toMutableSet()
+    val limitations = buildLimitations()
 
     /**
      * 构建限制条件集合
@@ -66,7 +47,7 @@ data class Limitations(
      *
      * @return 限制条件集合
      */
-    private fun buildLimitations(): Set<Pair<LimitType, String>> {
+    private fun buildLimitations(): MutableSet<Pair<LimitType, String>> {
         val result = mutableSetOf<Pair<LimitType, String>>()
         
         // 解析配置行
@@ -171,7 +152,9 @@ data class Limitations(
     private fun checkPapiExpression(expression: String, creature: LivingEntity?): Boolean {
         if (creature !is Player) return true
         return try {
-            expression.replacePlaceholder(creature).compileToJexl().eval().coerceBoolean()
+            // TODO
+            true
+            // expression.replacePlaceholder(creature).compileToJexl().eval().coerceBoolean()
         } catch (e: Exception) {
             false
         }
@@ -199,10 +182,6 @@ data class Limitations(
      * @return 检查结果
      */
     private fun checkDisableWorld(creature: LivingEntity?): Boolean {
-        sendDebug("正在为用户 ${creature?.name ?: creature?.uniqueId ?: creature} 检查附魔 ${belonging.basicData.name}(${belonging.basicData.id}) 的禁用世界")
-        sendDebug("要检查的世界: ${creature?.world}")
-        sendDebug("配置: ${belonging.basicData.disableWorlds}")
-        sendDebug("返回值: ${creature?.world?.name !in belonging.basicData.disableWorlds}")
         return creature?.world?.name !in belonging.basicData.disableWorlds
     }
 
@@ -230,12 +209,12 @@ data class Limitations(
         ignoreSlot: Boolean
     ): Boolean {
         val itemType = item.type
-        val enchants = item.fixedEnchants
+        val enchants = item.fastFixedEnchants
         
         return when (type) {
             SLOT -> checkSlot(itemType, slot, ignoreSlot)
             TARGET -> checkTarget(checkType, creature, itemType, use)
-            MAX_CAPABILITY -> checkMaxCapability(itemType, enchants)
+            MAX_CAPABILITY -> checkMaxCapability(item, enchants)
             DEPENDENCE_ENCHANT -> checkDependenceEnchant(value, enchants)
             CONFLICT_ENCHANT -> checkConflictEnchant(value, enchants)
             DEPENDENCE_GROUP -> checkDependenceGroup(value, enchants)
@@ -297,8 +276,8 @@ data class Limitations(
      * @param enchants 当前附魔列表
      * @return 检查结果
      */
-    private fun checkMaxCapability(itemType: Material, enchants: Map<AiyatsbusEnchantment, Int>): Boolean {
-        return itemType.capability > enchants.size
+    private fun checkMaxCapability(item: ItemStack, enchants: Array<Array<Any>>): Boolean {
+        return item.capability > enchants.size
     }
 
     /**
@@ -310,8 +289,8 @@ data class Limitations(
      * @param enchants 当前附魔列表
      * @return 检查结果
      */
-    private fun checkDependenceEnchant(value: String, enchants: Map<AiyatsbusEnchantment, Int>): Boolean {
-        return enchants.containsKey(aiyatsbusEt(value))
+    private fun checkDependenceEnchant(value: String, enchants: Array<Array<Any>>): Boolean {
+        return enchants.any { it[0] == aiyatsbusEt(value) }
     }
 
     /**
@@ -323,8 +302,8 @@ data class Limitations(
      * @param enchants 当前附魔列表
      * @return 检查结果
      */
-    private fun checkConflictEnchant(value: String, enchants: Map<AiyatsbusEnchantment, Int>): Boolean {
-        return !enchants.containsKey(aiyatsbusEt(value))
+    private fun checkConflictEnchant(value: String, enchants: Array<Array<Any>>): Boolean {
+        return enchants.none { it[0] == aiyatsbusEt(value) }
     }
 
     /**
@@ -336,8 +315,9 @@ data class Limitations(
      * @param enchants 当前附魔列表
      * @return 检查结果
      */
-    private fun checkDependenceGroup(value: String, enchants: Map<AiyatsbusEnchantment, Int>): Boolean {
-        return enchants.any { (enchant, _) -> 
+    private fun checkDependenceGroup(value: String, enchants: Array<Array<Any>>): Boolean {
+        return enchants.any { (enchant, _) ->
+            enchant as AiyatsbusEnchantment
             enchant.enchantment.isInGroup(value) && enchant.enchantmentKey != belonging.enchantmentKey 
         }
     }
@@ -351,10 +331,11 @@ data class Limitations(
      * @param enchants 当前附魔列表
      * @return 检查结果
      */
-    private fun checkConflictGroup(value: String, enchants: Map<AiyatsbusEnchantment, Int>): Boolean {
+    private fun checkConflictGroup(value: String, enchants: Array<Array<Any>>): Boolean {
         val group = aiyatsbusGroup(value)
         val maxCoexist = group?.maxCoexist ?: 10000
-        val conflictCount = enchants.count { (enchant, _) -> 
+        val conflictCount = enchants.count { (enchant, _) ->
+            enchant as AiyatsbusEnchantment
             enchant.enchantment.isInGroup(value) && enchant.enchantmentKey != belonging.enchantmentKey 
         }
         return conflictCount < maxCoexist

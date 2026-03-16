@@ -61,6 +61,21 @@ Settings:
       - "display"
       - "variables"
       - "mechanisms"
+    # 等级修正
+    # 必须开启自带的附魔展示系统才可使用此功能
+    levelfixers:
+      # 是否打开全局超出最大等级的附魔修正功能
+      enable: false
+      # 是否修正原版附魔
+      vanilla: true
+      # 是否修正自定义附魔
+      custom: true
+      # 不进行修正的附魔的名字或者 ID, 要填写的话记得去掉 [ ]
+      whitelist: [ ]
+#        - example
+      # 如果存在以下 NBT 节点则不进行修正, 要填写的话记得去掉 [ ]
+      bypass-nbt: [ ]
+#        - PublicBukkitValues.aiyatsbus_bypass_levelfixers
   # 是否开启调试信息
   debug: false
   # 以下用户会收到 Debug 信息

@@ -1,24 +1,10 @@
-/*
- *  Copyright (C) 2022-2024 PolarAstrumLab
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
 package cc.polarastrum.aiyatsbus.core
 
-import cc.polarastrum.aiyatsbus.core.data.*
-import cc.polarastrum.aiyatsbus.core.data.registry.*
+import cc.polarastrum.aiyatsbus.core.data.CheckType
+import cc.polarastrum.aiyatsbus.core.data.registry.Group
+import cc.polarastrum.aiyatsbus.core.data.registry.Rarity
 import cc.polarastrum.aiyatsbus.core.data.registry.Target
+import cc.polarastrum.aiyatsbus.core.util.get
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
 import org.bukkit.command.CommandSender
@@ -27,6 +13,7 @@ import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.EnchantmentStorageMeta
 import org.bukkit.inventory.meta.ItemMeta
+import org.bukkit.persistence.PersistentDataType
 import taboolib.common.platform.ProxyCommandSender
 import taboolib.common.platform.function.getProxyPlayer
 import taboolib.common5.RandomList
@@ -261,6 +248,7 @@ fun Rarity.drawEt(): AiyatsbusEnchantment? = RandomList(*aiyatsbusEts(this).asso
  * 获取物品上的所有附魔，并自动转换为 AiyatsbusEnchantment 格式。
  * 支持附魔书和普通物品。
  */
+@Deprecated("Use AiyatsbusItemStack#getEnchants() instead")
 var ItemMeta.fixedEnchants: Map<AiyatsbusEnchantment, Int>
     get() = (if (this is EnchantmentStorageMeta) storedEnchants else enchants).map { (enchant, level) -> enchant.aiyatsbusEt to level }.toMap()
     set(value) {
@@ -274,9 +262,18 @@ var ItemMeta.fixedEnchants: Map<AiyatsbusEnchantment, Int>
  *
  * 获取物品上的所有附魔，并自动转换为 AiyatsbusEnchantment 格式。
  */
-var ItemStack?.fixedEnchants: Map<AiyatsbusEnchantment, Int>
-    get() = this?.itemMeta?.fixedEnchants ?: emptyMap()
-    set(value) { this?.modifyMeta<ItemMeta> { fixedEnchants = value } }
+val ItemStack?.fixedEnchants: Map<AiyatsbusEnchantment, Int>
+    get() { return Aiyatsbus.api().getMinecraftAPI().getItemOperator().getEnchants(this ?: return emptyMap()) }
+
+fun ItemStack?.eachFastFixedEnchants(func: (AiyatsbusEnchantment, Int) -> Unit) {
+    fastFixedEnchants.forEach { (enchant, level) -> func(enchant as AiyatsbusEnchantment, level as Int) }
+}
+
+val ItemStack?.fastFixedEnchants: Array<Array<Any>>
+    get() { return Aiyatsbus.api().getMinecraftAPI().getItemOperator().getFastEnchants(this ?: return emptyArray()) }
+
+val ItemStack?.isUnbreakable: Boolean
+    get() { return Aiyatsbus.api().getMinecraftAPI().getItemOperator().isUnbreakable(this ?: return false) }
 
 /**
  * 获取附魔等级，若不存在则为 -1
@@ -284,6 +281,7 @@ var ItemStack?.fixedEnchants: Map<AiyatsbusEnchantment, Int>
  * @param enchant 要查询的附魔
  * @return 附魔等级，如果不存在则返回 -1
  */
+@Deprecated("Use AiyatsbusItemStack#getEnchants() instead")
 fun ItemMeta.etLevel(enchant: AiyatsbusEnchantment): Int {
     return fixedEnchants[enchant.enchantment as AiyatsbusEnchantment] ?: -1
 }
@@ -294,7 +292,9 @@ fun ItemMeta.etLevel(enchant: AiyatsbusEnchantment): Int {
  * @param enchant 要查询的附魔
  * @return 附魔等级，如果不存在则返回 -1
  */
-fun ItemStack.etLevel(enchant: AiyatsbusEnchantment) = itemMeta.etLevel(enchant)
+fun ItemStack.etLevel(enchant: AiyatsbusEnchantment) = fixedEnchants[enchant] ?: -1
+
+fun ItemStack.fastEtLevel(enchant: AiyatsbusEnchantment) = Aiyatsbus.api().getMinecraftAPI().getItemOperator().getEnchantLevel(this, enchant) ?: -1
 
 /**
  * 添加附魔
@@ -396,7 +396,12 @@ val Material.belongedTargets get() = Target.values.filter(::isInTarget)
  *
  * @return 最大附魔数量，默认为 32
  */
-val Material.capability get() = belongedTargets.minOfOrNull { it.capability } ?: 32
+val Material.capability: Int get() {
+    val targets = belongedTargets
+    return targets.mapNotNull { it.typesCapability[this] }.minOrNull() ?: targets.minOfOrNull { it.capability } ?: 32
+}
+
+val ItemStack.capability get() = itemMeta["aiyatsbus_item_capability", PersistentDataType.INTEGER] ?: type.capability
 
 /**
  * 检查附魔是否处于某个分组

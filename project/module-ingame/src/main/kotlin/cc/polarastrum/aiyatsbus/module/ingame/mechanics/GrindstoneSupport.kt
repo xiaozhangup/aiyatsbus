@@ -1,19 +1,3 @@
-/*
- *  Copyright (C) 2022-2024 PolarAstrumLab
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
 package cc.polarastrum.aiyatsbus.module.ingame.mechanics
 
 import cc.polarastrum.aiyatsbus.core.*
@@ -98,7 +82,7 @@ object GrindstoneSupport {
 
         result.clearEts()
         doGrind(player, upper)?.let { (item, refund) ->
-            item.fixedEnchants.forEach { (enchant, level) ->
+            item.eachFastFixedEnchants { enchant, level ->
                 // 有无法祛除的附魔就要变更类型, 防止返回一本带有诅咒附魔的普通书本或是带有非 Storage 附魔的假附魔书
                 if (result.type == Material.BOOK) {
                     result.type = Material.ENCHANTED_BOOK
@@ -108,7 +92,7 @@ object GrindstoneSupport {
             exp += refund
         }
         doGrind(player, lower)?.let { (item, refund) ->
-            item.fixedEnchants.forEach { (enchant, level) ->
+            item.eachFastFixedEnchants { enchant, level ->
                 // 有无法祛除的附魔就要变更类型, 防止返回一本带有诅咒附魔的普通书本或是带有非 Storage 附魔的假附魔书
                 if (result.type == Material.BOOK) {
                     result.type = Material.ENCHANTED_BOOK
@@ -155,7 +139,7 @@ object GrindstoneSupport {
         var total = 0.0
         val result = item?.clone() ?: return null
         result.clearEts()
-        item.fixedEnchants.forEach { (enchant, level) ->
+        item.eachFastFixedEnchants { enchant, level ->
             val maxLevel = enchant.basicData.maxLevel
             // 如果附魔不可被驱散, 就要添加回去
             if (enchant.enchantment.isInGroup(blacklist) || !enchant.alternativeData.grindstoneable) {

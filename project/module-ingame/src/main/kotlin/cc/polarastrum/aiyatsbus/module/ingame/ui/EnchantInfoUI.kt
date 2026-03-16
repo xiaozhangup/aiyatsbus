@@ -1,21 +1,5 @@
 @file:Suppress("DEPRECATION")
 
-/*
- *  Copyright (C) 2022-2024 PolarAstrumLab
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
 package cc.polarastrum.aiyatsbus.module.ingame.ui
 
 import cc.polarastrum.aiyatsbus.core.*
@@ -28,12 +12,14 @@ import cc.polarastrum.aiyatsbus.module.ingame.mechanics.VillagerSupport
 import cc.polarastrum.aiyatsbus.module.ingame.ui.internal.*
 import cc.polarastrum.aiyatsbus.module.ingame.ui.internal.config.MenuConfiguration
 import cc.polarastrum.aiyatsbus.module.ingame.ui.internal.feature.util.MenuFunctionBuilder
-import cc.polarastrum.aiyatsbus.core.util.variable
-import cc.polarastrum.aiyatsbus.core.util.variables
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.ItemMeta
+import taboolib.common.LifeCycle
+import taboolib.common.platform.Awake
+import taboolib.common.platform.function.console
+import taboolib.module.chat.Source
 import taboolib.module.chat.component
 import taboolib.module.configuration.Config
 import taboolib.module.configuration.Configuration
@@ -42,13 +28,6 @@ import taboolib.module.ui.type.PageableChest
 import taboolib.platform.util.giveItem
 import taboolib.platform.util.modifyLore
 import taboolib.platform.util.modifyMeta
-import cc.polarastrum.aiyatsbus.module.ingame.ui.internal.UIType
-import cc.polarastrum.aiyatsbus.module.ingame.ui.internal.record
-import taboolib.common.LifeCycle
-import taboolib.common.platform.Awake
-import taboolib.common.platform.function.console
-import taboolib.module.chat.Source
-import kotlin.collections.set
 import kotlin.system.measureTimeMillis
 
 @MenuComponent("EnchantInfo")
@@ -332,7 +311,7 @@ object EnchantInfoUI {
                     )
                 }
             }
-            val level = checked.etLevel(enchant)
+            val level = checked.fastEtLevel(enchant)
             val result = enchant.limitations.checkAvailable(CheckType.ANVIL, checked, player)
             val state = if (level > 0)
                 player.asLang("ui-enchant-info-available-installed", player.asLang("ui-enchant-info-available-installed-can-upgrade-${level < enchant.basicData.maxLevel}") to "upgrade")

@@ -1,19 +1,3 @@
-/*
- *  Copyright (C) 2022-2024 PolarAstrumLab
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
 package cc.polarastrum.aiyatsbus.module.script.kether.operation.operation
 
 import cc.polarastrum.aiyatsbus.core.compat.AntiGriefChecker
@@ -46,8 +30,12 @@ object Plant {
         "POTATO" to "POTATOES"
     )
 
+    val netherSeedsMap = linkedMapOf(
+        "NETHER_WART" to "NETHER_WART"
+    )
+
     fun getSeed(player: Player, seeds: String?): Material? {
-        if (seeds == "ALL") return player.inventory.contents.find { seedsMap.containsKey(it?.type?.name) }?.type
+        if (seeds == "ALL") return player.inventory.contents.find { seedsMap.containsKey(it?.type?.name) || netherSeedsMap.containsKey(it?.type?.name) }?.type
         try {
             val type = seeds?.let { Material.valueOf(it) } ?: return null
             if (player.inventory.containsAtLeast(ItemStack(type), 1)) return type
@@ -73,14 +61,19 @@ object Plant {
         for (x in down until up + 1) {
             for (z in down until up + 1) {
                 val current = loc.clone().add(x.toDouble(), 0.0, z.toDouble())
-                if (current.block.type != Material.FARMLAND) continue
+                val seed = when (current.block.type) {
+                    Material.FARMLAND -> seedsMap[type.name]
+                    Material.SOUL_SAND -> netherSeedsMap[type.name]
+                    else -> null
+                } ?: continue
+//                if (current.block.type != Material.FARMLAND) continue
                 val planted = current.clone().add(0.0, 1.0, 0.0).block
                 if (!AntiGriefChecker.canBreak(player, planted.location))
                     continue
                 if (planted.type != Material.AIR) continue // 防止左右手打架
                 if (!player.inventory.hasItem(1) { it.type == type }) continue
                 if (player.placeBlock(planted, ItemStack(type, 1))) {
-                    planted.type = Material.valueOf(seedsMap[type.name]!!)
+                    planted.type = Material.valueOf(seed)
                     val data = planted.blockData as Ageable
                     data.age = 0
                     planted.blockData = data

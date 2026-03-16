@@ -1,24 +1,9 @@
 @file:Suppress("deprecation")
 
-/*
- *  Copyright (C) 2022-2024 PolarAstrumLab
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
 package cc.polarastrum.aiyatsbus.impl
 
 import cc.polarastrum.aiyatsbus.core.*
+import cc.polarastrum.aiyatsbus.core.data.LevelDisplayType
 import cc.polarastrum.aiyatsbus.core.data.registry.Rarity
 import cc.polarastrum.aiyatsbus.core.util.*
 import net.kyori.adventure.text.Component
@@ -35,11 +20,14 @@ import taboolib.common.LifeCycle
 import taboolib.common.platform.Awake
 import taboolib.common.platform.PlatformFactory
 import taboolib.common.platform.function.console
+import taboolib.common.util.resettableLazy
+import taboolib.library.configuration.ConfigurationSection
 import taboolib.module.chat.component
 import taboolib.module.configuration.Config
 import taboolib.module.configuration.ConfigNode
 import taboolib.module.configuration.Configuration
 import taboolib.module.configuration.conversion
+import taboolib.module.configuration.util.map
 import taboolib.module.nms.MinecraftVersion
 import taboolib.platform.util.modifyMeta
 import taboolib.platform.util.onlinePlayers
@@ -67,6 +55,12 @@ class DefaultAiyatsbusDisplayManager : AiyatsbusDisplayManager {
         }.toTypedArray())
     }
 
+    override fun sortEnchants(enchants: List<Array<Any>>): LinkedHashMap<AiyatsbusEnchantment, Int> {
+        return linkedMapOf(*enchants.sortedBy { (enchant, level) ->
+            getSettings().rarityOrder.indexOf((enchant as AiyatsbusEnchantment).id) * 100000 + (if (getSettings().sortByLevel) level as Int else 0)
+        }.map { (it[0] as AiyatsbusEnchantment to it[1] as Int) }.toTypedArray())
+    }
+
     /**
      * 生成展示物品的 Lore
      */
@@ -80,8 +74,9 @@ class DefaultAiyatsbusDisplayManager : AiyatsbusDisplayManager {
 
         // 首先确保物品必须存在
         if (item == null) return emptyList()
+        val enchants = item.fastFixedEnchants
         // 整理附魔
-        val sortedEnchants = item.fixedEnchants.ifEmpty { return emptyList() }.filter { it.key.displayer.display }.let(::sortEnchants)
+        val sortedEnchants = enchants.ifEmpty { return emptyList() }.filter { (it[0] as AiyatsbusEnchantment).displayer.display }.let(::sortEnchants)
         return buildList {
             // 如果合并模式已打开, 且达到附魔数量的最低要求
             if (settings.combine && sortedEnchants.size >= settings.combineMinimal) {
@@ -120,10 +115,16 @@ class DefaultAiyatsbusDisplayManager : AiyatsbusDisplayManager {
         // 首先确保物品必须存在
         if (item.isNull) return item
 
+        var enchants = item.fastFixedEnchants
+
+        if (LevelFixer.fix(item, enchants)) {
+            enchants = item.fastFixedEnchants
+        }
+
         // 必须 **克隆** 物品, 不得修改原物品
         return item.clone().modifyMeta<ItemMeta> {
             // 如果没有任何附魔则不进行任何处理
-            item.fixedEnchants.ifEmpty { return@modifyMeta }
+            enchants.ifEmpty { return@modifyMeta }
             // 已经展示过了就不再展示 (不是重新展示)
             // NOTICE 从 0.7 版本, 我遵循白熊的嘱托, 废除了 display_mark, 以节省性能
             val loreIndex = this["lore_index", PersistentDataType.INTEGER_ARRAY]
@@ -157,7 +158,7 @@ class DefaultAiyatsbusDisplayManager : AiyatsbusDisplayManager {
                             add(
                                 componentFromRaw(
                                     settings.capabilityLine
-                                        .replace("capability" to item.type.capability - item.fixedEnchants.size)
+                                        .replace("capability" to item.type.capability - enchants.size)
                                         .component().buildColored().toRawMessage()
                                 )
                             )
@@ -174,7 +175,7 @@ class DefaultAiyatsbusDisplayManager : AiyatsbusDisplayManager {
             // 设置显示 Lore
             lore(result)
             if (item.type == Material.ENCHANTED_BOOK && !hasCustomModelData()) {
-                val rarity = item.fixedEnchants.minBy { it.key.rarity.weight }.key.rarity
+                val rarity = (enchants.minBy { (it[0] as AiyatsbusEnchantment).rarity.weight }[0] as AiyatsbusEnchantment).rarity
                 if (rarity.isCustomModelBookEnabled) {
                     setCustomModelData(rarity.customModelBook)
                     this["custom_book", PersistentDataType.STRING] = "true" // 记录这物品被打上了自定义模型
@@ -184,7 +185,7 @@ class DefaultAiyatsbusDisplayManager : AiyatsbusDisplayManager {
             // 加附魔序列化数据
             // TODO: 尝试减少字符串的拼接与分割操作
             this["enchants_serialized", PersistentDataType.STRING] =
-                item.fixedEnchants.map { (enchant, level) -> "${enchant.basicData.id}:$level" }.joinToString("|")
+                enchants.map { (enchant, level) -> "${(enchant as AiyatsbusEnchantment).basicData.id}:$level" }.joinToString("|")
         }
     }
 
@@ -276,6 +277,15 @@ class DefaultAiyatsbusDisplayManager : AiyatsbusDisplayManager {
         @ConfigNode("format.default_previous")
         override var defaultPrevious = "{enchant_display_roman}"
 
+        override val defaultLevelDisplayType: LevelDisplayType by resettableLazy {
+            when {
+                defaultPrevious.contains("{enchant_display_roman}") -> LevelDisplayType.ROMAN
+                defaultPrevious.contains("{enchant_display_number}") -> LevelDisplayType.NUMBER
+                defaultPrevious.contains("{enchant_display_tag}") -> LevelDisplayType.TAG
+                else -> error("Unknown level display type: $defaultPrevious")
+            }
+        }
+
         @ConfigNode("format.default_subsequent")
         override var defaultSubsequent = "\n&8| &7{description}"
 
@@ -310,6 +320,20 @@ class DefaultAiyatsbusDisplayManager : AiyatsbusDisplayManager {
 
         @ConfigNode("lore_formation.without_lore")
         override var withoutLoreFormation = listOf<String>()
+
+        @delegate:ConfigNode("display-tags.rarity")
+        override val levelTagFormat: Map<String, Map<Int, String>> by conversion<ConfigurationSection, Map<String, Map<Int, String>>> {
+            getKeys(false).associateWith { rarity ->
+                getConfigurationSection(rarity)!!.getKeys(false).associate {
+                    it.toInt() to getString("$rarity.$it")!!
+                }
+            }
+        }
+
+        @delegate:ConfigNode("display-tags.default")
+        override val levelTagFormatDefault: Map<Int, String> by conversion<ConfigurationSection, Map<Int, String>> {
+            getKeys(false).associate { it.toInt() to getString(it)!! }
+        }
 
         @Awake(LifeCycle.ENABLE)
         fun init() {

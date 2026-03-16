@@ -1,26 +1,10 @@
-/*
- *  Copyright (C) 2022-2024 PolarAstrumLab
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
 package cc.polarastrum.aiyatsbus.core
 
 import cc.polarastrum.aiyatsbus.core.data.*
 import cc.polarastrum.aiyatsbus.core.data.registry.Group
 import cc.polarastrum.aiyatsbus.core.data.registry.Rarity
 import cc.polarastrum.aiyatsbus.core.data.registry.Target
-import cc.polarastrum.aiyatsbus.core.data.trigger.Trigger
+import cc.polarastrum.aiyatsbus.core.data.trigger.Mechanism
 import cc.polarastrum.aiyatsbus.core.util.roman
 import org.bukkit.NamespacedKey
 import org.bukkit.enchantments.Enchantment
@@ -61,7 +45,7 @@ interface AiyatsbusEnchantment {
      * 
      * 存储附魔配置的 YAML 文件实例，包含所有附魔数据。
      */
-    val file: File
+    val file: File?
 
     /**
      * 附魔配置对象
@@ -137,11 +121,11 @@ interface AiyatsbusEnchantment {
     val limitations: Limitations
 
     /**
-     * 附魔触发器
+     * 附魔机制
      * 
-     * 定义附魔效果的触发条件和执行逻辑，为 null 表示不使用 Aiyatsbus 内置的触发器系统。
+     * 定义附魔效果的执行逻辑，为 null 表示不使用 Aiyatsbus 内置的附魔机制系统。
      */
-    val trigger: Trigger?
+    val mechanism: Mechanism?
 
     /** 是否不可获得 */
     val inaccessible: Boolean
@@ -173,12 +157,15 @@ interface AiyatsbusEnchantment {
      * 获取显示名称
      *
      * @param level 等级
-     * @param roman 是否使用罗马数字
      * @return 附魔显示名称
      */
-    fun displayName(level: Int? = null, roman: Boolean = true): String {
-        val name = basicData.name.colored() + if (roman) (level?.roman(basicData.maxLevel == 1, true)
-            ?: "") else if (basicData.maxLevel == 1) "" else level
-        return if (basicData.nameHasColor) name else rarity.displayName(name)
+    fun displayName(level: Int? = null): String {
+        return displayer.displayName(level)
     }
+
+    /**
+     * 更新附魔
+     * 用于品质和对象更新后重新加载
+     */
+    fun updateEnchantment()
 }

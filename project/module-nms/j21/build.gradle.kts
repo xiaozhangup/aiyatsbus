@@ -3,13 +3,15 @@ repositories {
 }
 
 dependencies {
+    compileOnly("io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT")
     compileOnly("io.papermc.paper:paper-api:1.21.5-R0.1-SNAPSHOT")
     compileOnly("paper:v12104:12104:core")
-    compileOnly("paper:v12004:12004:core")
     compileOnly("ink.ptms.core:v12105:12105:mapped")
     compileOnly(project(":project:module-nms"))
     compileOnly(project(":project:common"))
     compileOnly("com.mojang:brigadier:1.2.9")
+    compileOnly("com.mojang:authlib:1.5.25")
+    compileOnly("io.netty:netty-all:4.1.86.Final")
 }
 
 // 编译配置

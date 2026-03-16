@@ -8,7 +8,7 @@ basic:
   disable_worlds: [ ]
   id: bouncy_arrow
   name: "跃动"
-  max_level: 1
+  max_level: 3
 
 rarity: 稀世
 targets:
@@ -19,61 +19,61 @@ limitations: [ ]
 
 display:
   description:
-    general: "射出的箭撞到方块上可以反弹"
-    specific: "&7射出的箭撞到方块上最多可以反弹&a{次数}"
+    general: "射箭撞方块反弹并有概率分裂"
+    specific: "&7射箭撞方块可反弹最多&a{次数}&7并有&a{概率}&7的概率分裂"
 
 variables:
   leveled:
-    次数: "次:2+{level}"
-  ordinary:
-    力度: 0.65
-    触发速度: 0.7
+    次数: "次:{level}"
+    速度: ":0.5+0.1*{level}"
+    概率: "%:20*{level}"
 
 mechanisms:
   listeners:
-    on-kill:
+    on-projectile-hit:
       listen: "projectile-hit"
       handle: |-
-        if check &event[hit-block-face] is null then {
-          exit
-        }
-        set speed to type double &力度
-        set bounciness to type double &触发速度
-        set max to type int &次数
-        if check &event[entity.velocity.length] < &bounciness then {
-          exit
-        }
-        set bounces to type int 0
-        if hasMetadata bounces on &event[entity] then {
-          set bounces to getMetadata bounces on &event[entity] by 0
-        }
-        if check &bounces >= &max then {
-          exit
+        def spawn(world, location, velocity, speed, spread, oldArrow, bouncedTime) = {
+            newArrow = &world.spawnArrow(&location, &velocity, &speed, &spread)
+            &newArrow::setMeta("bouncedTime", &bouncedTime)
+            &newArrow::setShooter(&oldArrow::shooter())
+
+            // 1.20.4+
+            try {
+                &newArrow.setWeapon(&oldArrow.getWeapon())
+            } catch (e) {
+            }
+        
+            return &newArrow
         }
 
-        set blockVec to &event[hit-block-face.direction]
-        set reflection to &event[entity.velocity.clone.taboo]
+        if !(&event::entity() is org.bukkit.entity.AbstractArrow) then return
+        if &event::hitBlockFace() == null then return
 
-        set dot0 to vec dot &event[entity.velocity] by &blockVec
-        set dot to calc "2.0 * dot0"
+        arrow = &event::entity()
+        blockFace = &event::hitBlockFace()
 
-        set x to &blockVec[x]
-        set y to &blockVec[y]
-        set z to &blockVec[z]
-        set &blockVec[x] to calc "x * dot"
-        set &blockVec[y] to calc "y * dot"
-        set &blockVec[z] to calc "z * dot"
+        normalLine = &blockFace::direction()
+        velocity = &arrow::velocity()
+        location = &arrow::location()
+        world = &location::world() ?: return
 
-        set r1 to vec sub &reflection by &blockVec
+        bouncedTime = int(&arrow::getMeta("bouncedTime") ?: 0) + 1
+        if &bouncedTime > &level then return
 
-        set x1 to &r1[x]
-        set y1 to &r1[y]
-        set z1 to &r1[z]
-        set &r1[x] to calc "x1 * speed"
-        set &r1[y] to calc "y1 * speed"
-        set &r1[z] to calc "z1 * speed"
+        newVelocity = &velocity::clone::rotateAroundAxis(&normalLine, &PI)::multiply(-1)
+        speed = float(&newVelocity::length()) * float(&速度)
+        &newVelocity::normalize()
 
-        set newArrow to operation spawn-arrow args array [ &event[entity.location] &r1 &event[entity.shooter] &event[entity] ]
-        setMetadata bounces to math add [ &bounces 1 ] on &newArrow
+        &world::spawnParticle(particle("CRIT"), &location, 20)
+        newArrow = spawn(&world, &location, &newVelocity, &speed, 0, &arrow, &bouncedTime)
 
-        remove-entity &event[entity]
+        if random(0, 100) <= &概率 then {
+            &newVelocity::rotateAroundAxis(vector(0.0, 1.0, 0.0), &PI / 18.0)
+            &newArrow = spawn(&world, &location, &newVelocity, &speed, 0, &arrow, &bouncedTime)
+
+            &newVelocity::rotateAroundAxis(vector(0.0, 1.0, 0.0), -&PI / 9.0)
+            &newArrow = spawn(&world, &location, &newVelocity, &speed, 0, &arrow, &bouncedTime)
+        }
+
+        &arrow::remove()

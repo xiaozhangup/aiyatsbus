@@ -1,19 +1,3 @@
-/*
- *  Copyright (C) 2022-2024 PolarAstrumLab
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
 package cc.polarastrum.aiyatsbus.core.event
 
 import org.bukkit.entity.Player
@@ -36,7 +20,7 @@ import taboolib.platform.type.BukkitProxyEvent
  * @author mical
  * @since 2024/5/3 16:02
  */
-class AiyatsbusPrepareAnvilEvent(
+data class AiyatsbusPrepareAnvilEvent(
     /** 左侧物品（主要物品） */
     val left: ItemStack, 
     /** 右侧物品（材料物品），可能为 null */

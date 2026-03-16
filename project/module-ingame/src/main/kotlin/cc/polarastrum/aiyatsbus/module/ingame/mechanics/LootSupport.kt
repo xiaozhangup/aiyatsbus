@@ -1,21 +1,5 @@
 @file:Suppress("DuplicatedCode")
 
-/*
- *  Copyright (C) 2022-2024 PolarAstrumLab
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
 package cc.polarastrum.aiyatsbus.module.ingame.mechanics
 
 import cc.polarastrum.aiyatsbus.core.*
@@ -91,10 +75,10 @@ object LootSupport {
         if (!enable) return
         (event.entity as? Player)?.let {
             event.loot.replaceAll { item ->
-                if (item.fixedEnchants.isNotEmpty()) doEnchant(it, item).second
+                if (item.fastFixedEnchants.isNotEmpty()) doEnchant(it, item).second
                 else item
             }
-        } ?: event.loot.removeIf { it.fixedEnchants.isNotEmpty() }
+        } ?: event.loot.removeIf { it.fastFixedEnchants.isNotEmpty() }
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -102,7 +86,7 @@ object LootSupport {
         if (!fishEnable) return
         if (event.state != PlayerFishEvent.State.CAUGHT_FISH || event.caught !is Item) return
         val item = event.caught as Item
-        if (item.itemStack.fixedEnchants.isNotEmpty()) {
+        if (item.itemStack.fastFixedEnchants.isNotEmpty()) {
             item.itemStack = doEnchant(event.player, item.itemStack).second
         }
     }

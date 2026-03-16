@@ -1,19 +1,3 @@
-/*
- *  Copyright (C) 2022-2024 PolarAstrumLab
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
 package cc.polarastrum.aiyatsbus.core.util
 
 /**
@@ -78,26 +62,27 @@ fun interface Function2<in T, R> {
 }
 
 /**
- * 三参数转双返回值函数接口
+ * 四参数转双返回值函数接口
  * 
- * 接受三个参数并返回两个值的函数接口。
+ * 接受四个参数并返回两个值的函数接口。
  * 适用于需要同时返回多个结果的复杂计算场景。
  * 
  * @param T 第一个输入参数类型
  * @param R 第二个输入参数类型
  * @param C 第三个输入参数类型
+ * @param E 第四个输入参数类型
  * @param B 第一个返回值类型
  * @param K 第二个返回值类型
  * 
  * @example
  * ```kotlin
- * val calculator: Function3To2<Int, Int, Int, Int, Double> = Function3To2 { a, b, c ->
+ * val calculator: Function3To2<Int, Int, Int, Int, Int, Double> = Function3To2 { a, b, c, d ->
  *     Pair1(a + b, c.toDouble() / 2)
  * }
  * val result = calculator.apply(1, 2, 10) // 返回 Pair1(3, 5.0)
  * ```
  */
-fun interface Function3To2<in T, in R, in C, B, K> {
+fun interface Function4To2<in T, in R, in C, in E, B, K> {
 
     /**
      * 执行函数
@@ -105,9 +90,10 @@ fun interface Function3To2<in T, in R, in C, B, K> {
      * @param t 第一个输入参数
      * @param r 第二个输入参数
      * @param c 第三个输入参数
+     * @param e 第四个输入参数
      * @return 包含两个值的键值对
      */
-    fun apply(t: T, r: R, c: C): Pair1<B, K>
+    fun apply(t: T, r: R, c: C, e: E): Pair1<B, K>
 }
 
 /**

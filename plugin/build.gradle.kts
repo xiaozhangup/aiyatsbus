@@ -18,6 +18,7 @@ taboolib {
             name("QuickShop").optional(true)
             name("QuickShop-Hikari").optional(true)
             name("Citizens").optional(true)
+            name("FluxonPlugin").optional(true)
         }
 
         desc("Aiyatsbus is a powerful enchantment framework for Paper servers.")
@@ -25,13 +26,13 @@ taboolib {
         bukkitApi("1.17")
     }
 
-    relocate("ink.ptms.um", "cc.polarastrum.aiyatsbus.module.compat.library.um")
+//    relocate("ink.ptms.um", "cc.polarastrum.aiyatsbus.module.compat.library.um")
     relocate("redempt", "cc.polarastrum.aiyatsbus.library")
+    relocate("org.tabooproject.fluxon", "cc.polarastrum.aiyatsbus.module.script.fluxon.core")
 }
 
-dependencies {
-    taboo("ink.ptms:um:1.0.9")
-    taboo("com.github.Redempt:Crunch:1.0.7")
+repositories {
+    mavenLocal()
 }
 
 tasks {

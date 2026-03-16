@@ -1,21 +1,5 @@
 @file:Suppress("DuplicatedCode")
 
-/*
- *  Copyright (C) 2022-2024 PolarAstrumLab
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
 package cc.polarastrum.aiyatsbus.module.ingame.mechanics
 
 import cc.polarastrum.aiyatsbus.core.*
@@ -25,6 +9,7 @@ import cc.polarastrum.aiyatsbus.core.util.MathUtils.selectByWeight
 import cc.polarastrum.aiyatsbus.core.util.calcToDouble
 import cc.polarastrum.aiyatsbus.core.util.calcToInt
 import cc.polarastrum.aiyatsbus.core.util.serialized
+import cc.polarastrum.aiyatsbus.module.ingame.ui.internal.function.round
 import com.google.common.collect.HashBasedTable
 import org.bukkit.Material
 import org.bukkit.enchantments.Enchantment
@@ -50,6 +35,7 @@ import taboolib.module.nms.MinecraftVersion
 import taboolib.module.nms.PacketSendEvent
 import taboolib.module.ui.InventoryViewProxy
 import taboolib.platform.util.onlinePlayers
+import taboolib.platform.util.sendMessage
 import taboolib.platform.util.serializeToByteArray
 import taboolib.platform.util.submit
 import java.util.UUID
@@ -211,8 +197,9 @@ object EnchantingTableSupport {
             // 预先为所有附魔项生成一个附魔
             val enchants = doPrepareEnchant(event.enchanter, event.item, bonus)
             for (i in 0..2) {
-                event.offers[i]?.enchantment = enchants[i]!!.first.enchantment
-                event.offers[i]?.enchantmentLevel = enchants[i]!!.second
+                val entry = enchants[i] ?: continue
+                event.offers[i]?.enchantment = entry.first.enchantment
+                event.offers[i]?.enchantmentLevel = entry.second
             }
         }
     }
@@ -268,7 +255,7 @@ object EnchantingTableSupport {
                 lines.forEach { line ->
                     val type = line.substringBefore(":")
                     onlinePlayers.forEach {
-                        val text = it.asLangOrNull(line.substringAfter(":"), event.enchanter.name to "player", enchant.displayName(level, true) to "enchant") ?: return@forEach
+                        val text = it.asLangOrNull(line.substringAfter(":"), event.enchanter.name to "player", enchant.displayName(level) to "enchant") ?: return@forEach
                         when (type) {
                             "actionbar" -> it.sendActionBar(text)
                             "message" -> it.sendMessage(text)
@@ -299,11 +286,12 @@ object EnchantingTableSupport {
                 }
         }
 
-        val random = Random(item.serializeToByteArray().sum() + player.world.seed + player.enchantmentSeed )
+        val random = Random(item.serializeToByteArray().sum() + player.world.seed + player.enchantmentSeed)
         val pool = item.etsAvailable(CheckType.ATTAIN, player).filterNot { it.alternativeData.isTreasure }
         val result = LinkedHashMap<Int, Pair<AiyatsbusEnchantment, Int>>()
         for (i in 0..2) {
             // 从特定附魔列表中根据品质和附魔的权重抽取一个附魔
+            // FIXME: 有死循环的风险，等待优化
             while (true) {
                 val enchant = pool.drawEt(random) ?: continue
                 val maxLevel = enchant.basicData.maxLevel
@@ -312,7 +300,8 @@ object EnchantingTableSupport {
                 val level = if (player.hasPermission(fullLevelPrivilege)) maxLevel else levelFormula.calcToInt(
                     "bonus" to bonus,
                     "max_level" to limit,
-                    "button" to i + 1
+                    "button" to i + 1,
+                    "random" to random.nextDouble().round(3)
                 ).coerceIn(1, limit)
 
 //                if (result.values.any { it.first == enchant && it.second == level }) {
