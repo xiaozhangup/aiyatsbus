@@ -10,6 +10,7 @@ import cc.polarastrum.aiyatsbus.module.ingame.mechanics.*
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import taboolib.common.platform.command.subCommand
+import taboolib.common.util.ResettableLazy
 import taboolib.module.lang.Language
 import taboolib.platform.util.onlinePlayers
 
@@ -31,6 +32,7 @@ val reloadSubCommand = subCommand {
         val event = AiyatsbusReloadEvent()
         event.call()
         Reloadables.execute()
+        ResettableLazy.reset()
         (Aiyatsbus.api().getEnchantmentRegisterer() as? ModernEnchantmentRegisterer)?.freezeRegistry()
         Aiyatsbus.api().getDisplayManager().getSettings().conf.reload()
         Aiyatsbus.api().getSkillHandler().getSettings().conf.reload()

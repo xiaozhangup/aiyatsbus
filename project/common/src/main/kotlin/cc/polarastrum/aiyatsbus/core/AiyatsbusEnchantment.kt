@@ -157,26 +157,10 @@ interface AiyatsbusEnchantment {
      * 获取显示名称
      *
      * @param level 等级
-     * @param roman 是否使用罗马数字
      * @return 附魔显示名称
      */
-    fun displayName(level: Int? = null, roman: Boolean = true): String {
-        val name = basicData.name.colored() + if (roman) (level?.roman(basicData.maxLevel == 1, true)
-            ?: "") else if (basicData.maxLevel == 1) "" else level
-        return if (basicData.nameHasColor) name else rarity.displayName(name)
-    }
-
-    /**
-     * 获取显示名称并使用标签
-     *
-     * @param level 等级
-     * @param tags 标签映射
-     * @return 附魔显示名称
-     */
-    fun displayName(level: Int? = null, tags: Map<Int, String>): String {
-        val tag = level?.let { tags[it] } ?: ""
-        val name = basicData.name.colored() + "&r$tag"
-        return if (basicData.nameHasColor) name else rarity.displayName(name)
+    fun displayName(level: Int? = null): String {
+        return displayer.displayName(level)
     }
 
     /**

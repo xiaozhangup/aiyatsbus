@@ -40,5 +40,5 @@ include(
     // Fluxon 脚本实现
     "project:module-script:script-fluxon",
     // Kether 脚本实现
-    "project:module-script:script-kether",
+//    "project:module-script:script-kether",
 )

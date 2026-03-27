@@ -3,6 +3,7 @@
 package cc.polarastrum.aiyatsbus.impl
 
 import cc.polarastrum.aiyatsbus.core.*
+import cc.polarastrum.aiyatsbus.core.data.LevelDisplayType
 import cc.polarastrum.aiyatsbus.core.data.registry.Rarity
 import cc.polarastrum.aiyatsbus.core.util.*
 import net.kyori.adventure.text.Component
@@ -19,11 +20,14 @@ import taboolib.common.LifeCycle
 import taboolib.common.platform.Awake
 import taboolib.common.platform.PlatformFactory
 import taboolib.common.platform.function.console
+import taboolib.common.util.resettableLazy
+import taboolib.library.configuration.ConfigurationSection
 import taboolib.module.chat.component
 import taboolib.module.configuration.Config
 import taboolib.module.configuration.ConfigNode
 import taboolib.module.configuration.Configuration
 import taboolib.module.configuration.conversion
+import taboolib.module.configuration.util.map
 import taboolib.module.nms.MinecraftVersion
 import taboolib.platform.util.modifyMeta
 import taboolib.platform.util.onlinePlayers
@@ -264,6 +268,15 @@ class DefaultAiyatsbusDisplayManager : AiyatsbusDisplayManager {
         @ConfigNode("format.default_previous")
         override var defaultPrevious = "{enchant_display_roman}"
 
+        override val defaultLevelDisplayType: LevelDisplayType by resettableLazy {
+            when {
+                defaultPrevious.contains("{enchant_display_roman}") -> LevelDisplayType.ROMAN
+                defaultPrevious.contains("{enchant_display_number}") -> LevelDisplayType.NUMBER
+                defaultPrevious.contains("{enchant_display_tag}") -> LevelDisplayType.TAG
+                else -> error("Unknown level display type: $defaultPrevious")
+            }
+        }
+
         @ConfigNode("format.default_subsequent")
         override var defaultSubsequent = "\n&8| &7{description}"
 
@@ -299,14 +312,19 @@ class DefaultAiyatsbusDisplayManager : AiyatsbusDisplayManager {
         @ConfigNode("lore_formation.without_lore")
         override var withoutLoreFormation = listOf<String>()
 
-        @ConfigNode("level.enable")
-        override var levelTag = false
+        @delegate:ConfigNode("display-tags.rarity")
+        override val levelTagFormat: Map<String, Map<Int, String>> by conversion<ConfigurationSection, Map<String, Map<Int, String>>> {
+            getKeys(false).associateWith { rarity ->
+                getConfigurationSection(rarity)!!.getKeys(false).associate {
+                    it.toInt() to getString("$rarity.$it")!!
+                }
+            }
+        }
 
-        @ConfigNode("level.format")
-        override var levelTagFormat = mapOf<String, Map<Int, String>>()
-
-        @ConfigNode("level.default")
-        override var levelTagFormatDefault = mapOf<Int, String>()
+        @delegate:ConfigNode("display-tags.default")
+        override val levelTagFormatDefault: Map<Int, String> by conversion<ConfigurationSection, Map<Int, String>> {
+            getKeys(false).associate { it.toInt() to getString(it)!! }
+        }
 
         @Awake(LifeCycle.ENABLE)
         fun init() {

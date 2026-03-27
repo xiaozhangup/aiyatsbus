@@ -5,7 +5,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     java
-    id("io.izzel.taboolib") version "2.0.30" apply false
+    id("io.izzel.taboolib") version "2.0.36" apply false
     id("org.jetbrains.kotlin.jvm") version "2.1.21" apply false
     id("org.jetbrains.dokka") version "1.8.20" apply false
 }
@@ -31,8 +31,6 @@ subprojects {
                 BukkitUI,
                 BukkitUtil,
                 I18n,
-                JavaScript,
-                Kether,
                 MinecraftChat,
                 MinecraftEffect,
                 Metrics,
@@ -40,9 +38,10 @@ subprojects {
             forceDownloadInDev = false
             disableOnSkippedVersion = false
             disableWhenPrimitiveLoaderError = true
+            enableLegacyDependencyResolver = true
         }
         version {
-            taboolib = "6.2.4-a7c1695"
+            taboolib = "6.2.4-3d34097"
             coroutines = "1.10.2"
             skipKotlin = true
             skipKotlinRelocate = true

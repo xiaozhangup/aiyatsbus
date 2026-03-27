@@ -11,6 +11,8 @@ import cc.polarastrum.aiyatsbus.module.script.fluxon.FluxonScriptHandler
 import cc.polarastrum.aiyatsbus.module.script.fluxon.relocate.FluxonRelocate
 import org.bukkit.entity.Player
 import org.tabooproject.fluxon.runtime.FluxonRuntime
+import org.tabooproject.fluxon.runtime.FunctionSignature.returns
+import org.tabooproject.fluxon.runtime.Type
 import org.tabooproject.fluxon.runtime.java.Export
 import org.tabooproject.fluxon.runtime.java.Optional
 import taboolib.common.LifeCycle
@@ -28,11 +30,13 @@ import taboolib.common.platform.Awake
 @FluxonRelocate
 object FnCooldown {
 
+    val TYPE = Type.fromClass(FnCooldown::class.java)!!
+
     @Awake(LifeCycle.LOAD)
     fun init() {
         FluxonScriptHandler.DEFAULT_PACKAGE_AUTO_IMPORT += "aiy:cooldown"
         with(FluxonRuntime.getInstance()) {
-            registerFunction("aiy:cooldown", "cooldown", 0) { FnCooldown }
+            registerFunction("aiy:cooldown", "cooldown", returns(TYPE).noParams()) { it.setReturnRef(FnCooldown) }
             exportRegistry.registerClass(FnCooldown::class.java, "aiy:cooldown")
         }
     }

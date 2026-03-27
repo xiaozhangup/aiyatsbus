@@ -4,7 +4,7 @@ import cc.polarastrum.aiyatsbus.core.script.AiyatsbusScriptHandler
 import cc.polarastrum.aiyatsbus.core.script.ScriptHandler
 import cc.polarastrum.aiyatsbus.core.script.ScriptType
 import cc.polarastrum.aiyatsbus.module.script.fluxon.FluxonScriptHandler
-import cc.polarastrum.aiyatsbus.module.script.kether.KetherScriptHandler
+//import cc.polarastrum.aiyatsbus.module.script.kether.KetherScriptHandler
 import taboolib.common.LifeCycle
 import taboolib.common.platform.Awake
 import taboolib.common.platform.PlatformFactory
@@ -18,12 +18,12 @@ import taboolib.common.platform.PlatformFactory
  */
 class DefaultAiyatsbusScriptHandler : AiyatsbusScriptHandler {
 
-    val ketherScriptHandler = KetherScriptHandler()
+//    val ketherScriptHandler = KetherScriptHandler()
     val fluxonScriptHandler = FluxonScriptHandler()
 
     override fun getScriptHandler(type: ScriptType): ScriptHandler {
         return when (type) {
-            ScriptType.KETHER -> ketherScriptHandler
+//            ScriptType.KETHER -> ketherScriptHandler
             ScriptType.FLUXON -> fluxonScriptHandler
             else -> error("Unsupported script type: ${type.name}")
         }

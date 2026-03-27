@@ -7,6 +7,8 @@ import cc.polarastrum.aiyatsbus.module.script.fluxon.relocate.FluxonRelocate
 import org.bukkit.Material
 import org.bukkit.inventory.ItemStack
 import org.tabooproject.fluxon.runtime.FluxonRuntime
+import org.tabooproject.fluxon.runtime.FunctionSignature.returns
+import org.tabooproject.fluxon.runtime.Type
 import org.tabooproject.fluxon.runtime.java.Export
 import taboolib.common.LifeCycle
 import taboolib.common.Requires
@@ -23,11 +25,13 @@ import taboolib.common.platform.Awake
 @FluxonRelocate
 object FnItem {
 
+    val TYPE = Type.fromClass(FnItem::class.java)!!
+
     @Awake(LifeCycle.LOAD)
     fun init() {
         FluxonScriptHandler.DEFAULT_PACKAGE_AUTO_IMPORT += "aiy:item"
         with(FluxonRuntime.getInstance()) {
-            registerFunction("aiy:item", "item", 0) { FnItem }
+            registerFunction("aiy:item", "item", returns(TYPE).noParams()) { it.setReturnRef(FnItem) }
             exportRegistry.registerClass(FnItem::class.java, "aiy:item")
         }
     }

@@ -22,7 +22,7 @@ import java.util.*
 data class Skill @JvmOverloads constructor(
     private val root: ConfigurationSection,
     private val enchant: AiyatsbusEnchantment,
-    val scriptType: ScriptType = ScriptType.valueOf(root.getString("type")?.uppercase() ?: "KETHER"),
+    val scriptType: ScriptType = ScriptType.valueOf(root.getString("type")?.uppercase() ?: "FLUXON"),
     override val handle: String = root.getString("handle") ?: "",
     private val sound: Optional<XSound> = XSound.of(root.getString("sound") ?: ""),
     private val particleType: Optional<XParticle> = XParticle.of(root.getString("particle.type")),

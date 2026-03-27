@@ -257,7 +257,7 @@ object EnchantingTableSupport {
                     val text = player.asLangOrNull(
                         line.substringAfter(":"),
                         event.enchanter.name to "player",
-                        enchant.displayName(level, true) to "enchant"
+                        enchant.displayName(level) to "enchant"
                     ) ?: return@forEach
                     NetworkService.broadcastMessage(text)
                 }

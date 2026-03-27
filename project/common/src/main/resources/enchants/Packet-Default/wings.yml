@@ -4,6 +4,8 @@
 
 
 basic:
+  enable: true
+  disable_worlds: [ ]
   id: wings
   name: "反重力"
   max-level: 3
@@ -27,7 +29,6 @@ variables:
 mechanisms:
   listeners:
     on-fall:
-      type: fluxon
       listen: "entity-damage"
       handle: |-
         if &event::cause() == FALL && &player::hasMeta("fall-protect") then {

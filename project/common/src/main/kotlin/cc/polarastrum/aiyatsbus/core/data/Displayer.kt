@@ -34,11 +34,13 @@ data class Displayer(
     /** 描述 */
     val generalDescription: String = root.getString("description.general", "&7")!!.let {
         "&8${it.replace("&7", "&8").replace("&a", "&7")}" // 直接取代
-    }, // 特殊显示, 直接内部格式化
+    },
     /** 一般有变量的描述会用这个替换变量，这个不写默认为普通描述 */
-    val specificDescription: String = root.getString("description.specific")?.let {
+    val specificDescription: String = root.getString("description.specific", generalDescription)!!.let {
         "&8${it.replace("&7", "&8").replace("&a", "&7")}" // 直接取代
-    } ?: generalDescription
+    },
+    /** 附魔等级贴图设置 */
+    val displayTags: Map<Int, String> = root.getConfigurationSection("display-tags")?.getKeys(false)?.associate { it.toInt() to root.getString("display-tags.$it")!! } ?: emptyMap()
 ) {
 
     /** 显示管理器设置 */
@@ -50,6 +52,16 @@ data class Displayer(
      * @return true 表示使用默认格式
      */
     fun isDefaultDisplay() = previous == "{default_previous}" && subsequent == "{default_subsequent}"
+
+    private var _levelDisplayType: LevelDisplayType? = null
+
+    fun getLevelDisplayType(): LevelDisplayType = _levelDisplayType ?: when {
+        previous.contains("{default_previous}") -> Aiyatsbus.api().getDisplayManager().getSettings().defaultLevelDisplayType
+        previous.contains("{enchant_display_roman}") -> LevelDisplayType.ROMAN
+        previous.contains("{enchant_display_number}") -> LevelDisplayType.NUMBER
+        previous.contains("{enchant_display_tag}") -> LevelDisplayType.TAG
+        else -> error("Unknown level display type: $previous")
+    }.apply { _levelDisplayType = this }
 
     /**
      * 生成本附魔在当前状态下的显示，在非合并模式下
@@ -115,34 +127,35 @@ data class Displayer(
         val tmp = enchant.variables.variables(level, item, true)
             .mapValues { it.value.toString() }.toMutableMap() // 因为是显示，这里的变量可以直接转为字符串
         val lv = level
-        var tags: Map<Int, String>? = null // 后面的优先级更高，覆盖前面的
-        if (displayManagerSettings.levelTag) {
-            displayManagerSettings.levelTagFormat[enchant.rarity.id]?.let { tags = it }
-            displayManagerSettings.levelTagFormat[enchant.rarity.name]?.let { tags = it }
-            displayManagerSettings.levelTagFormat[enchant.basicData.id]?.let { tags = it }
-            displayManagerSettings.levelTagFormat[enchant.basicData.name]?.let { tags = it }
-
-            if (tags == null) {
-                tags = displayManagerSettings.levelTagFormatDefault
-            }
-        }
+        val tags = displayTags.ifEmpty { with(Aiyatsbus.api().getDisplayManager().getSettings()) { levelTagFormat[enchant.rarity.name] ?: levelTagFormat[enchant.rarity.id] ?: levelTagFormatDefault } }
 
         tmp["id"] = enchant.basicData.id
         tmp["name"] = enchant.basicData.name
         tmp["level"] = "$lv"
-        tmp["tag_level"] = "&r${tags?.get(lv) ?: ""}"
+        tmp["tag_level"] = "&r${tags[lv] ?: ""}"
         tmp["roman_level"] = lv.roman(enchant.basicData.maxLevel == 1)
         tmp["roman_level_with_a_blank"] = lv.roman(enchant.basicData.maxLevel == 1, true)
         tmp["max_level"] = "${enchant.basicData.maxLevel}"
         tmp["rarity"] = enchant.rarity.name
         tmp["rarity_display"] = enchant.rarity.displayName()
-        tmp["enchant_display"] = enchant.displayName()
-        tmp["enchant_display_roman"] = enchant.displayName(lv)
-        tmp["enchant_display_number"] = enchant.displayName(lv, false)
-        tmp["enchant_display_tag"] = tags?.get(lv) ?: ""
+        tmp["enchant_display"] = displayName()
+        tmp["enchant_display_roman"] = displayName(lv, LevelDisplayType.ROMAN)
+        tmp["enchant_display_number"] = displayName(lv, LevelDisplayType.NUMBER)
+        tmp["enchant_display_tag"] = displayName(lv, LevelDisplayType.TAG)
         tmp["enchant_display_lore"] = display(tmp).replacePlaceholder(player)
         tmp["description"] = specificDescription.replace(tmp).colored().replacePlaceholder(player)
         return tmp
+    }
+
+    @JvmOverloads
+    fun displayName(level: Int? = null, type: LevelDisplayType = getLevelDisplayType()): String {
+        val tags = displayTags.ifEmpty { with(Aiyatsbus.api().getDisplayManager().getSettings()) { levelTagFormat[enchant?.rarity?.name] ?: levelTagFormat[enchant?.rarity?.id] ?: levelTagFormatDefault } }
+        val name = enchant?.basicData?.name?.colored() + if (level == null) "" else when (type) {
+            LevelDisplayType.ROMAN -> level.roman(enchant?.basicData?.maxLevel == 1, true)
+            LevelDisplayType.NUMBER -> if (enchant?.basicData?.maxLevel == 1) "" else " $level"
+            LevelDisplayType.TAG -> " ${tags[level]}"
+        }
+        return if (enchant?.basicData?.nameHasColor == true) name else enchant?.rarity?.displayName(name) ?: name
     }
 
     fun serialize(): ConfigurationSection {
