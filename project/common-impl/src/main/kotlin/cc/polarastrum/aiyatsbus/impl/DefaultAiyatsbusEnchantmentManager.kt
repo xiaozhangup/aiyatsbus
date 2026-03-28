@@ -222,9 +222,11 @@ class DefaultAiyatsbusEnchantmentManager : AiyatsbusEnchantmentManager {
     }
 
     override fun clearEnchantments() {
+        // 预先构建外部附魔的键集合，用于快速判断是否应跳过该附魔
+        val externalKeys = enchantmentsToRegister.mapTo(HashSet()) { it.enchantmentKey }
         for (enchant in byKeyMap.values) {
-            // 不卸载外部附魔
-            if (enchant in enchantmentsToRegister) continue
+            // 不卸载外部附魔（通过键比较，因为 byKeyMap 存储的是包装对象而非原始对象）
+            if (enchant.enchantmentKey in externalKeys) continue
             enchant.file?.isProcessingByWatcher = false
             enchant.file?.unwatch()
             unregister(enchant)

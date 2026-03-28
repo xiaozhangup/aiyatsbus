@@ -44,7 +44,8 @@ class DefaultAiyatsbusTickHandler : AiyatsbusTickHandler {
         counter = 0
         task?.cancel()
         task = null
-        routine.clear() // 清空等待重新加载
+        // 不在此处清空 routine，由 Ticker.close() 在附魔注销时负责移除对应条目
+        // 这样可以保留通过代码注册的外部附魔（如 BuiltinAiyatsbusEnchantment）的 Ticker 条目
     }
 
     override fun start() {
