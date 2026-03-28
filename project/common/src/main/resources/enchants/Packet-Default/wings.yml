@@ -45,14 +45,14 @@ mechanisms:
       interval: 40
       pre-handle: |-
         unbreakable = item::isUnbreakable(&item)
-        damage = (&item::type::maxDurability() - &item::durability()) / &item::type::maxDurability() <= 0.1
+        damage = double(&item::type::maxDurability() - &item::durability()) / &item::type::maxDurability() <= 0.1
         canDamage = !&damage || &unbreakable
         if (&player::gameMode() == SURVIVAL || &player::gameMode() == ADVENTURE) && &canDamage then {
             &player::setAllowFlight(true)
         }
       handle: |-
         unbreakable = item::isUnbreakable(&item)
-        damage = (&item::type::maxDurability() - &item::durability()) / &item::type::maxDurability() <= 0.1
+        damage = double(&item::type::maxDurability() - &item::durability()) / &item::type::maxDurability() <= 0.1
         canDamage = !&damage || &unbreakable
         if &player::gameMode() == SURVIVAL || &player::gameMode() == ADVENTURE then {
           if &player::isOnGround() && &player::hasMeta("fall-protect") then {
@@ -64,7 +64,7 @@ mechanisms:
           if !&canDamage && &player::isFlying() then {
               &player::setFlying(false)
               &player::setAllowFlight(false)
-              &player::setMeta("fall-protect", 1)
+              &player::setMeta("fall-protect", "true")
               return
           }
           if !&unbreakable && &player::isFlying() then {
