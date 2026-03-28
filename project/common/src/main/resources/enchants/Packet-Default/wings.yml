@@ -10,6 +10,10 @@ basic:
   name: "反重力"
   max-level: 3
 
+alternative:
+  is-tradeable: false
+  is-discoverable: false
+
 rarity: 异宝
 targets:
   - 靴子
