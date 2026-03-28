@@ -37,13 +37,19 @@ import kotlin.system.measureTimeMillis
 val devSubCommand = subCommand {
     execute<CommandSender> { sender, _, _ ->
 //        sender.itemInHand.modifyMeta<ItemMeta> { this["aiyatsbus_item_capability", PersistentDataType.INTEGER] = 999 }
-//       printMap( Aiyatsbus.api().getEnchantmentManager().getEnchants())
-        try {
-            XEnchantment.of("wings").getOrNull()?.get()?.javaClass?.let { println(it) }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+////       printMap( Aiyatsbus.api().getEnchantmentManager().getEnchants())
+//        try {
+//            XEnchantment.of("wings").getOrNull()?.get()?.javaClass?.let { println(it) }
+//        } catch (e: Exception) {
+//            e.printStackTrace()
+//        }
 
+        (sender as Player).itemInHand.enchantments.keys.forEach { ench ->
+            println(ench)
+            ench as AiyatsbusEnchantment
+            println(ench.basicData)
+            println(ench.alternativeData)
+        }
 
     }
 ////        sender.giveItem(sender.equipment.itemInMainHand.toDisplayMode(sender))
