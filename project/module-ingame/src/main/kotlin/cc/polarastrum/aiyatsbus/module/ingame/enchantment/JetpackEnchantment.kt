@@ -8,11 +8,10 @@ import cc.polarastrum.aiyatsbus.core.data.trigger.builtin.EventFunctions
 import org.bukkit.Effect
 import org.bukkit.entity.Player
 import org.bukkit.event.player.PlayerToggleSneakEvent
-import org.bukkit.inventory.ItemStack
 import org.bukkit.util.Vector
 import taboolib.common.LifeCycle
 import taboolib.common.platform.Awake
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 object JetpackEnchantment {
