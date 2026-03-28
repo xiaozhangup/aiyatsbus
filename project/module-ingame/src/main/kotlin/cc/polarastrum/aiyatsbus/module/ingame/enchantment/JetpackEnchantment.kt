@@ -1,6 +1,7 @@
 package cc.polarastrum.aiyatsbus.module.ingame.enchantment
 
 import cc.polarastrum.aiyatsbus.core.BuiltinAiyatsbusEnchantment
+import cc.polarastrum.aiyatsbus.core.data.AlternativeData
 import cc.polarastrum.aiyatsbus.core.data.BasicData
 import cc.polarastrum.aiyatsbus.core.data.Displayer
 import cc.polarastrum.aiyatsbus.core.data.VariableType
@@ -35,6 +36,11 @@ object JetpackEnchantment {
                 Displayer.builder()
                     .generalDescription("&7蹲下时消耗经验并获得&a{力度}&7的升力")
                     .specificDescription("&7每&a{等级}&7次消耗&a1&7经验并获得&a{力度}&7升力")
+                    .build()
+            )
+            .alternativeData(
+                AlternativeData.builder()
+                    .isTradeable(false)
                     .build()
             )
             .addTicker(

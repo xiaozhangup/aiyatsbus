@@ -13,6 +13,8 @@ basic:
 alternative:
   is-tradeable: false
   is-discoverable: false
+  is-treasure: true
+  inaccessible: true
 
 rarity: 异宝
 targets:
