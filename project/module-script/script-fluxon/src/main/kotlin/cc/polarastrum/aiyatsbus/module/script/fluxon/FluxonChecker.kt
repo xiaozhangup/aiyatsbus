@@ -38,8 +38,15 @@ object FluxonChecker {
         load("!org.tabooproject.fluxon:core:$FLUXON_VERSION".substring(1), scope, rel)
         load("!org.tabooproject.fluxon:inst-core:$FLUXON_VERSION".substring(1), scope, rel)
         if (!PrimitiveSettings.IS_ISOLATED_MODE) {
-            rel.add(JarRelocation(RuntimeEnv.KOTLIN_ID + ".", PrimitiveSettings.getRelocatedKotlinVersion() + "."))
-            rel.add(JarRelocation(RuntimeEnv.KOTLIN_COROUTINES_ID + ".", PrimitiveSettings.getRelocatedKotlinCoroutinesVersion() + "."))
+            if (!PrimitiveSettings.SKIP_KOTLIN_RELOCATE) {
+                rel.add(JarRelocation(RuntimeEnv.KOTLIN_ID + ".", PrimitiveSettings.getRelocatedKotlinVersion() + "."))
+                rel.add(
+                    JarRelocation(
+                        RuntimeEnv.KOTLIN_COROUTINES_ID + ".",
+                        PrimitiveSettings.getRelocatedKotlinCoroutinesVersion() + "."
+                    )
+                )
+            }
             rel.add(JarRelocation(PrimitiveSettings.ID, PrimitiveLoader.TABOOLIB_PACKAGE_NAME))
         }
         load("!org.tabooproject.fluxon.plugin:core:$FP_VERSION".substring(1), scope, rel)

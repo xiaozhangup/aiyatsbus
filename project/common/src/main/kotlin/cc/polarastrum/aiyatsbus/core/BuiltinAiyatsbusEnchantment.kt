@@ -5,6 +5,8 @@ import cc.polarastrum.aiyatsbus.core.data.trigger.Mechanism
 import cc.polarastrum.aiyatsbus.core.data.trigger.TriggerType
 import cc.polarastrum.aiyatsbus.core.data.trigger.builtin.Builtin
 import cc.polarastrum.aiyatsbus.core.data.trigger.builtin.EventFunctions
+import cc.polarastrum.aiyatsbus.core.data.trigger.ticker.BuiltinTicker
+import org.bukkit.entity.LivingEntity
 import taboolib.module.configuration.Configuration
 
 /**
@@ -34,6 +36,16 @@ class BuiltinAiyatsbusEnchantment(
 
         private var eventExecutor: EventFunctions = object : EventFunctions {
         }
+        
+        private class TickerData(
+            val id: String,
+            val interval: Long,
+            val preHandle: ((LivingEntity, MutableMap<String, Any?>) -> Unit)?,
+            val handle: ((LivingEntity, MutableMap<String, Any?>) -> Unit)?,
+            val postHandle: ((LivingEntity, MutableMap<String, Any?>) -> Unit)?
+        )
+
+        private var customTickers: MutableList<TickerData> = mutableListOf()
 
         fun basicData(basicData: BasicData): Builder {
             this.basicData = basicData
@@ -77,6 +89,17 @@ class BuiltinAiyatsbusEnchantment(
 
         fun eventExecutor(event: EventFunctions): Builder {
             this.eventExecutor = event
+            return this
+        }
+
+        fun addTicker(
+            id: String,
+            interval: Long,
+            preHandle: ((LivingEntity, MutableMap<String, Any?>) -> Unit)? = null,
+            handle: ((LivingEntity, MutableMap<String, Any?>) -> Unit)? = null,
+            postHandle: ((LivingEntity, MutableMap<String, Any?>) -> Unit)? = null
+        ): Builder {
+            this.customTickers.add(TickerData(id, interval, preHandle, handle, postHandle))
             return this
         }
 
@@ -129,6 +152,11 @@ class BuiltinAiyatsbusEnchantment(
             }
             return BuiltinAiyatsbusEnchantment(basicData!!.id, config, eventExecutor).apply {
                 mechanism.addTrigger(TriggerType.BUILTIN, object : Builtin(), EventFunctions by eventExecutor { })
+                customTickers.forEach { tData ->
+                    val ticker = BuiltinTicker(this, tData.id, tData.preHandle, tData.handle, tData.postHandle, tData.interval)
+                    ticker.init()
+                    mechanism.addTrigger(TriggerType.TICKER, ticker)
+                }
             }
         }
 

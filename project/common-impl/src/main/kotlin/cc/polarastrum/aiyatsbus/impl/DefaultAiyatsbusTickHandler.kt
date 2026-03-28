@@ -12,6 +12,7 @@ import org.bukkit.inventory.ItemStack
 import taboolib.common.LifeCycle
 import taboolib.common.platform.Awake
 import taboolib.common.platform.PlatformFactory
+import taboolib.common.platform.function.info
 import taboolib.common.platform.function.registerLifeCycleTask
 import taboolib.common.platform.function.submit
 import taboolib.common.platform.service.PlatformExecutor
@@ -123,7 +124,7 @@ class DefaultAiyatsbusTickHandler : AiyatsbusTickHandler {
                                     ticker.executePreHandle(player, vars)
                                 }
 
-                                ticker.executeHandle(player, vars)
+                                ticker.executeTickerHandle(player, vars)
                             }
                         }
                         if (!flag && record.contains(id)) {

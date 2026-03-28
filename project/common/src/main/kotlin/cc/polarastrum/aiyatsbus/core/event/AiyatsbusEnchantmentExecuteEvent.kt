@@ -3,6 +3,8 @@ package cc.polarastrum.aiyatsbus.core.event
 import cc.polarastrum.aiyatsbus.core.AiyatsbusEnchantment
 import cc.polarastrum.aiyatsbus.core.data.trigger.Trigger
 import cc.polarastrum.aiyatsbus.core.data.trigger.TriggerType
+import cc.polarastrum.aiyatsbus.core.data.trigger.ticker.BuiltinTicker
+import cc.polarastrum.aiyatsbus.core.data.trigger.ticker.ScriptTicker
 import cc.polarastrum.aiyatsbus.core.data.trigger.ticker.Ticker
 import org.bukkit.entity.LivingEntity
 import org.bukkit.event.Event
@@ -74,20 +76,26 @@ data class AiyatsbusEnchantmentExecuteEvent(
      * 只适用于 Ticker
      */
     fun isPreHandle(): Boolean {
-        return trigger is Ticker && script == trigger.preHandle
+        if (trigger is ScriptTicker && script == trigger.preHandle) return true
+        if (trigger is BuiltinTicker && (script == "BuiltinTickerPreHandle" || script == "${trigger.internalId}BuiltinPreHandle")) return true
+        return false
     }
 
     /**
      * 一般是用于 Ticker
      */
     fun isHandle(): Boolean {
-        return script == trigger.handle
+        if (trigger is ScriptTicker && script == trigger.handle) return true
+        if (trigger is BuiltinTicker && (script == "BuiltinTickerHandle" || script == "${trigger.internalId}BuiltinHandle")) return true
+        return false
     }
 
     /**
      * 只适用于 Ticker
      */
     fun isPostHandle(): Boolean {
-        return trigger is Ticker && script == trigger.postHandle
+        if (trigger is ScriptTicker && script == trigger.postHandle) return true
+        if (trigger is BuiltinTicker && (script == "BuiltinTickerPostHandle" || script == "${trigger.internalId}BuiltinPostHandle")) return true
+        return false
     }
 }

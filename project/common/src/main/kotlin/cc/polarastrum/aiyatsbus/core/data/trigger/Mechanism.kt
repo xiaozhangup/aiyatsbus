@@ -4,7 +4,7 @@ import cc.polarastrum.aiyatsbus.core.AiyatsbusEnchantment
 import cc.polarastrum.aiyatsbus.core.data.trigger.builtin.Builtin
 import cc.polarastrum.aiyatsbus.core.data.trigger.event.EventExecutor
 import cc.polarastrum.aiyatsbus.core.data.trigger.skill.Skill
-import cc.polarastrum.aiyatsbus.core.data.trigger.ticker.Ticker
+import cc.polarastrum.aiyatsbus.core.data.trigger.ticker.ScriptTicker
 import cc.polarastrum.aiyatsbus.core.util.safeguard
 import taboolib.library.configuration.ConfigurationSection
 import taboolib.library.reflex.Reflex.Companion.invokeConstructor
@@ -49,7 +49,7 @@ data class Mechanism(
         // 初始化定时器
         section?.getConfigurationSection("tickers")?.let { tickersSection ->
             for (ticker in tickersSection.getKeys(false)) {
-                val trigger = Ticker(tickersSection.getConfigurationSection(ticker)!!, enchant)
+                val trigger = ScriptTicker(tickersSection.getConfigurationSection(ticker)!!, enchant)
                 trigger.init()
                 addTrigger(TriggerType.TICKER, trigger)
             }
