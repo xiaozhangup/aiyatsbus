@@ -21,8 +21,8 @@ import java.io.File
  */
 object FluxonChecker {
 
-    private const val FLUXON_VERSION = "1.6.16"
-    private const val FP_VERSION = "1.1.7"
+    private const val FLUXON_VERSION = "1.6.17"
+    private const val FP_VERSION = "1.1.8"
 
     private var isCentral = false
 

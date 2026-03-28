@@ -22,11 +22,13 @@ import org.bukkit.inventory.ItemStack
 import taboolib.common.LifeCycle
 import taboolib.common.platform.event.EventPriority
 import taboolib.common.platform.event.SubscribeEvent
+import taboolib.common.platform.function.adaptPlayer
 import taboolib.common.platform.function.console
 import taboolib.common.platform.function.registerLifeCycleTask
 import taboolib.common.platform.function.submit
 import taboolib.common.util.randomDouble
 import taboolib.library.configuration.ConfigurationSection
+import taboolib.module.chat.component
 import taboolib.module.configuration.Config
 import taboolib.module.configuration.ConfigNode
 import taboolib.module.configuration.Configuration
@@ -255,10 +257,12 @@ object EnchantingTableSupport {
                 lines.forEach { line ->
                     val type = line.substringBefore(":")
                     onlinePlayers.forEach {
-                        val text = it.asLangOrNull(line.substringAfter(":"), event.enchanter.name to "player", enchant.displayName(level) to "enchant") ?: return@forEach
+                        val component = (it.asLangOrNull(line.substringAfter(":"), event.enchanter.name to "player", (enchant as AiyatsbusEnchantment).displayName(level) to "enchant") ?: return@forEach)
+                            .component().buildColored()
+                        val text = component.toLegacyText()
                         when (type) {
                             "actionbar" -> it.sendActionBar(text)
-                            "message" -> it.sendMessage(text)
+                            "message" -> component.sendTo(adaptPlayer(it))
                             "title" -> it.sendTitle(text.split(";")[0], text.split(";")[1])
                         }
                     }
