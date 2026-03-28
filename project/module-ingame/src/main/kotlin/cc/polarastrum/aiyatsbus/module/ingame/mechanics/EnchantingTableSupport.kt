@@ -256,14 +256,9 @@ object EnchantingTableSupport {
             val rarity = (enchant as AiyatsbusEnchantment).rarity
             (celebrateNotice[rarity.name] ?: celebrateNotice[rarity.id])?.let { lines ->
                 lines.forEach { line ->
-                    val component = (it.asLangOrNull(line.substringAfter(":"), event.enchanter.name to "player", (enchant as AiyatsbusEnchantment).displayName(level) to "enchant") ?: return@forEach)
+                    val component = (player.asLangOrNull(line.substringAfter(":"), event.enchanter.name to "player", (enchant as AiyatsbusEnchantment).displayName(level) to "enchant") ?: return@forEach)
                         .component().buildColored()
-                    val text = component.toLegacyText()
-                    when (type) {
-                        "actionbar" -> it.sendActionBar(text)
-                        "message" -> component.sendTo(adaptPlayer(it))
-                        "title" -> it.sendTitle(text.split(";")[0], text.split(";")[1])
-                    }
+                    val text = component.toAdventureObject()
                     NetworkService.broadcastMessage(text)
                 }
             }
