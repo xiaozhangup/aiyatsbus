@@ -222,9 +222,10 @@ class DefaultAiyatsbusEnchantmentManager : AiyatsbusEnchantmentManager {
     }
 
     override fun clearEnchantments() {
+        val externalKeys = enchantmentsToRegister.mapTo(HashSet()) { it.enchantmentKey }
         for (enchant in byKeyMap.values) {
             // 不卸载外部附魔
-            if (enchant in enchantmentsToRegister) continue
+            if (enchant.enchantmentKey in externalKeys) continue
             enchant.file?.isProcessingByWatcher = false
             enchant.file?.unwatch()
             unregister(enchant)

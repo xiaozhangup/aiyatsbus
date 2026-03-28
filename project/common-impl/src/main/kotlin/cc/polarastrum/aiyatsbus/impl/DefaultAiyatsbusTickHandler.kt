@@ -45,7 +45,13 @@ class DefaultAiyatsbusTickHandler : AiyatsbusTickHandler {
         counter = 0
         task?.cancel()
         task = null
-        routine.clear() // 清空等待重新加载
+
+        val iterator = routine.cellSet().iterator()
+        while (iterator.hasNext()) {
+            if (iterator.next().rowKey !is BuiltinAiyatsbusEnchantment) {
+                iterator.remove()
+            }
+        }
     }
 
     override fun start() {
