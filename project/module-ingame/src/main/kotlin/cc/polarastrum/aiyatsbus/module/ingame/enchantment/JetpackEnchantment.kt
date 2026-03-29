@@ -29,7 +29,7 @@ object JetpackEnchantment {
     @Awake(LifeCycle.LOAD)
     fun register() {
         BuiltinAiyatsbusEnchantment.builder()
-            .basicData(BasicData.builder().id("jetpack").name("喷气").maxLevel(5).build())
+            .basicData(BasicData.builder().id("jetpack").name("气动").maxLevel(5).build())
             .rarity("异宝")
             .targets("胸甲")
             .displayer(
