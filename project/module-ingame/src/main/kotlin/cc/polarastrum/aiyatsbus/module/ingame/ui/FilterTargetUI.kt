@@ -31,7 +31,7 @@ import kotlin.system.measureTimeMillis
 @MenuComponent("FilterTarget")
 object FilterTargetUI {
 
-    @Config("core/ui/filter_target.yml", autoReload = true)
+    @Config("core/ui/filter_target.yml")
     private lateinit var source: Configuration
     private lateinit var config: MenuConfiguration
 

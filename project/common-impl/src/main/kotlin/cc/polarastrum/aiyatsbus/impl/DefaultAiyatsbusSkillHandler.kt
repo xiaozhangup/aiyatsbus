@@ -112,7 +112,7 @@ class DefaultAiyatsbusSkillHandler : AiyatsbusSkillHandler {
     @ConfigNode(bind = "enchants/skill.yml")
     object AiyatsbusSkillSettings : AiyatsbusSkillHandler.Settings {
 
-        @Config("enchants/skill.yml", autoReload = true)
+        @Config("enchants/skill.yml")
         override lateinit var conf: Configuration
 
         @ConfigNode("cooldown.enable")

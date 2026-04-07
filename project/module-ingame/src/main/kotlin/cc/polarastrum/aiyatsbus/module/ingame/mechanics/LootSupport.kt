@@ -30,7 +30,7 @@ import taboolib.module.configuration.conversion
 @ConfigNode(bind = "core/mechanisms/loot.yml")
 object LootSupport {
 
-    @Config("core/mechanisms/loot.yml", autoReload = true)
+    @Config("core/mechanisms/loot.yml")
     lateinit var conf: Configuration
         private set
 

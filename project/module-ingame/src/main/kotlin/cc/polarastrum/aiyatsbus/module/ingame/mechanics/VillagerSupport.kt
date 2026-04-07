@@ -26,7 +26,7 @@ import taboolib.module.nms.MinecraftVersion
 @ConfigNode(bind = "core/mechanisms/villager.yml")
 object VillagerSupport {
 
-    @Config("core/mechanisms/villager.yml", autoReload = true)
+    @Config("core/mechanisms/villager.yml")
     lateinit var conf: Configuration
         private set
 

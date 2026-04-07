@@ -33,7 +33,7 @@ import kotlin.system.measureTimeMillis
 @MenuComponent("ItemCheck")
 object ItemCheckUI {
 
-    @Config("core/ui/item_check.yml", autoReload = true)
+    @Config("core/ui/item_check.yml")
     private lateinit var source: Configuration
     private lateinit var config: MenuConfiguration
 

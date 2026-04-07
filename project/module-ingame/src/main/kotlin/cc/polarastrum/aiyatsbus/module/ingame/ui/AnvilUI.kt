@@ -25,7 +25,7 @@ import kotlin.system.measureTimeMillis
 @MenuComponent("Anvil")
 object AnvilUI {
 
-    @Config("core/ui/anvil.yml", autoReload = true)
+    @Config("core/ui/anvil.yml")
     private lateinit var source: Configuration
     private lateinit var config: MenuConfiguration
 

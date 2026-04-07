@@ -33,7 +33,7 @@ import kotlin.system.measureTimeMillis
 @MenuComponent("EnchantInfo")
 object EnchantInfoUI {
 
-    @Config("core/ui/enchant_info.yml", autoReload = true)
+    @Config("core/ui/enchant_info.yml")
     private lateinit var source: Configuration
     private lateinit var config: MenuConfiguration
 

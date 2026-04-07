@@ -3,9 +3,6 @@ package cc.polarastrum.aiyatsbus.impl
 import cc.polarastrum.aiyatsbus.core.*
 import cc.polarastrum.aiyatsbus.core.compat.EnchantRegistrationHooks
 import cc.polarastrum.aiyatsbus.core.registration.modern.ModernEnchantmentRegisterer
-import cc.polarastrum.aiyatsbus.core.util.FileWatcher.isProcessingByWatcher
-import cc.polarastrum.aiyatsbus.core.util.FileWatcher.unwatch
-import cc.polarastrum.aiyatsbus.core.util.FileWatcher.watch
 import cc.polarastrum.aiyatsbus.core.util.YamlUpdater
 import cc.polarastrum.aiyatsbus.core.util.deepRead
 import cc.polarastrum.aiyatsbus.core.util.reloadable
@@ -136,7 +133,6 @@ class DefaultAiyatsbusEnchantmentManager : AiyatsbusEnchantmentManager {
 
         register(enchant)
         enchant.mechanism.init()
-        setupFileWatcher(file, relativePath, key, id)
     }
 
     /**
@@ -152,44 +148,6 @@ class DefaultAiyatsbusEnchantmentManager : AiyatsbusEnchantmentManager {
                 path.count { it == '/' } >= 2
             }
             .forEach { releaseResourceFile(it) }
-    }
-
-    /**
-     * 设置文件监听器
-     * 
-     * 监听附魔配置文件的变更，支持热重载功能
-     * 
-     * @param file 要监听的文件
-     * @param relativePath 相对路径
-     * @param key 附魔的命名空间键
-     * @param id 附魔 ID
-     */
-    private fun setupFileWatcher(file: File, relativePath: String, key: NamespacedKey, id: String) {
-        file.watch { watchedFile ->
-            if (watchedFile.isProcessingByWatcher) {
-                watchedFile.isProcessingByWatcher = false
-                return@watch
-            }
-
-            val startTime = System.currentTimeMillis()
-            
-            // 尝试从资源文件更新配置
-            val resourceStream = javaClass.classLoader.getResourceAsStream(relativePath.replace('\\', '/')) // 真傻逼啊
-            if (AiyatsbusSettings.enableUpdater && resourceStream != null) {
-                console().sendLang("enchantment-reload-failed", id)
-                watchedFile.isProcessingByWatcher = true
-                YamlUpdater.loadFromFile(
-                    relativePath, 
-                    AiyatsbusSettings.enableUpdater, 
-                    AiyatsbusSettings.updateContents, 
-                    Configuration.loadFromInputStream(resourceStream)
-                )
-                return@watch
-            }
-
-            // 重新加载附魔
-            reloadEnchantment(watchedFile, key, id, startTime)
-        }
     }
 
     /**
@@ -226,8 +184,6 @@ class DefaultAiyatsbusEnchantmentManager : AiyatsbusEnchantmentManager {
         for (enchant in byKeyMap.values) {
             // 不卸载外部附魔
             if (enchant.enchantmentKey in externalKeys) continue
-            enchant.file?.isProcessingByWatcher = false
-            enchant.file?.unwatch()
             unregister(enchant)
         }
     }

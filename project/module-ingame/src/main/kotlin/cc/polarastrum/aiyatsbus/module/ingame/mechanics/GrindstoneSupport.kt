@@ -33,7 +33,7 @@ import kotlin.math.roundToInt
 @ConfigNode(bind = "core/mechanisms/grindstone.yml")
 object GrindstoneSupport {
 
-    @Config("core/mechanisms/grindstone.yml", autoReload = true)
+    @Config("core/mechanisms/grindstone.yml")
     lateinit var conf: Configuration
         private set
 

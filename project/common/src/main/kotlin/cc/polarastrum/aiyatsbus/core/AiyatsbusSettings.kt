@@ -23,7 +23,7 @@ import java.math.RoundingMode
 object AiyatsbusSettings {
 
     /** 配置文件实例，支持自动重载 */
-    @Config("core/config.yml", autoReload = true)
+    @Config("core/config.yml")
     lateinit var conf: Configuration
         private set
 

@@ -80,7 +80,7 @@ data class Rarity @JvmOverloads constructor(
     companion object : Registry<Rarity>("rarity", { section -> Rarity(section) }) {
 
         /** 稀有度配置文件，自动重载配置变更 */
-        @Config("enchants/rarity.yml", autoReload = true)
+        @Config("enchants/rarity.yml")
         override lateinit var config: Configuration
             private set
     }

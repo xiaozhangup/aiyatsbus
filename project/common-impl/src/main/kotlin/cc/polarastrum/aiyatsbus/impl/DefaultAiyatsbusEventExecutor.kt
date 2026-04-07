@@ -297,7 +297,7 @@ class DefaultAiyatsbusEventExecutor : AiyatsbusEventExecutor {
 
     companion object {
 
-        @Config(value = "core/event-mapping.yml", autoReload = true)
+        @Config(value = "core/event-mapping.yml")
         private lateinit var conf: Configuration
 
         @delegate:ConfigNode("mappings", bind = "core/event-mapping.yml")

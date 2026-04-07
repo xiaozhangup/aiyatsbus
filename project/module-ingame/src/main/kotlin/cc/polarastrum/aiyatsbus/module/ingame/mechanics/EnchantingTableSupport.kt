@@ -63,7 +63,7 @@ object EnchantingTableSupport {
      */
     private val enchantmentOffers = HashBasedTable.create<UUID, String, List<EnchantmentOffer?>>()
 
-    @Config("core/mechanisms/enchanting_table.yml", autoReload = true)
+    @Config("core/mechanisms/enchanting_table.yml")
     lateinit var conf: Configuration
         private set
 

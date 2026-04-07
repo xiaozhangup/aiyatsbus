@@ -39,7 +39,7 @@ import kotlin.math.roundToInt
 @ConfigNode(bind = "core/mechanisms/anvil.yml")
 object AnvilSupport {
 
-    @Config("core/mechanisms/anvil.yml", autoReload = true)
+    @Config("core/mechanisms/anvil.yml")
     lateinit var conf: Configuration
         private set
 

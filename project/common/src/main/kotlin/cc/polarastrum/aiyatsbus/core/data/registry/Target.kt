@@ -64,7 +64,7 @@ data class Target @JvmOverloads constructor(
     companion object : Registry<Target>("target", { section -> Target(section) }) {
 
         /** 附魔目标配置文件，自动重载配置变更 */
-        @Config("enchants/target.yml", autoReload = true)
+        @Config("enchants/target.yml")
         override lateinit var config: Configuration
             private set
     }

@@ -259,7 +259,7 @@ class DefaultAiyatsbusDisplayManager : AiyatsbusDisplayManager {
     @ConfigNode(bind = "enchants/display.yml")
     object AiyatsbusDisplaySettings : AiyatsbusDisplayManager.Settings {
 
-        @Config("enchants/display.yml", autoReload = true)
+        @Config("enchants/display.yml")
         override lateinit var conf: Configuration
 
         @ConfigNode("enable")

@@ -66,7 +66,7 @@ data class Group @JvmOverloads constructor(
     companion object : Registry<Group>("group", { section -> Group(section) }) {
 
         /** 附魔组配置文件，自动重载配置变更 */
-        @Config("enchants/group.yml", autoReload = true)
+        @Config("enchants/group.yml")
         override lateinit var config: Configuration
             private set
     }

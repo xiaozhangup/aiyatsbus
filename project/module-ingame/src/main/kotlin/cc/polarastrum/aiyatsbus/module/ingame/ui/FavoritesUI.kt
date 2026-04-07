@@ -29,7 +29,7 @@ import kotlin.system.measureTimeMillis
 @MenuComponent("Favorites")
 object FavoritesUI {
 
-    @Config("core/ui/favorites.yml", autoReload = true)
+    @Config("core/ui/favorites.yml")
     private lateinit var source: Configuration
     private lateinit var config: MenuConfiguration
 

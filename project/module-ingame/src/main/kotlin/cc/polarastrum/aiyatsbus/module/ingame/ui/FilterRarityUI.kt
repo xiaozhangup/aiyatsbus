@@ -28,7 +28,7 @@ import kotlin.system.measureTimeMillis
 @MenuComponent("FilterRarity")
 object FilterRarityUI {
 
-    @Config("core/ui/filter_rarity.yml", autoReload = true)
+    @Config("core/ui/filter_rarity.yml")
     private lateinit var source: Configuration
     private lateinit var config: MenuConfiguration
 

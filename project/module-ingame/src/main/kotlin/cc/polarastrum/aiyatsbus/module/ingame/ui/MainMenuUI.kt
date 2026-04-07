@@ -23,7 +23,7 @@ import kotlin.system.measureTimeMillis
 @MenuComponent("Menu")
 object MainMenuUI {
 
-    @Config("core/ui/menu.yml", autoReload = true)
+    @Config("core/ui/menu.yml")
     private lateinit var source: Configuration
     private lateinit var config: MenuConfiguration
 
