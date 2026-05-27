@@ -6,6 +6,7 @@ import cc.polarastrum.aiyatsbus.core.data.BasicData
 import cc.polarastrum.aiyatsbus.core.data.Displayer
 import cc.polarastrum.aiyatsbus.core.data.VariableType
 import cc.polarastrum.aiyatsbus.core.data.trigger.builtin.EventFunctions
+import cc.polarastrum.aiyatsbus.core.util.doBreakBlock
 import cc.polarastrum.aiyatsbus.core.util.mark
 import cc.polarastrum.aiyatsbus.core.util.unmark
 import org.bukkit.Material
@@ -75,7 +76,7 @@ object SickleEnchantment {
 
                         target.mark("block-ignored")
                         try {
-                            target.breakNaturally(toolCopy)
+                            player.doBreakBlock(target)
 
                             if (level >= 2 && AntiGriefChecker.canPlace(player, target.location)) {
                                 replantCrop(target, cropType)

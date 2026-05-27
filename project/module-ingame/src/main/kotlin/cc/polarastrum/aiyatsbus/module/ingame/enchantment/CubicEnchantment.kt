@@ -6,10 +6,12 @@ import cc.polarastrum.aiyatsbus.core.data.BasicData
 import cc.polarastrum.aiyatsbus.core.data.Displayer
 import cc.polarastrum.aiyatsbus.core.data.VariableType
 import cc.polarastrum.aiyatsbus.core.data.trigger.builtin.EventFunctions
+import cc.polarastrum.aiyatsbus.core.util.doBreakBlock
 import cc.polarastrum.aiyatsbus.core.util.mark
 import cc.polarastrum.aiyatsbus.core.util.unmark
 import org.bukkit.Material
 import org.bukkit.block.Block
+import org.bukkit.entity.Player
 import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.inventory.ItemStack
 import taboolib.common.LifeCycle
@@ -62,13 +64,12 @@ object CubicEnchantment {
                     if (level < 1) return
 
                     val block = event.block
-                    val toolCopy = tool.clone()
                     val radius = minOf(level, 5)
 
                     for (target in getCubeBlocks(block, radius)) {
                         if (target.type == Material.AIR || target.type in unbreakable) continue
                         if (!AntiGriefChecker.canBreak(player, target.location)) continue
-                        breakBlockSafely(target, toolCopy)
+                        breakBlockSafely(player, target)
                     }
                 }
             })
@@ -100,10 +101,10 @@ object CubicEnchantment {
      * @param block 要破坏的方块
      * @param tool 使用的工具（用于计算掉落物及附魔效果）
      */
-    private fun breakBlockSafely(block: Block, tool: ItemStack) {
+    private fun breakBlockSafely(player: Player, block: Block) {
         block.mark("block-ignored")
         try {
-            block.breakNaturally(tool)
+            player.doBreakBlock(block)
         } finally {
             block.unmark("block-ignored")
         }

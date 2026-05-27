@@ -3,7 +3,6 @@ package cc.polarastrum.aiyatsbus.core.util
 import cc.polarastrum.aiyatsbus.core.Aiyatsbus
 import cc.polarastrum.aiyatsbus.core.AiyatsbusSettings
 import cc.polarastrum.aiyatsbus.core.compat.NPCChecker
-import dev.lone.itemsadder.api.CustomBlock
 import org.bukkit.Material
 import org.bukkit.block.Block
 import org.bukkit.entity.Entity
@@ -13,6 +12,8 @@ import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 import kotlin.math.PI
+import dev.lone.itemsadder.api.CustomBlock as IACustomBlock
+import net.momirealms.craftengine.bukkit.api.CraftEngineBlocks as CECustomBlock
 
 /**
  * 实体工具类
@@ -202,7 +203,7 @@ fun LivingEntity.realDamage(amount: Double, who: Entity? = null) {
  */
 fun Player.placeBlock(placedBlock: Block, itemInHand: ItemStack = this.itemInHand): Boolean {
     val blockAgainst = placedBlock.getRelative(0, 1, 0)
-    val event = BlockPlaceEvent(placedBlock, placedBlock.state, blockAgainst, itemInHand, this, true)
+    val event = BlockPlaceEvent(placedBlock, placedBlock.state, blockAgainst, itemInHand, this, true, EquipmentSlot.HAND)
     return event.callEvent()
 }
 
@@ -245,11 +246,23 @@ fun Player.doBreakBlock(block: Block) {
     } finally {
         if (block.type != Material.AIR) {
             if (AiyatsbusSettings.supportItemsAdder && itemsAdderEnabled) {
-                if (CustomBlock.byAlreadyPlaced(block) != null) {
-                    CustomBlock.getLoot(block, inventory.itemInMainHand, true).forEach {
+                if (IACustomBlock.byAlreadyPlaced(block) != null) {
+                    IACustomBlock.getLoot(block, inventory.itemInMainHand, true).forEach {
                         world.dropItem(block.location, it)
                     }
-                    CustomBlock.remove(block.location)
+                    IACustomBlock.remove(block.location)
+                } else {
+                    block.breakNaturally(inventory.itemInMainHand)
+                }
+            } else if (craftEngineEnabled) {
+                if (CECustomBlock.isCustomBlock(block)) {
+                    CECustomBlock.remove(
+                        block,
+                        this,
+                        false,
+                        true,
+                        true
+                    )
                 } else {
                     block.breakNaturally(inventory.itemInMainHand)
                 }
