@@ -14,8 +14,8 @@ dependencies {
     // compileOnly("ink.ptms.core:v11903:11903:universal")
     compileOnly("com.github.Redempt:Crunch:1.0.7")
     compileOnly("com.github.LoneDev6:API-ItemsAdder:3.6.2-beta-r3-b")
-    compileOnly("net.momirealms:craft-engine-core:0.0.66")
-    compileOnly("net.momirealms:craft-engine-bukkit:0.0.66")
+    compileOnly("net.momirealms:craft-engine-core:26.6")
+    compileOnly("net.momirealms:craft-engine-bukkit:26.6")
 }
 
 tasks.named<DokkaTask>("dokkaJavadoc") {
