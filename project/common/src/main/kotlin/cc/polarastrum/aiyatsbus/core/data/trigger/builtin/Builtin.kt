@@ -20,15 +20,17 @@ import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 import taboolib.common.LifeCycle
 import taboolib.common.platform.Awake
+import taboolib.common.platform.function.submit
 import taboolib.common5.Baffle
 import taboolib.module.configuration.Configuration
+import taboolib.platform.util.onlinePlayers
+import taboolib.platform.util.submit
 import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
 /**
- * Aiyatsbus
- * cc.polarastrum.aiyatsbus.core.data.trigger.builtin.Builtin
+ * 详见 NereusOpus 的 EventExecutor 和 PublicTasks 类
  *
  * @author mical
  * @since 2026/3/8 23:59
@@ -38,6 +40,11 @@ open class Builtin : Trigger(Configuration.empty(), null, ScriptType.FLUXON, "",
     fun call(level: Int, type: EventType, entity: LivingEntity, event: Event) {
         executors[type]?.invoke(this, level, event)
         executors[EventType.TRIGGER]?.invoke(this, level, type, event, entity)
+    }
+
+    fun call(level: Int, slot: EquipmentSlot, player: Player, type: EventType) {
+        executors.get(type)?.invoke(this, level, slot, player, stamp)
+        executors.get(EventType.TRIGGER)?.invoke(this, level, type, null, player)
     }
 
     override fun init() {
@@ -55,14 +62,25 @@ open class Builtin : Trigger(Configuration.empty(), null, ScriptType.FLUXON, "",
 
         val executors = ConcurrentHashMap<EventType, Method>()
 
+        private var stamp = 0
+
         @Awake(LifeCycle.LOAD)
         fun init() {
             executors.putAll(EventFunctions::class.java.declaredMethods.associateBy { method ->
                 EventType.valueOf(method.name.camelToSnake()) }
             )
+            submit(period = 20) {
+                stamp += 20
+                onlinePlayers.forEach {
+                    it.submit {
+                        execute(it, EventType.TICK_TASK, null, EquipmentSlot.HAND, EquipmentSlot.OFF_HAND,
+                            EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)
+                    }
+                }
+            }
         }
 
-        fun execute(entity: Entity, type: EventType, event: Event, vararg slots: EquipmentSlot) {
+        fun execute(entity: Entity, type: EventType, event: Event?, vararg slots: EquipmentSlot) {
             if (entity !is LivingEntity) return
             for (slot in slots) {
                 val item = entity.equipment?.getItem(slot)
@@ -74,14 +92,14 @@ open class Builtin : Trigger(Configuration.empty(), null, ScriptType.FLUXON, "",
         /**
          * 适用于三叉戟这种触发时物品不在手上的附魔
          */
-        fun execute(entity: Entity, type: EventType, event: Event, item: ItemStack, vararg slots: EquipmentSlot) {
+        fun execute(entity: Entity, type: EventType, event: Event?, item: ItemStack, vararg slots: EquipmentSlot) {
             if (entity !is LivingEntity) return
             for (slot in slots) {
                 execute(entity, item, type, event, slot)
             }
         }
 
-        fun execute(entity: Entity, item: ItemStack, type: EventType, event: Event, slot: EquipmentSlot) {
+        fun execute(entity: Entity, item: ItemStack, type: EventType, event: Event?, slot: EquipmentSlot) {
             entity as LivingEntity
             if (item.fastFixedEnchants.isEmpty()) return
 //            if (checkEvents.contains(event)) return
@@ -107,7 +125,11 @@ open class Builtin : Trigger(Configuration.empty(), null, ScriptType.FLUXON, "",
                     random(chance) &&
                     enchant.limitations.checkAvailable(CheckType.USE, item, entity, slot).isSuccess
                 ) {
-                    builtin.call(level, type, entity, event)
+                    if (event != null) {
+                        builtin.call(level, type, entity, event)
+                    } else {
+                        builtin.call(level, slot, entity as Player, type)
+                    }
                 }
             }
         }

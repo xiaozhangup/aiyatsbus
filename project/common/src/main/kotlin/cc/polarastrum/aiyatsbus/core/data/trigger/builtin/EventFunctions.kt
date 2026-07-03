@@ -23,7 +23,7 @@ import org.bukkit.inventory.EquipmentSlot
 @Suppress("unused")
 interface EventFunctions {
 
-    fun trigger(level: Int, type: EventType, event: Event, who: LivingEntity) {
+    fun trigger(level: Int, type: EventType, event: Event?, who: LivingEntity) {
     }
 
     fun attackEntity(level: Int, event: EntityDamageByEntityEvent) {
